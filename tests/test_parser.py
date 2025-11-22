@@ -8,7 +8,7 @@ from swig_pyi.parser import (
     get_included_files,
     parse_declarations,
     parse_module_name,
-    parse_swig_file, # Added parse_swig_file
+    parse_swig_file,  # Added parse_swig_file
     resolve_includes,
 )
 
@@ -150,5 +150,3 @@ def test_parse_swig_file() -> None:
     assert isinstance(bond_functions_class, Class)
     assert bond_functions_class.name == "BondFunctions"
     assert len(bond_functions_class.methods) > 0
-
-

@@ -29,6 +29,7 @@ class Function:
     name: str
     parameters: list[Parameter]
     return_type: str
+    is_const: bool = False
 
 
 @dataclass
@@ -37,3 +38,6 @@ class Class:
 
     name: str
     methods: list[Function] = field(default_factory=list)
+
+
+Declaration = Class | Function
