@@ -8,6 +8,7 @@ from swig_pyi.parser import (
     get_included_files,
     parse_declarations,
     parse_module_name,
+    parse_swig_file, # Added parse_swig_file
     resolve_includes,
 )
 
@@ -125,5 +126,29 @@ def test_parse_parameter_type_and_name_template_type() -> None:
     # Then
     assert param_type == "std::vector<int>"
     assert param_name == "myVec"
+
+
+def test_parse_swig_file() -> None:
+    """Test the main parse_swig_file function."""
+    # Given
+    entry_file = Path("tests/data/quantlib-1.40/quantlib.i")
+
+    # When
+    module_name, swig_files, declarations = parse_swig_file(entry_file)
+
+    # Then
+    assert module_name == "QuantLib"
+    assert len(swig_files) > 1  # Should include quantlib.i and its includes
+    assert len(declarations) > 1  # Should include classes and functions from all files
+
+    # Verify a known class is present
+    bond_functions_class = next(
+        (d for d in declarations if isinstance(d, Class) and d.name == "BondFunctions"),
+        None,
+    )
+    assert bond_functions_class is not None
+    assert isinstance(bond_functions_class, Class)
+    assert bond_functions_class.name == "BondFunctions"
+    assert len(bond_functions_class.methods) > 0
 
 

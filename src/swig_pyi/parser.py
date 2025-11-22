@@ -222,3 +222,27 @@ def parse_declarations(content: str) -> list[Declaration]:
             Function(name=name, parameters=parameters, return_type=return_type.strip())
         )
     return declarations
+
+
+def parse_swig_file(entry_file: Path) -> tuple[str | None, list[SwigFile], list[Declaration]]:
+    """
+    Parse a SWIG entry file and all its included files to extract module information and declarations.
+
+    Args:
+        entry_file: The path to the main SWIG interface file.
+
+    Returns:
+        A tuple containing:
+            - The module name (str | None).
+            - A list of SwigFile objects for the entry file and all its includes.
+            - A list of Declaration objects (Class or Function) from all parsed files.
+    """
+    module_name = parse_module_name(entry_file)
+    all_swig_files = resolve_includes(entry_file)
+
+    all_declarations: list[Declaration] = []
+    for swig_file in all_swig_files:
+        declarations_in_file = parse_declarations(swig_file.content)
+        all_declarations.extend(declarations_in_file)
+    
+    return module_name, all_swig_files, all_declarations
