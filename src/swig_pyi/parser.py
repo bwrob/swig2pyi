@@ -2,8 +2,11 @@
 
 import re
 from pathlib import Path
+from typing import Union
 
-from .models import SwigFile
+from .models import Class, Function, Parameter, SwigFile
+
+Declaration = Union[Class, Function]
 
 
 def parse_module_name(swig_file: Path) -> str | None:
@@ -89,3 +92,54 @@ def resolve_includes(entry_file: Path) -> list[SwigFile]:
                 files_to_process.append(path)
 
     return all_swig_files
+
+
+def parse_declarations(content: str) -> list[Declaration]:
+    """
+    Parse a SWIG interface file to extract declarations.
+
+    Args:
+        content: The content of the SWIG interface file.
+
+    Returns:
+        A list of Declaration objects (Class or Function).
+    """
+    # Regex for class definitions
+    class_pattern = re.compile(r"class\s+(\w+)\s*\{(.*?)\};", re.DOTALL)
+    # Simplified regex for function definitions.
+    function_pattern = re.compile(
+        r"\s*(?:const\s+)?(?:static\s+)?([\w<>:*\s&]+?)\s+(\w+)\s*\(([^)]*)\);", re.MULTILINE
+    )
+
+    declarations: list[Declaration] = []
+    
+    # Parse classes
+    for class_match in class_pattern.finditer(content):
+        class_name, class_body = class_match.groups()
+        # Remove C++ comments, preprocessor directives, SWIG directives, and access specifiers
+        clean_class_body = class_body
+        # Remove single-line comments // ...
+        clean_class_body = re.sub(r'//.*$', '', clean_class_body, flags=re.MULTILINE)
+        # Remove multi-line comments /* ... */
+        clean_class_body = re.sub(r'/\*.*?\*/', '', clean_class_body, flags=re.DOTALL)
+        # Remove lines containing preprocessor directives (#) or SWIG directives (%)
+        clean_class_body = re.sub(r'^\s*(#|%).*$', '', clean_class_body, flags=re.MULTILINE)
+        # Remove lines containing access specifiers (public:, private:, protected:)
+        clean_class_body = re.sub(r'^\s*(public|private|protected):.*$', '', clean_class_body, flags=re.MULTILINE)
+        methods = []
+        for method_match in function_pattern.finditer(clean_class_body):
+            return_type, name, params_str = method_match.groups()
+            parameters = []
+            if params_str:
+                for param in params_str.split(","):
+                    param = param.strip()
+                    parts = param.rsplit(" ", 1)
+                    if len(parts) == 2:
+                        param_type, param_name = parts
+                        parameters.append(Parameter(name=param_name.strip(), type=param_type.strip()))
+            methods.append(
+                Function(name=name, parameters=parameters, return_type=return_type.strip())
+            )
+        declarations.append(Class(name=class_name, methods=methods))
+
+    return declarations
