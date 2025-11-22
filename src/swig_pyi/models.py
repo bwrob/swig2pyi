@@ -19,6 +19,7 @@ class Parameter:
 
     name: str
     type: str
+    default_value: str | None = None
 
 
 @dataclass

@@ -73,3 +73,15 @@ def test_parse_declarations() -> None:
     assert len(declarations[0].methods) > 0
     assert declarations[0].methods[0].name == "startDate"
     assert declarations[0].methods[0].return_type == "Date"
+
+    # Test a method with a default parameter
+    is_tradable_method = next(
+        (m for m in declarations[0].methods if m.name == "isTradable"), None
+    )
+    assert is_tradable_method is not None
+    assert len(is_tradable_method.parameters) == 2
+    assert is_tradable_method.parameters[0].name == "bond"
+    assert is_tradable_method.parameters[0].type == "const Bond&"
+    assert is_tradable_method.parameters[1].name == "settlementDate"
+    assert is_tradable_method.parameters[1].type == "Date"
+    assert is_tradable_method.parameters[1].default_value == "Date()"

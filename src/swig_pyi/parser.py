@@ -108,7 +108,7 @@ def parse_declarations(content: str) -> list[Declaration]:
     class_pattern = re.compile(r"class\s+(\w+)\s*\{(.*?)\};", re.DOTALL)
     # Simplified regex for function definitions.
     function_pattern = re.compile(
-        r"\s*(?:const\s+)?(?:static\s+)?([\w<>:*\s&]+?)\s+(\w+)\s*\(([^)]*)\);", re.MULTILINE
+        r"\s*(?:static\s+)?(?:const\s+)?([\w<>:*\s&]+)\s+([\w]+)\s*\((.*?)\);", re.DOTALL
     )
 
     declarations: list[Declaration] = []
@@ -139,10 +139,34 @@ def parse_declarations(content: str) -> list[Declaration]:
             if params_str:
                 for param in params_str.split(","):
                     param = param.strip()
-                    parts = param.rsplit(" ", 1)
-                    if len(parts) == 2:
-                        param_type, param_name = parts
-                        parameters.append(Parameter(name=param_name.strip(), type=param_type.strip()))
+                    param_type_and_name = param
+                    default_value = None
+
+                    # Check for default value
+                    if "=" in param:
+                        param_parts = param.split("=", 1)
+                        param_type_and_name = param_parts[0].strip()
+                        default_value = param_parts[1].strip()
+
+                    # Handle type and name
+                    # Find the last space to split type and name
+                    last_space_idx = param_type_and_name.rfind(" ")
+                    if last_space_idx != -1:
+                        param_type = param_type_and_name[:last_space_idx].strip()
+                        param_name = param_type_and_name[last_space_idx:].strip()
+                    else:
+                        # If no space, assume the whole thing is the name and type is implicit (e.g., in templates)
+                        # This might need further refinement for edge cases.
+                        param_type = ""
+                        param_name = param_type_and_name.strip()
+                    
+                    parameters.append(
+                        Parameter(
+                            name=param_name,
+                            type=param_type,
+                            default_value=default_value
+                        )
+                    )
             methods.append(
                 Function(name=name, parameters=parameters, return_type=return_type.strip())
             )
@@ -162,12 +186,35 @@ def parse_declarations(content: str) -> list[Declaration]:
         if params_str:
             for param in params_str.split(","):
                 param = param.strip()
-                parts = param.rsplit(" ", 1)
-                if len(parts) == 2:
-                    param_type, param_name = parts
-                    parameters.append(Parameter(name=param_name.strip(), type=param_type.strip()))
+                param_type_and_name = param
+                default_value = None
+
+                # Check for default value
+                if "=" in param:
+                    param_parts = param.split("=", 1)
+                    param_type_and_name = param_parts[0].strip()
+                    default_value = param_parts[1].strip()
+
+                # Handle type and name
+                # Find the last space to split type and name
+                last_space_idx = param_type_and_name.rfind(" ")
+                if last_space_idx != -1:
+                    param_type = param_type_and_name[:last_space_idx].strip()
+                    param_name = param_type_and_name[last_space_idx:].strip()
+                else:
+                    # If no space, assume the whole thing is the name and type is implicit (e.g., in templates)
+                    # This might need further refinement for edge cases.
+                    param_type = ""
+                    param_name = param_type_and_name.strip()
+                
+                parameters.append(
+                    Parameter(
+                        name=param_name,
+                        type=param_type,
+                        default_value=default_value
+                    )
+                )
         declarations.append(
             Function(name=name, parameters=parameters, return_type=return_type.strip())
         )
-
     return declarations
