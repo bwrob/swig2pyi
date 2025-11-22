@@ -17,8 +17,8 @@ class SwigFile:
 class Parameter:
     """Represents a function or method parameter."""
 
-    name: str
     type: str
+    name: str | None = None
     default_value: str | None = None
 
 

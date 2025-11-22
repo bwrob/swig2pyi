@@ -9,6 +9,30 @@ from .models import Class, Function, Parameter, SwigFile
 Declaration = Union[Class, Function]
 
 
+def _parse_parameter_type_and_name(param_str: str) -> tuple[str, str | None]:
+    param_str = param_str.strip()
+    # Regex to find an identifier at the end, optionally preceded by * or &
+    # This also handles template types, e.g., 'std::vector<int> someVec'
+    # The name is assumed to be a valid C++ identifier.
+    name_match = re.search(r"([a-zA-Z_]\w*)(?:\s*([*&]))?\s*$", param_str)
+    if name_match:
+        name = name_match.group(1)
+        type_str = param_str[:name_match.start()].strip()
+        
+        # If there's an asterisk or ampersand after the name, include it in the name
+        if name_match.group(2):
+            name += name_match.group(2)
+        
+        # If the type is empty, it means the whole string was the name, e.g., "int"
+        # In this case, the 'name' is actually the type, and there is no explicit name.
+        if not type_str:
+            return param_str, None # Treat whole string as type, no explicit name
+        return type_str, name
+    
+    # If no clear name is found, treat the whole string as the type, with no explicit name
+    return param_str, None
+
+
 def parse_module_name(swig_file: Path) -> str | None:
     """Parse a SWIG interface file to extract the module name.
 
@@ -195,17 +219,7 @@ def parse_declarations(content: str) -> list[Declaration]:
                     param_type_and_name = param_parts[0].strip()
                     default_value = param_parts[1].strip()
 
-                # Handle type and name
-                # Find the last space to split type and name
-                last_space_idx = param_type_and_name.rfind(" ")
-                if last_space_idx != -1:
-                    param_type = param_type_and_name[:last_space_idx].strip()
-                    param_name = param_type_and_name[last_space_idx:].strip()
-                else:
-                    # If no space, assume the whole thing is the name and type is implicit (e.g., in templates)
-                    # This might need further refinement for edge cases.
-                    param_type = ""
-                    param_name = param_type_and_name.strip()
+                param_type, param_name = _parse_parameter_type_and_name(param_type_and_name)
                 
                 parameters.append(
                     Parameter(
