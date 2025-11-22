@@ -1,9 +1,9 @@
 """Logic for generating .pyi content."""
 
-import datetime
+import keyword
 import re
 from collections import defaultdict
-import keyword
+
 from .models import Class, Declaration, Function, Parameter
 
 # A simple type mapping from C++ to Python
@@ -16,7 +16,7 @@ CPP_TO_PY_TYPE_MAP = {
     "Spread": "float",
     "Volatility": "float",
     "Time": "float",
-    "InterestRate": "float", # Add InterestRate here
+    "InterestRate": "float",  # Add InterestRate here
     "bool": "bool",
     "std::string": "str",
     "void": "None",
@@ -28,7 +28,7 @@ CPP_TO_PY_DEFAULT_MAP = {
 
 
 def _map_cpp_type_to_py(cpp_type: str) -> str:
-    original_cpp_type = cpp_type # Keep original for recursive calls
+    original_cpp_type = cpp_type  # Keep original for recursive calls
 
     # Handle std::vector<T> -> list[mapped_T]
     vector_match = re.match(r"std::vector<(.*?)>", cpp_type)
@@ -36,7 +36,7 @@ def _map_cpp_type_to_py(cpp_type: str) -> str:
         inner_type = vector_match.group(1).strip()
         mapped_inner_type = _map_cpp_type_to_py(inner_type)  # Recursive call
         return f"list[{mapped_inner_type}]"
-    
+
     # Handle ext::shared_ptr<T> -> mapped_T
     shared_ptr_match = re.match(r"ext::shared_ptr<(.*?)>", cpp_type)
     if shared_ptr_match:
@@ -45,7 +45,7 @@ def _map_cpp_type_to_py(cpp_type: str) -> str:
 
     # Remove const and & only for basic types after complex type handling
     cpp_type = cpp_type.replace("const ", "").replace("&", "").strip()
-    
+
     # Handle specific types
     if cpp_type == "Period":
         return "datetime.timedelta"
@@ -82,7 +82,7 @@ def generate_pyi(declarations: list[Declaration]) -> str:
             lines.append(f"class {decl.name}:")
             if not decl.methods:
                 lines.append("    ...")
-            
+
             # Group methods by name to handle overloads
             methods_by_name = defaultdict(list)
             for method in decl.methods:
@@ -100,12 +100,12 @@ def generate_pyi(declarations: list[Declaration]) -> str:
                     if method_name == decl.name:
                         method_name = "__init__"
                         return_type = "None"
-                    elif keyword.iskeyword(method_name): # Handle Python keywords
+                    elif keyword.iskeyword(method_name):  # Handle Python keywords
                         method_name += "_"
-                    
+
                     params = _format_parameters(method.parameters)
                     self_param = "self"  # __init__ always has self, no special handling here for now
-                    
+
                     # Handle self parameter and empty parameter list
                     if not params:
                         formatted_params = self_param
@@ -118,7 +118,7 @@ def generate_pyi(declarations: list[Declaration]) -> str:
             lines.append("")
         elif isinstance(decl, Function):
             function_name = decl.name
-            if keyword.iskeyword(function_name): # Handle Python keywords
+            if keyword.iskeyword(function_name):  # Handle Python keywords
                 function_name += "_"
             params = _format_parameters(decl.parameters)
             return_type = _map_cpp_type_to_py(decl.return_type)
@@ -126,4 +126,3 @@ def generate_pyi(declarations: list[Declaration]) -> str:
             lines.append("")
 
     return "\n".join(lines)
-

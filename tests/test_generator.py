@@ -2,11 +2,9 @@
 
 from pathlib import Path
 
-import pytest
-
+from swig_pyi.generator import generate_pyi
 from swig_pyi.models import Class
 from swig_pyi.parser import parse_swig_file
-from swig_pyi.generator import generate_pyi
 
 
 def test_generate_pyi_bond_class():
@@ -41,7 +39,11 @@ def test_generate_pyi_yield_term_structure_class():
     _, _, declarations = parse_swig_file(entry_file)
 
     yts_class = next(
-        (d for d in declarations if isinstance(d, Class) and d.name == "YieldTermStructure"),
+        (
+            d
+            for d in declarations
+            if isinstance(d, Class) and d.name == "YieldTermStructure"
+        ),
         None,
     )
     assert yts_class is not None
