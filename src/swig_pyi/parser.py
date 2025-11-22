@@ -113,19 +113,25 @@ def parse_declarations(content: str) -> list[Declaration]:
 
     declarations: list[Declaration] = []
     
-    # Parse classes
-    for class_match in class_pattern.finditer(content):
+    # Extract class matches
+    class_matches = list(class_pattern.finditer(content))
+    
+    # Process classes and build non_class_content
+    non_class_content_parts = []
+    last_end = 0
+    for class_match in class_matches:
+        # Add content *before* the current class to non_class_content_parts
+        non_class_content_parts.append(content[last_end:class_match.start()])
+        
+        # Parse the class
         class_name, class_body = class_match.groups()
         # Remove C++ comments, preprocessor directives, SWIG directives, and access specifiers
         clean_class_body = class_body
-        # Remove single-line comments // ...
         clean_class_body = re.sub(r'//.*$', '', clean_class_body, flags=re.MULTILINE)
-        # Remove multi-line comments /* ... */
         clean_class_body = re.sub(r'/\*.*?\*/', '', clean_class_body, flags=re.DOTALL)
-        # Remove lines containing preprocessor directives (#) or SWIG directives (%)
         clean_class_body = re.sub(r'^\s*(#|%).*$', '', clean_class_body, flags=re.MULTILINE)
-        # Remove lines containing access specifiers (public:, private:, protected:)
         clean_class_body = re.sub(r'^\s*(public|private|protected):.*$', '', clean_class_body, flags=re.MULTILINE)
+        
         methods = []
         for method_match in function_pattern.finditer(clean_class_body):
             return_type, name, params_str = method_match.groups()
@@ -141,5 +147,27 @@ def parse_declarations(content: str) -> list[Declaration]:
                 Function(name=name, parameters=parameters, return_type=return_type.strip())
             )
         declarations.append(Class(name=class_name, methods=methods))
+        
+        # Update last_end to after the current class
+        last_end = class_match.end()
+
+    # Add any remaining content after the last class to non_class_content_parts
+    non_class_content_parts.append(content[last_end:])
+    non_class_content = "".join(non_class_content_parts)
+
+    # Parse standalone functions from the content that had classes removed
+    for func_match in function_pattern.finditer(non_class_content):
+        return_type, name, params_str = func_match.groups()
+        parameters = []
+        if params_str:
+            for param in params_str.split(","):
+                param = param.strip()
+                parts = param.rsplit(" ", 1)
+                if len(parts) == 2:
+                    param_type, param_name = parts
+                    parameters.append(Parameter(name=param_name.strip(), type=param_type.strip()))
+        declarations.append(
+            Function(name=name, parameters=parameters, return_type=return_type.strip())
+        )
 
     return declarations
