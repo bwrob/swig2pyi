@@ -1,0 +1,8 @@
+{
+    "ignore": [
+        "examples",
+        "tests/assets"
+    ],
+    "pythonVersion": "3.10",
+    "typeCheckingMode": "all"
+}

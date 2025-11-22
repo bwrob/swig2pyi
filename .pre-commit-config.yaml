@@ -11,8 +11,8 @@ repos:
     -   id: ruff
         args: [--fix, --unsafe-fixes]
     -   id: ruff-format
--   repo: https://github.com/pre-commit/mirrors-basedpyright
-    rev: v1.1.362
+-   repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+    rev: v1.13.0
     hooks:
     -   id: basedpyright
         args: [--project, pyrightconfig.json]
