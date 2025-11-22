@@ -1,0 +1,59 @@
+[project]
+    authors = [
+        { name = "bwrob", email = "bartosz.marcin.wroblewski@gmail.com" },
+    ]
+    classifiers = [
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ]
+    dependencies = []
+    description = "Generate Python typing stubs from SWIG interface files."
+    license = 'MIT'
+    license-files = ['LICENSE']
+    name = "swig-pyi"
+    readme = "README.md"
+    requires-python = ">=3.12,<3.15"
+    version = "0.1.0"
+
+    [project.urls]
+        Changelog     = "https://bwrob.github.io/swig-pyi/changelog/"
+        Documentation = "https://bwrob.github.io/swig-pyi/"
+        Homepage      = "https://bwrob.github.io/swig-pyi/"
+        Source        = "https://github.com/bwrob/swig-pyi/"
+
+    [project.scripts]
+        "swig-pyi" = "swig_pyi._cli:main"
+
+
+[dependency-groups]
+
+    dev = [
+        "basedpyright>=1.31.2",
+        "coverage>=7.10.4",
+        "diff-cover>=9.6.0",
+        "poethepoet>=0.37.0",
+        "pre-commit>=3.7.1",
+        "pytest>=8.4.1",
+        "pytest-cov>=6.2.1",
+        "ruff>=0.12.9",
+        "tach>=0.29.0",
+    ]
+    docs = [
+        "mkdocs>=1.6.1",
+        "mkdocs-git-authors-plugin>=0.10.0",
+        "mkdocs-git-committers-plugin-2>=2.5.0",
+        "mkdocs-git-revision-date-localized-plugin>=1.4.7",
+        "mkdocs-material>=9.6.17",
+        "mkdocs-typer2>=0.1.5",
+        "mkdocstrings-python>=1.17.0",
+        "pymdown-extensions>=10.16.1",
+    ]
+
+
+[tool.uv]
+    package          = true
+    required-version = ">=0.8.0"

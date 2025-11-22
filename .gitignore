@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local history for Visual Studio Code
+.vscode
+
+.temp
+.tmp
