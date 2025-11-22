@@ -172,17 +172,7 @@ def parse_declarations(content: str) -> list[Declaration]:
                         param_type_and_name = param_parts[0].strip()
                         default_value = param_parts[1].strip()
 
-                    # Handle type and name
-                    # Find the last space to split type and name
-                    last_space_idx = param_type_and_name.rfind(" ")
-                    if last_space_idx != -1:
-                        param_type = param_type_and_name[:last_space_idx].strip()
-                        param_name = param_type_and_name[last_space_idx:].strip()
-                    else:
-                        # If no space, assume the whole thing is the name and type is implicit (e.g., in templates)
-                        # This might need further refinement for edge cases.
-                        param_type = ""
-                        param_name = param_type_and_name.strip()
+                    param_type, param_name = _parse_parameter_type_and_name(param_type_and_name)
                     
                     parameters.append(
                         Parameter(

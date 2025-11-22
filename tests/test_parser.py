@@ -4,6 +4,7 @@ from pathlib import Path
 
 from swig_pyi.models import Class
 from swig_pyi.parser import (
+    _parse_parameter_type_and_name,
     get_included_files,
     parse_declarations,
     parse_module_name,
@@ -85,3 +86,44 @@ def test_parse_declarations() -> None:
     assert is_tradable_method.parameters[1].name == "settlementDate"
     assert is_tradable_method.parameters[1].type == "Date"
     assert is_tradable_method.parameters[1].default_value == "Date()"
+
+
+def test_parse_parameter_type_and_name_unnamed() -> None:
+    """Test _parse_parameter_type_and_name with an unnamed parameter."""
+    # Given
+    param_str = "int"
+
+    # When
+    param_type, param_name = _parse_parameter_type_and_name(param_str)
+
+    # Then
+    assert param_type == "int"
+    assert param_name is None
+
+
+def test_parse_parameter_type_and_name_complex_type() -> None:
+    """Test _parse_parameter_type_and_name with a complex type."""
+    # Given
+    param_str = "const std::string& name"
+
+    # When
+    param_type, param_name = _parse_parameter_type_and_name(param_str)
+
+    # Then
+    assert param_type == "const std::string&"
+    assert param_name == "name"
+
+
+def test_parse_parameter_type_and_name_template_type() -> None:
+    """Test _parse_parameter_type_and_name with a template type."""
+    # Given
+    param_str = "std::vector<int> myVec"
+
+    # When
+    param_type, param_name = _parse_parameter_type_and_name(param_str)
+
+    # Then
+    assert param_type == "std::vector<int>"
+    assert param_name == "myVec"
+
+
