@@ -41,6 +41,18 @@ class StubEmitter:
 
     def visit_class(self, cls: Class):
         name = cls.name
+        
+        # Filter invalid or unwanted classes
+        if name.startswith("std::"):
+            return
+        if "<" in name:
+             # Template instantiation without %template rename
+            return
+            
+        # Normalize namespace (e.g. QuantLib::Date -> Date)
+        if "::" in name:
+            name = name.split("::")[-1]
+
         # If kind is struct/class, usually maps to class.
         self.write(f"class {name}:")
         self.indent()
@@ -93,6 +105,7 @@ class StubEmitter:
 
     def visit_function(self, func: CDecl, is_method: bool = False):
         name = func.name
+        # print(f"DEBUG: Visiting {name}, parms: {len(func.parms)}")
         if is_method and self.tm.config.rename_operators:
             name = self.map_operator(name)
         
@@ -134,6 +147,7 @@ class StubEmitter:
         return ", ".join(parts)
 
     def map_operator(self, name: str) -> str:
+        normalized = name.replace(" ", "")
         mapping = {
             "operator+": "__add__",
             "operator-": "__sub__",
@@ -148,4 +162,4 @@ class StubEmitter:
             "operator()": "__call__",
             "operator[]": "__getitem__",
         }
-        return mapping.get(name, name)
+        return mapping.get(normalized, name)
