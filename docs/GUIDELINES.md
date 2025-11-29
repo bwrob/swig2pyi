@@ -1,10 +1,10 @@
-# Project Guidelines for swig-pyi
+# Project Guidelines for swig2pyi
 
-This document outlines the development guidelines, project practices, and contribution guide for the `swig-pyi` project.
+This document outlines the development guidelines, project practices, and contribution guide for the `swig2pyi` project.
 
 ## 1. Project Overview
 
-`swig-pyi` is a command-line tool written in Python to generate Python typing stubs (`.pyi`) from SWIG interface files (`.i`).
+`swig2pyi` is a command-line tool written in Python to generate Python typing stubs (`.pyi`) from SWIG interface files (`.i`).
 
 ### 1.1. Tech Stack & Tooling
 
@@ -23,10 +23,10 @@ The primary motivation for this project is to automate the generation of fully a
 
 ## 2. Core Functionality
 
-This section details the expected behavior and features of `swig-pyi`.
+This section details the expected behavior and features of `swig2pyi`.
 
 1.  **Input:**
-    The `swig-pyi` command should accept:
+    The `swig2pyi` command should accept:
     *   A single `.i` file path.
     *   A directory path, in which case `.i` files within that directory (and potentially subdirectories, if recursive discovery is enabled) should be processed.
     *   All included files (via SWIG's `%include` directive) should be taken into account and processed as part of the input.
@@ -37,7 +37,7 @@ This section details the expected behavior and features of `swig-pyi`.
     The generated `.pyi` file should be placed in a user-specified output directory or printed to standard output.
 
 3.  **SWIG Features:**
-    Based on the analysis of QuantLib-SWIG interface files, the `swig-pyi` tool should support the following SWIG features and address their implications for Python type hint generation:
+    Based on the analysis of QuantLib-SWIG interface files, the `swig2pyi` tool should support the following SWIG features and address their implications for Python type hint generation:
     *   **Core Directives:**
         *   `%module`: For defining the module name.
         *   `%include`: To handle included interface files and their definitions.
@@ -58,8 +58,8 @@ This section details the expected behavior and features of `swig-pyi`.
         *   **STL and Custom Containers:** Correctly map C++ containers to their Python type hint equivalents.
         *   **Callbacks/Delegates:** Type hints for Python callable objects used as callbacks for C++ functions/methods via directors.
 
-    *   **Implications for `swig-pyi`:**
-        Generating accurate type hints will require `swig-pyi` to:
+    *   **Implications for `swig2pyi`:**
+        Generating accurate type hints will require `swig2pyi` to:
         *   Perform robust parsing of `.i` files to extract all relevant SWIG directives and their arguments.
         *   Understand the C++ type system and how SWIG maps it to Python.
         *   Be able to follow `%include` chains and resolve type dependencies across multiple files.
@@ -69,7 +69,7 @@ This section details the expected behavior and features of `swig-pyi`.
 
 ## 3. Development Guidelines
 
-This section outlines the coding style, architectural principles, testing strategy, and other development practices for `swig-pyi`.
+This section outlines the coding style, architectural principles, testing strategy, and other development practices for `swig2pyi`.
 
 ### 3.1. Coding Style & Architecture
 
@@ -100,7 +100,7 @@ This section outlines the coding style, architectural principles, testing strate
 *   **Tooling:** Use `uv` for all dependency management and package building tasks.
 *   **Dependency Range:** The project should aim to minimize its dependency range.
 *   **Python Version:**
-    *   The `swig-pyi` tool itself should be written for **Python 3.12+**.
+    *   The `swig2pyi` tool itself should be written for **Python 3.12+**.
     *   The generated type annotations (`.pyi` files) must be compliant with **Python 3.10+**.
 
 ### 3.5. Branching and Pull Requests
@@ -117,14 +117,14 @@ This project is open to contributions from the community.
 
 ### 4.1. Contributor Guidelines
 
-All contributions are welcome, from bug reports to pull requests. For detailed information on how to contribute, please see the [CONTRIBUTING.md](https://github.com/bwrob/swig-pyi/blob/main/CONTRIBUTING.md) file.
+All contributions are welcome, from bug reports to pull requests. For detailed information on how to contribute, please see the [CONTRIBUTING.md](https://github.com/bwrob/swig2pyi/blob/main/CONTRIBUTING.md) file.
 
 Key guidelines include:
-*   Follow the project's [Code of Conduct](https://github.com/bwrob/swig-pyi/blob/main/CODE_OF_CONDUCT.md).
+*   Follow the project's [Code of Conduct](https://github.com/bwrob/swig2pyi/blob/main/CODE_OF_CONDUCT.md).
 *   Use the issue tracker to report bugs and suggest enhancements.
 *   Submit pull requests with clear descriptions of the changes.
 *   Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages.
 
 ### 4.2. Code of Conduct
 
-All participants in the `swig-pyi` community are expected to adhere to the [Contributor Covenant Code of Conduct](https://github.com/bwrob/swig-pyi/blob/main/CODE_OF_CONDUCT.md). Please read the full text to understand what actions will and will not be tolerated.
+All participants in the `swig2pyi` community are expected to adhere to the [Contributor Covenant Code of Conduct](https://github.com/bwrob/swig2pyi/blob/main/CODE_OF_CONDUCT.md). Please read the full text to understand what actions will and will not be tolerated.

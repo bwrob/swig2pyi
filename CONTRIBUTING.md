@@ -1,10 +1,10 @@
-# Contributing to swig-pyi
+# Contributing to swig2pyi
 
-First off, thank you for considering contributing to `swig-pyi`! It's people like you that make open source great.
+First off, thank you for considering contributing to `swig2pyi`! It's people like you that make open source great.
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [swig-pyi Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior.
+This project and everyone participating in it is governed by the [swig2pyi Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior.
 
 ## How Can I Contribute?
 
@@ -15,7 +15,7 @@ This is one of the easiest and most helpful ways to contribute. If you're runnin
 -   **Use a clear and descriptive title** for the issue to identify the problem.
 -   **Describe the exact steps which reproduce the problem** in as much detail as possible.
 -   **Provide specific examples to demonstrate the steps.** Include links to files or projects, or copy/pasteable snippets, which you use in those examples.
--   **Include details about your environment** (e.g., operating system, Python version, `swig-pyi` version).
+-   **Include details about your environment** (e.g., operating system, Python version, `swig2pyi` version).
 
 ### Suggesting Enhancements
 
@@ -23,7 +23,7 @@ If you have an idea for a new feature or an improvement to an existing one, plea
 
 -   **Use a clear and descriptive title** for the issue to identify the suggestion.
 -   **Provide a step-by-step description of the suggested enhancement** in as many details as possible.
--   **Explain why this enhancement would be useful** to most `swig-pyi` users.
+-   **Explain why this enhancement would be useful** to most `swig2pyi` users.
 
 ### Pull Requests
 

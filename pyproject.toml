@@ -14,19 +14,19 @@
     description = "Generate Python typing stubs from SWIG interface files."
     license = 'MIT'
     license-files = ['LICENSE']
-    name = "swig-pyi"
+    name = "swig2pyi"
     readme = "README.md"
     requires-python = ">=3.12,<3.15"
     version = "0.1.0"
 
     [project.urls]
-        Changelog     = "https://bwrob.github.io/swig-pyi/changelog/"
-        Documentation = "https://bwrob.github.io/swig-pyi/"
-        Homepage      = "https://bwrob.github.io/swig-pyi/"
-        Source        = "https://github.com/bwrob/swig-pyi/"
+        Changelog     = "https://bwrob.github.io/swig2pyi/changelog/"
+        Documentation = "https://bwrob.github.io/swig2pyi/"
+        Homepage      = "https://bwrob.github.io/swig2pyi/"
+        Source        = "https://github.com/bwrob/swig2pyi/"
 
     [project.scripts]
-        "swig-pyi" = "swig_pyi._cli:main"
+        "swig2pyi" = "swig_pyi._cli:main"
 
 
 [dependency-groups]
