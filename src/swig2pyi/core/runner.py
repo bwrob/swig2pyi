@@ -21,10 +21,10 @@ class SwigRunner:
              # We don't raise immediately to allow instantiation, but run will fail.
              pass
 
-    def run(self, includes: List[str], interface_file: Path) -> str:
+    def run(self, includes: List[str], interface_file: Path, output_xml: Path) -> Path:
         """
-        Executes swig -xml -python -c++ -I... interface.i
-        Returns the XML output as a string.
+        Executes swig -xml -c++ -I... interface.i -o output_xml
+        Returns the path to the generated XML file.
         """
         cmd_env = os.environ.copy()
         
@@ -54,31 +54,19 @@ class SwigRunner:
                 cmd.append(f"-I{mocks_dir}")
 
         # Note: -xml and -python cannot be used together. 
-        # We use -xml to get the AST, and -DSWIGPYTHON to simulate the Python target definitions.
-        cmd.extend(["-xml", "-DSWIGPYTHON", "-c++"])
+        # We use -xml to get the AST.
+        # We DO NOT use -DSWIGPYTHON because it triggers %pythoncode and other implementation-specific
+        # directives that crash the XML parser or are irrelevant for the AST.
+        # We rely on our config and TypeManager to bridge the gap.
+        cmd.extend(["-xml", "-c++"])
+        
+        # Output file
+        cmd.extend(['-o', str(output_xml)])
         
         for inc in includes:
             cmd.append(f"-I{inc}")
             
         # Create a temporary wrapper file to inject preamble
-        # We define macros to silence unsupported directives from python.swg
-        preamble = """
-%define apply_cpptypes(x...)
-%enddef
-%define fragment(x...)
-%enddef
-%define typemap(x...)
-%enddef
-%define feature(x...)
-%enddef
-"""
-        # Note: We are ignoring typemaps/features because they cause parsing errors in -xml mode 
-        # or are irrelevant for AST generation. 
-        # However, the user wanted %feature("autodoc"). 
-        # If ignoring feature silences autodoc, that's bad.
-        # But we can't easily parse them if they use unknown directives.
-        # Let's try to ONLY silence known bad directives.
-        
         preamble = """
 %define apply_cpptypes(x...)
 %enddef
@@ -101,14 +89,18 @@ class SwigRunner:
         
         # Execute
         try:
-            result = subprocess.run(
+            subprocess.run(
                 cmd, 
                 capture_output=True, 
                 text=True, 
                 check=True,
                 env=cmd_env
             )
-            return result.stdout
+            
+            if output_xml.exists():
+                return output_xml
+            else:
+                raise RuntimeError("SWIG did not produce output file.")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"SWIG failed:\n{e.stderr}") from e
         finally:

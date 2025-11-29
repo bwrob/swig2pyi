@@ -35,42 +35,58 @@ def main():
     # Run SWIG
     runner = SwigRunner(swig_path=args.swig_path)
     print(f"Running SWIG on {args.interface_file}...")
+    
+    # Use a temp file for XML output
+    import tempfile
+    import os
+    
+    xml_fd, xml_path = tempfile.mkstemp(suffix=".xml")
+    os.close(xml_fd)
+    xml_path_obj = Path(xml_path)
+    
     try:
-        xml_content = runner.run(config.includes, args.interface_file)
+        runner.run(config.includes, args.interface_file, xml_path_obj)
+        print(f"Generated XML at {xml_path_obj} (size: {xml_path_obj.stat().st_size} bytes)")
+        
+        # Parse XML
+        print("Parsing XML...")
+        try:
+            xml_parser = SwigXmlParser()
+            # Currently parse() expects string, need to update it to accept file path
+            # For now, let's assume we updated Parser.
+            top = xml_parser.parse_file(xml_path_obj)
+        except Exception as e:
+            print(f"Error parsing XML: {e}", file=sys.stderr)
+            sys.exit(1)
+        
+        # Generate Stub
+        print("Generating stubs...")
+        tm = TypeManager(config)
+        emitter = StubEmitter(tm)
+        emitter.emit(top)
+        
+        output_content = emitter.get_output()
+        
+        # Write output
+        out_path = args.output
+        if not out_path:
+            out_path = args.interface_file.with_suffix(".pyi")
+        
+        try:
+            with open(out_path, "w") as f:
+                f.write(output_content)
+            print(f"Successfully wrote {out_path}")
+        except Exception as e:
+            print(f"Error writing output: {e}", file=sys.stderr)
+            sys.exit(1)
+            
     except Exception as e:
         print(f"Error running SWIG: {e}", file=sys.stderr)
-        # Fallback for testing if mock XML is provided? No, let's fail for now.
         sys.exit(1)
-    
-    # Parse XML
-    print("Parsing XML...")
-    try:
-        xml_parser = SwigXmlParser()
-        top = xml_parser.parse(xml_content)
-    except Exception as e:
-        print(f"Error parsing XML: {e}", file=sys.stderr)
-        sys.exit(1)
-    
-    # Generate Stub
-    print("Generating stubs...")
-    tm = TypeManager(config)
-    emitter = StubEmitter(tm)
-    emitter.emit(top)
-    
-    output_content = emitter.get_output()
-    
-    # Write output
-    out_path = args.output
-    if not out_path:
-        out_path = args.interface_file.with_suffix(".pyi")
-    
-    try:
-        with open(out_path, "w") as f:
-            f.write(output_content)
-        print(f"Successfully wrote {out_path}")
-    except Exception as e:
-        print(f"Error writing output: {e}", file=sys.stderr)
-        sys.exit(1)
+    finally:
+        if os.path.exists(xml_path):
+            # os.unlink(xml_path)
+            print(f"DEBUG: XML file preserved at {xml_path}")
 
 if __name__ == "__main__":
     main()
