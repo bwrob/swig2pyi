@@ -1,130 +1,98 @@
 # Project Guidelines for swig2pyi
 
-This document outlines the development guidelines, project practices, and contribution guide for the `swig2pyi` project.
+This document outlines the development guidelines, project practices, and architectural decisions for the `swig2pyi` project.
 
 ## 1. Project Overview
 
-`swig2pyi` is a command-line tool written in Python to generate Python typing stubs (`.pyi`) from SWIG interface files (`.i`).
+`swig2pyi` is a tool designed to generate high-quality Python typing stubs (`.pyi`) from SWIG interface files (`.i`).
 
-### 1.1. Tech Stack & Tooling
+### 1.1. Core Philosophy: "Universal Pipeline"
 
-*   **Language:** Python (versions 3.10-3.14)
+Unlike previous iterations or similar tools that parse `.i` files directly (which is fragile due to SWIG's complexity), `swig2pyi` leverages SWIG itself to produce an intermediate representation (XML).
+
+**The Pipeline:**
+1.  **SWIG Frontend:** Execute `swig -xml ...` to generate a comprehensive AST of the exposed C++ interface.
+2.  **Middle-End (Normalization):** Parse the XML into structured data objects using `pydantic-xml`. Normalize "dirty" C++ types (e.g., `boost::shared_ptr<QuantLib::Date>`) into clean Python types (e.g., `Date`) using a robust, configuration-driven Type Manager.
+3.  **Backend (Emission):** Iterate over the normalized AST to emit valid, idiomatic Python type stubs (`.pyi`).
+
+### 1.2. Tech Stack & Tooling
+
+*   **Language:** Python 3.12+
 *   **Package Management:** `uv`
-*   **Task Runner:** `poethepoet`
-*   **Testing:** `pytest`
-*   **Linting & Formatting:** `ruff`
-*   **Type Checking:** `basedpyright`
-*   **Documentation:** `mkdocs`
-*   **Dependency Analysis:** `tach`
+*   **Core Dependencies:**
+    *   `swig` (The Python module, used to locate the SWIG binary and environment)
+    *   `pydantic` & `pydantic-xml` (For declarative XML parsing)
+*   **Testing:** `pytest` (Unit tests and functional integration tests against QuantLib data)
+*   **Linting/Types:** `ruff` & `basedpyright`
 
-### 1.2. Motivation
+## 2. Architectural Components
 
-The primary motivation for this project is to automate the generation of fully annotated Python wrappers, specifically for libraries like Quantlib, which utilize SWIG. The goal is to provide a deterministic and programmable solution for generating `.pyi` stubs, moving beyond manual or AI-assisted methods (like Copilot-generated stubs) to integrate this process directly into a development workflow.
+### 2.1. The Configuration (`config.json`)
 
-## 2. Core Functionality
+The tool is completely driven by configuration, avoiding hardcoded library rules. A typical config includes:
+*   **`module_name`**: The target Python module name.
+*   **`includes`**: Paths to C++ headers or SWIG interfaces.
+*   **`type_map`**: Direct C++ to Python type mappings (e.g., `QuantLib::Real` -> `float`).
+*   **`smart_pointers`**: Regex-capable list of smart pointers to unwrap.
+*   **`containers`**: Mapping of C++ templates to Python ABCs (e.g., `std::vector` -> `typing.MutableSequence`).
 
-This section details the expected behavior and features of `swig2pyi`.
+### 2.2. The Runner (`SwigRunner`)
 
-1.  **Input:**
-    The `swig2pyi` command should accept:
-    *   A single `.i` file path.
-    *   A directory path, in which case `.i` files within that directory (and potentially subdirectories, if recursive discovery is enabled) should be processed.
-    *   All included files (via SWIG's `%include` directive) should be taken into account and processed as part of the input.
-    *   Optionally, a list of specific class and/or function names can be provided. In this scenario, only those named objects and any other objects recursively required for their type definitions should be processed to generate stubs.
+**Challenge:** SWIG's `-xml` output mode is mutually exclusive with language backends like `-python`. However, we need the XML to reflect the Python interface (including specific directives like `feature("autodoc")`).
 
-2.  **Output:**
-    The expected output is a single `.pyi` file. This single file is intended to serve as a consolidated stub for an entire module, such as an `__init__.pyi` file, which would provide typing information for an unannotated SWIG-wrapped Python library (e.g., `__init__.py` importing from the SWIG-generated module).
-    The generated `.pyi` file should be placed in a user-specified output directory or printed to standard output.
+**Solution:**
+*   The runner executes `swig -xml -DSWIGPYTHON`.
+*   **Mocks & Preamble:** Since we aren't loading the full standard `python.swg` library (which contains directives that crash the XML parser or are invalid in XML mode), the Runner injects:
+    1.  **Mocks:** Minimal `.i` files (e.g., `std_vector.i`, `boost_shared_ptr.i`) located in `src/swig2pyi/mocks`. These satisfy `%include` requirements without pulling in complex logic.
+    2.  **Preamble:** A dynamically generated set of macros (`%define`) to silence known directives that cause errors in XML mode (e.g., `%apply_cpptypes`, `%pythoncode`).
 
-3.  **SWIG Features:**
-    Based on the analysis of QuantLib-SWIG interface files, the `swig2pyi` tool should support the following SWIG features and address their implications for Python type hint generation:
-    *   **Core Directives:**
-        *   `%module`: For defining the module name.
-        *   `%include`: To handle included interface files and their definitions.
-        *   `%shared_ptr`: To correctly represent C++ `std::shared_ptr` (or aliased versions like `ext::shared_ptr`) as their Python equivalent with proper type hints (e.g., indicating non-nullable types or custom smart pointer wrappers).
-        *   `%template`: To generate type hints for specific instantiations of C++ template classes (e.g., `std::vector<int>` -> `list[int]`, `Handle<T>` -> `Handle[T_co]`).
-        *   `%extend`: To generate type hints for methods, properties, and constructors added to Python-wrapped classes via `%extend` blocks.
-        *   `%feature("kwargs")`: To reflect the ability to call constructors/methods with keyword arguments in the type hints.
-        *   `%feature("director")`: To generate correct type hints for Python classes that act as directors, inheriting from C++ base classes and overriding virtual methods. This requires representing Python-side implementations of C++ abstract interfaces.
-        *   `%pythoncode`: To parse and understand raw Python code injected into the wrappers, especially for factory functions that dynamically create templated classes.
-        *   `%typemap`: To interpret and generate type hints based on custom type conversions defined by `typemap` directives (e.g., `ext::optional<T>` to `Optional[T]`, `Array` to `list`).
-        *   `%rename`: To correctly map the C++ names to their Python-renamed counterparts in the type stubs.
-        *   `%define`: To understand and expand SWIG macros, as they encapsulate reusable wrapping patterns.
+### 2.3. The Parser (`SwigXmlParser`)
 
-    *   **Wrapped C++ Features:**
-        *   **Templates:** Support for various template instantiations, including STL containers (`std::vector`, `std::pair`) and custom library templates.
-        *   **Smart Pointers:** Accurate typing for objects managed by `shared_ptr`.
-        *   **Operator Overloading:** Proper representation of overloaded operators (`operator()`, arithmetic, comparison) as Python methods.
-        *   **STL and Custom Containers:** Correctly map C++ containers to their Python type hint equivalents.
-        *   **Callbacks/Delegates:** Type hints for Python callable objects used as callbacks for C++ functions/methods via directors.
+Uses `pydantic-xml` to define a declarative schema for the SWIG XML format. This avoids imperative XML traversal and ensures the AST is strongly typed before processing.
 
-    *   **Implications for `swig2pyi`:**
-        Generating accurate type hints will require `swig2pyi` to:
-        *   Perform robust parsing of `.i` files to extract all relevant SWIG directives and their arguments.
-        *   Understand the C++ type system and how SWIG maps it to Python.
-        *   Be able to follow `%include` chains and resolve type dependencies across multiple files.
-        *   Interpret and apply `typemap` rules to transform C++ types into Python type hints.
-        *   Handle the dynamic nature of `%extend` and `%pythoncode` to correctly infer types for added Python functionality.
-        *   Address the complexities introduced by directors and template instantiations to provide precise type annotations.
+### 2.4. The Type System (`TypeManager`)
+
+Responsible for the "C++ -> Python" translation layer.
+*   **Unwrapping:** Recursively unwraps smart pointers defined in the config.
+*   **Stripping:** Removes `const`, `volatile`, `&`, `*`.
+*   **Templating:** Translates `std::vector<T>` to `MutableSequence[T]` based on config rules.
 
 ## 3. Development Guidelines
 
-This section outlines the coding style, architectural principles, testing strategy, and other development practices for `swig2pyi`.
+### 3.1. Setting up the Environment
 
-### 3.1. Coding Style & Architecture
+```bash
+# Install dependencies
+uv sync
 
-*   **Style:** The coding style should be modern and functional, adhering strictly to the rules defined by `ruff` for formatting/linting and `pyright` for type checking.
-*   **Type Annotations:** All code must be fully and strictly type-annotated.
-*   **Constants:** Avoid hard-coded values within the code. Instead, use top-level constants or dedicated configuration modules.
-*   **Architecture:** The project should follow a clear, layered architecture to ensure separation of concerns and extensibility:
-    1.  **Helpers/Backend:** Common utilities and core logic for parsing SWIG files and generating stub content.
-    2.  **Execution Loop:** The main application logic that orchestrates the parsing, generation, and output processes.
-    3.  **Interface:** The command-line interface (CLI) that interacts with the user.
-*   **Extensibility:** The design must be modern and easy to extend, allowing for the addition of new SWIG functionality coverage in the future.
+# Activate virtual environment
+source .venv/bin/activate
+```
 
-### 3.2. Testing
+### 3.2. Running Tests
 
-*   **Framework:** Use `pytest` for all unit and functional testing.
-*   **Style:** Tests should be written in a functional style (no test classes), leveraging `pytest` features like fixtures and parametrization.
-*   **Scope:** The project should have extensive test coverage to ensure correctness and stability.
-*   **Testing Ground:**
-    *   The initial development and testing will be performed against the SWIG interface files of **QuantLib version 1.40**.
-    *   The long-term goal is to ensure compatibility with all QuantLib versions from **1.30 to 1.40**.
+We rely on a snapshot of QuantLib interface files located in `tests/data/quantlib-1.40`.
 
-### 3.3. Documentation
+```bash
+# Run all tests
+pytest
 
-*   **Framework:** Project documentation will be created and maintained using `mkdocs`.
+# Run a specific functional test (checking SWIG integration)
+swig2pyi tests/data/quantlib-1.40/quantlib.i --config src/swig2pyi/rules/quantlib.json
+```
 
-### 3.4. Dependency Management
+### 3.3. Adding New Features
 
-*   **Tooling:** Use `uv` for all dependency management and package building tasks.
-*   **Dependency Range:** The project should aim to minimize its dependency range.
-*   **Python Version:**
-    *   The `swig2pyi` tool itself should be written for **Python 3.12+**.
-    *   The generated type annotations (`.pyi` files) must be compliant with **Python 3.10+**.
+1.  **New SWIG Directive Support:**
+    *   If `swig -xml` fails on a new directive, add a silencing macro to `SwigRunner`'s preamble or improve the `mocks/` to handle it if it's essential for type info.
+2.  **New Type Rules:**
+    *   Update `TypeManager` logic and add the rule to `quantlib.json` (or the relevant config).
 
-### 3.5. Branching and Pull Requests
+### 3.4. Known Limitations
 
-*   **Branching Model:** The project will follow a trunk-based development model, with the `main` branch serving as the single source of truth.
-*   **Pull Requests (PRs):**
-    *   All changes must be submitted via a pull request.
-    *   PRs must pass all continuous integration (CI) checks before they can be merged.
-    *   The existing GitHub workflow in `.github/workflows` should be reviewed and improved to ensure robust CI.
+*   **Complex Templates:** Nested template parsing is currently rudimentary.
+*   **Directives:** Directives that rely on Python runtime logic (`%pythoncode`) are currently ignored/silenced to allow XML generation. Future work may involve parsing these blocks separately if they contain type info.
 
-## 4. Contribution & Community
+## 4. Contribution
 
-This project is open to contributions from the community.
-
-### 4.1. Contributor Guidelines
-
-All contributions are welcome, from bug reports to pull requests. For detailed information on how to contribute, please see the [CONTRIBUTING.md](https://github.com/bwrob/swig2pyi/blob/main/CONTRIBUTING.md) file.
-
-Key guidelines include:
-*   Follow the project's [Code of Conduct](https://github.com/bwrob/swig2pyi/blob/main/CODE_OF_CONDUCT.md).
-*   Use the issue tracker to report bugs and suggest enhancements.
-*   Submit pull requests with clear descriptions of the changes.
-*   Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages.
-
-### 4.2. Code of Conduct
-
-All participants in the `swig2pyi` community are expected to adhere to the [Contributor Covenant Code of Conduct](https://github.com/bwrob/swig2pyi/blob/main/CODE_OF_CONDUCT.md). Please read the full text to understand what actions will and will not be tolerated.
+See `CONTRIBUTING.md` for details on how to submit PRs.

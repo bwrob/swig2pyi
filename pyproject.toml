@@ -10,7 +10,11 @@
         "Programming Language :: Python :: 3.14",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ]
-    dependencies = []
+    dependencies = [
+        "pydantic>=2.10.0",
+        "pydantic-xml>=2.14.0",
+        "swig>=4.3.0",
+    ]
     description = "Generate Python typing stubs from SWIG interface files."
     license = 'MIT'
     license-files = ['LICENSE']
@@ -26,7 +30,7 @@
         Source        = "https://github.com/bwrob/swig2pyi/"
 
     [project.scripts]
-        "swig2pyi" = "swig_pyi._cli:main"
+        "swig2pyi" = "swig2pyi.main:main"
 
 
 [dependency-groups]
