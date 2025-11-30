@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -23,10 +24,20 @@ class Constructor(BaseModel):
 class Destructor(BaseModel):
     name: str
 
+class EnumItem(BaseModel):
+    name: str
+    value: Optional[str] = None
+
+class Enum(BaseModel):
+    name: str
+    items: List[EnumItem] = []
+
 class Class(BaseModel):
     name: str
     kind: Optional[str] = None # class, struct
+    bases: List[str] = []
     classes: List['Class'] = []
+    enums: List[Enum] = []
     constructors: List[Constructor] = []
     destructors: List[Destructor] = []
     cdecls: List[CDecl] = [] # methods and members
@@ -34,6 +45,7 @@ class Class(BaseModel):
 class Module(BaseModel):
     name: str
     classes: List[Class] = []
+    enums: List[Enum] = []
     cdecls: List[CDecl] = []
 
 class Top(BaseModel):
@@ -50,6 +62,13 @@ class SwigXmlParser:
             return self._parse_root(root)
         except ET.ParseError as e:
             raise RuntimeError(f"Failed to parse XML: {e}")
+
+    def parse_string(self, xml_content: str) -> Top:
+        try:
+            root = ET.fromstring(xml_content)
+            return self._parse_root(root)
+        except ET.ParseError as e:
+            raise RuntimeError(f"Failed to parse XML string: {e}")
 
     def _get_attributes(self, node: ET.Element) -> Dict[str, str]:
         """Extracts attributes from <attributelist> child."""
@@ -68,8 +87,6 @@ class SwigXmlParser:
 
     def _parse_parms(self, node: ET.Element) -> List[Parm]:
         parms = []
-        # parms can be in <parmlist> or direct?
-        # Let's check direct children 'parm' and children of direct 'parmlist'
         
         def extract_parm(p_node):
             p_attrs = self._get_attributes(p_node)
@@ -78,13 +95,20 @@ class SwigXmlParser:
                 type=p_attrs.get("type")
             )
 
-        for child in node:
-            if child.tag == "parm":
-                parms.append(extract_parm(child))
-            elif child.tag == "parmlist":
-                for p_child in child:
-                    if p_child.tag == "parm":
-                        parms.append(extract_parm(p_child))
+        def scan_children(parent):
+            for child in parent:
+                if child.tag == "parm":
+                    parms.append(extract_parm(child))
+                elif child.tag == "parmlist":
+                    scan_children(child)
+
+        # Scan direct children
+        scan_children(node)
+        
+        # Scan children of attributelist
+        attr_list = node.find("attributelist")
+        if attr_list is not None:
+            scan_children(attr_list)
                         
         return parms
 
@@ -106,32 +130,68 @@ class SwigXmlParser:
     def _parse_destructor(self, node: ET.Element, attrs: Dict[str, str]) -> Destructor:
         return Destructor(name=attrs.get("name", ""))
 
+    def _parse_enum(self, node: ET.Element, attrs: Dict[str, str]) -> Enum:
+        enum_obj = Enum(name=attrs.get("name", ""))
+        
+        for child in node:
+            if child.tag == "enumitem":
+                item_attrs = self._get_attributes(child)
+                enum_obj.items.append(EnumItem(
+                    name=item_attrs.get("name", ""),
+                    value=item_attrs.get("enumvalue")
+                ))
+        return enum_obj
+
     def _parse_class(self, node: ET.Element, attrs: Dict[str, str]) -> Class:
         cls = Class(
             name=attrs.get("name", ""),
             kind=attrs.get("kind")
         )
         
+        # Helper to parse baselist
+        def parse_baselist(bl_node):
+            for base in bl_node.findall("base"):
+                b_name = base.get("name")
+                if b_name:
+                    cls.bases.append(b_name)
+
+        # Check for baselist in attributelist
+        attr_list = node.find("attributelist")
+        if attr_list is not None:
+            baselist = attr_list.find("baselist")
+            if baselist is not None:
+                parse_baselist(baselist)
+        
+        # Check for direct baselist (fallback, though seemingly unused by SWIG 4)
+        baselist = node.find("baselist")
+        if baselist is not None:
+            parse_baselist(baselist)
+
         for child in node:
             if child.tag == "attributelist":
                 continue
-                
-            c_attrs = self._get_attributes(child)
             
             # SWIG XML often nests 'cdecl' for methods
             if child.tag == "cdecl":
+                c_attrs = self._get_attributes(child)
                 # Method or member
                 kind = c_attrs.get("kind")
                 if kind in ("function", "variable"): 
                      cls.cdecls.append(self._parse_cdecl(child, c_attrs))
                      
             elif child.tag == "constructor":
+                c_attrs = self._get_attributes(child)
                 cls.constructors.append(self._parse_constructor(child, c_attrs))
             elif child.tag == "destructor":
+                c_attrs = self._get_attributes(child)
                 cls.destructors.append(self._parse_destructor(child, c_attrs))
             elif child.tag == "class":
                  # Nested class
+                 c_attrs = self._get_attributes(child)
                  cls.classes.append(self._parse_class(child, c_attrs))
+            elif child.tag == "enum":
+                 e_attrs = self._get_attributes(child)
+                 cls.enums.append(self._parse_enum(child, e_attrs))
         
         return cls
 
@@ -172,6 +232,12 @@ class SwigXmlParser:
                         func = self._parse_cdecl(child, attrs)
                         module.cdecls.append(func)
                 
+                elif tag == "enum":
+                    attrs = self._get_attributes(child)
+                    # Check if ignoring? usually not for enums
+                    module.enums.append(self._parse_enum(child, attrs))
+                
+
                 elif tag in ("include", "namespace", "module", "top", "insert"):
                     visit(child)
         

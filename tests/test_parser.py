@@ -4,19 +4,45 @@ from swig2pyi.core.parser import SwigXmlParser
 def test_parse_simple_xml():
     xml = """
     <top>
-        <module name="QuantLib">
-            <class name="Date">
-                <constructor name="Date">
-                   <parm type="int" name="d"/>
+        <attributelist>
+            <attribute name="module" value="QuantLib"/>
+        </attributelist>
+        <module>
+            <class>
+                <attributelist>
+                    <attribute name="name" value="Date"/>
+                </attributelist>
+                <constructor>
+                    <attributelist>
+                         <attribute name="name" value="Date"/>
+                    </attributelist>
+                    <parm>
+                        <attributelist>
+                            <attribute name="name" value="d"/>
+                            <attribute name="type" value="int"/>
+                        </attributelist>
+                    </parm>
                 </constructor>
-                <cdecl kind="function" name="dayOfMonth" type="int"/>
+                <cdecl>
+                    <attributelist>
+                        <attribute name="kind" value="function"/>
+                        <attribute name="name" value="dayOfMonth"/>
+                        <attribute name="type" value="int"/>
+                    </attributelist>
+                </cdecl>
             </class>
-            <cdecl kind="function" name="testGlobal" type="void"/>
+            <cdecl>
+                <attributelist>
+                    <attribute name="kind" value="function"/>
+                    <attribute name="name" value="testGlobal"/>
+                    <attribute name="type" value="void"/>
+                </attributelist>
+            </cdecl>
         </module>
     </top>
     """
     parser = SwigXmlParser()
-    top = parser.parse(xml)
+    top = parser.parse_string(xml)
     assert top.module is not None
     assert top.module.name == "QuantLib"
     assert len(top.module.classes) == 1

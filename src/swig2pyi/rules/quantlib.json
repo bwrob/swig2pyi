@@ -13,7 +13,15 @@
     "QuantLib::Spread": "float",
     "QuantLib::Volatility": "float",
     "std::string": "str",
-    "bool": "bool"
+    "bool": "bool",
+    "Day": "int",
+    "Year": "int",
+    "Hour": "int",
+    "Minute": "int",
+    "Second": "int",
+    "Millisecond": "int",
+    "Microsecond": "int",
+    "Time": "float"
   },
   "smart_pointers": ["boost::shared_ptr", "std::shared_ptr"],
   "containers": {
