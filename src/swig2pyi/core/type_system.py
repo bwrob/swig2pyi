@@ -88,6 +88,25 @@ class TypeManager:
                 normalized_inner = self.normalize_type(inner_content)
                 return f"{py_abc}[{normalized_inner}]"
         
+        # 4b. General Template Handling (Fallback)
+        # If it looks like a template T<Arg>, try to normalize T and Arg.
+        # This catches Handle<(Quote)> -> Handle[Quote]
+        if '<' in cpp_type and cpp_type.endswith('>'):
+            # Naive split at first <
+            first_bracket = cpp_type.find('<')
+            base = cpp_type[:first_bracket].strip()
+            args = cpp_type[first_bracket+1:-1].strip()
+            
+            # Normalize base (e.g. QuantLib::Handle -> Handle)
+            norm_base = self.normalize_type(base)
+            
+            # Normalize args. 
+            # Note: This naive recursion works well for single args. 
+            # For "int, double", normalize_type returns "int, double" which is valid inside [].
+            norm_args = self.normalize_type(args)
+            
+            return f"{norm_base}[{norm_args}]"
+
         # 5. Namespace resolution
         py_type = cpp_type.replace("::", ".")
 

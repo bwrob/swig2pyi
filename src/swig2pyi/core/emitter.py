@@ -234,7 +234,7 @@ class StubEmitter:
                  p_name = f"arg{i}" # Default name if missing
             
             # Sanitize keywords
-            if p_name in ["from", "in", "global", "lambda", "class", "def", "pass", "None"]:
+            if p_name in ["from", "in", "global", "lambda", "class", "def", "pass", "None", "yield"]:
                 p_name += "_"
             
             p_type = self.tm.to_python(p.type) if p.type else "Any"

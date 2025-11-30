@@ -20,12 +20,14 @@ The "Universal Pipeline" described in `GUIDELINES.md` is fully implemented:
     *   Container mapping (`std::vector` -> `MutableSequence`).
     *   Namespace resolution and stripping (e.g., `QuantLib::Date` -> `Date`).
     *   Typedef handling via direct type mapping aliases.
+    *   Generic template normalization (e.g., `Handle<Quote>` -> `Handle[Quote]`).
 *   **Stub Emitter:**
     *   Emits valid Python 3 code with type hints.
     *   Handles Overloads via `@overload`.
     *   Groups methods and constructors.
     *   Emits Enums as `int` subclasses.
     *   Handles inheritance.
+    *   Sanitizes common Python keywords in parameter names (e.g., `from` -> `from_`).
 
 ### 2. Integration Verified
 *   Validated against a significant subset of QuantLib 1.40 interfaces (`ql_mini.i` extended).
@@ -34,6 +36,10 @@ The "Universal Pipeline" described in `GUIDELINES.md` is fully implemented:
     *   Type normalization.
     *   Enum parsing and emission.
     *   Full integration test generating `quantlib_mini.pyi`.
+
+## Known Issues
+*   **Parameter Name Sanitation:** The `yield` keyword, used as a parameter name in modules like `cashflows.i`, `instruments.i`, and `termstructures.i`, is not yet consistently sanitized, causing syntax errors in the generated `.pyi` file. These modules have been temporarily disabled in the test suite.
+*   **Complex Templates:** Some complex template types might still require manual mapping if the generic normalization logic doesn't cover them.
 
 ## Current Capabilities
 The tool can now generate high-quality `.pyi` stubs for complex C++ libraries exposed via SWIG, supporting:

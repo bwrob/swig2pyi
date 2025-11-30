@@ -23,7 +23,7 @@
     "Microsecond": "int",
     "Time": "float"
   },
-  "smart_pointers": ["boost::shared_ptr", "std::shared_ptr"],
+  "smart_pointers": ["boost::shared_ptr", "std::shared_ptr", "ext::shared_ptr"],
   "containers": {
     "std::vector": "typing.MutableSequence",
     "std::set": "typing.AbstractSet"
