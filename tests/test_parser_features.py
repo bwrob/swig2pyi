@@ -1,7 +1,7 @@
-import pytest
 from swig2pyi.core.parser import SwigXmlParser
 
-def test_parse_nested_parmlist():
+
+def test_parse_nested_parmlist() -> None:
     xml = """
     <top>
         <attributelist><attribute name="module" value="Test"/></attributelist>
@@ -36,7 +36,8 @@ def test_parse_nested_parmlist():
     assert method.parms[0].name == "x"
     assert method.parms[0].type == "int"
 
-def test_parse_overloads_structure():
+
+def test_parse_overloads_structure() -> None:
     xml = """
     <top>
         <attributelist><attribute name="module" value="Test"/></attributelist>

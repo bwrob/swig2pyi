@@ -4,71 +4,100 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 from pydantic import BaseModel
 
+
 # --- Models ---
 
 class Parm(BaseModel):
+    """Represents a parameter in a function or method."""
     name: Optional[str] = None
     type: Optional[str] = None
 
+
 class CDecl(BaseModel):
+    """Represents a C-style declaration (function, variable)."""
     name: str
     type: Optional[str] = None
-    kind: Optional[str] = None
+    kind: Optional[str] = None  # e.g. function, variable
     parms: List[Parm] = []
-    decl: Optional[str] = None # e.g. f(int)
+    decl: Optional[str] = None  # e.g. f(int)
+
 
 class Constructor(BaseModel):
+    """Represents a class constructor."""
     name: str
     parms: List[Parm] = []
 
+
 class Destructor(BaseModel):
+    """Represents a class destructor."""
     name: str
 
+
 class EnumItem(BaseModel):
+    """Represents an item within an enumeration."""
     name: str
     value: Optional[str] = None
 
+
 class Enum(BaseModel):
+    """Represents an enumeration."""
     name: str
     items: List[EnumItem] = []
 
+
 class Class(BaseModel):
+    """Represents a C++ class or struct."""
     name: str
-    kind: Optional[str] = None # class, struct
+    kind: Optional[str] = None  # class, struct
     bases: List[str] = []
-    classes: List['Class'] = []
-    enums: List[Enum] = []
+    classes: List['Class'] = []  # Nested classes
+    enums: List[Enum] = []  # Nested enums
     constructors: List[Constructor] = []
     destructors: List[Destructor] = []
-    cdecls: List[CDecl] = [] # methods and members
+    cdecls: List[CDecl] = []  # methods and members
+
 
 class Module(BaseModel):
+    """Represents a top-level module."""
     name: str
     classes: List[Class] = []
     enums: List[Enum] = []
     cdecls: List[CDecl] = []
 
+
 class Top(BaseModel):
+    """Represents the top-level structure of the parsed XML."""
     module: Optional[Module] = None
+
 
 # --- Parser ---
 
 class SwigXmlParser:
+    """
+    Parses SWIG-generated XML into a structured AST.
+    """
     def parse_file(self, file_path: Path) -> Top:
-        # Load whole tree into memory (2.8MB is fine)
+        """
+        Parse an XML file from SWIG.
+        """
         try:
-            tree = ET.parse(str(file_path))
+            tree = ET.parse(str(file_path))  # noqa: S314
             root = tree.getroot()
             return self._parse_root(root)
         except ET.ParseError as e:
-            raise RuntimeError(f"Failed to parse XML: {e}")
+            msg = f"Failed to parse XML: {e}"
+            raise RuntimeError(msg) from e
 
     def parse_string(self, xml_content: str) -> Top:
+        """
+        Parse an XML string from SWIG.
+        """
         try:
-            root = ET.fromstring(xml_content)
+            root = ET.fromstring(xml_content)  # noqa: S314
             return self._parse_root(root)
         except ET.ParseError as e:
-            raise RuntimeError(f"Failed to parse XML string: {e}")
+            msg = f"Failed to parse XML string: {e}"
+            raise RuntimeError(msg) from e
 
     def _get_attributes(self, node: ET.Element) -> Dict[str, str]:
         """Extracts attributes from <attributelist> child."""
@@ -86,16 +115,19 @@ class SwigXmlParser:
         return attrs
 
     def _parse_parms(self, node: ET.Element) -> List[Parm]:
-        parms = []
+        """
+        Parses parameters from a node, looking in direct children and attributelist.
+        """
+        parms: List[Parm] = []
         
-        def extract_parm(p_node):
+        def extract_parm(p_node: ET.Element) -> Parm:
             p_attrs = self._get_attributes(p_node)
             return Parm(
                 name=p_attrs.get("name"),
                 type=p_attrs.get("type")
             )
 
-        def scan_children(parent):
+        def scan_children(parent: ET.Element) -> None:
             for child in parent:
                 if child.tag == "parm":
                     parms.append(extract_parm(child))
@@ -113,6 +145,7 @@ class SwigXmlParser:
         return parms
 
     def _parse_cdecl(self, node: ET.Element, attrs: Dict[str, str]) -> CDecl:
+        """Parses a C-style declaration."""
         return CDecl(
             name=attrs.get("name", ""),
             type=attrs.get("type"),
@@ -122,15 +155,18 @@ class SwigXmlParser:
         )
 
     def _parse_constructor(self, node: ET.Element, attrs: Dict[str, str]) -> Constructor:
+        """Parses a constructor declaration."""
         return Constructor(
             name=attrs.get("name", ""),
             parms=self._parse_parms(node)
         )
     
-    def _parse_destructor(self, node: ET.Element, attrs: Dict[str, str]) -> Destructor:
+    def _parse_destructor(self, node: ET.Element, attrs: Dict[str, str]) -> Destructor: # noqa: ARG002
+        """Parses a destructor declaration."""
         return Destructor(name=attrs.get("name", ""))
 
     def _parse_enum(self, node: ET.Element, attrs: Dict[str, str]) -> Enum:
+        """Parses an enumeration."""
         enum_obj = Enum(name=attrs.get("name", ""))
         
         for child in node:
@@ -142,14 +178,15 @@ class SwigXmlParser:
                 ))
         return enum_obj
 
-    def _parse_class(self, node: ET.Element, attrs: Dict[str, str]) -> Class:
+    def _parse_class(self, node: ET.Element, attrs: Dict[str, str]) -> Class: # noqa: C901, PLR0912
+        """Parses a C++ class or struct declaration."""
         cls = Class(
             name=attrs.get("name", ""),
             kind=attrs.get("kind")
         )
         
         # Helper to parse baselist
-        def parse_baselist(bl_node):
+        def parse_baselist(bl_node: ET.Element) -> None:
             for base in bl_node.findall("base"):
                 b_name = base.get("name")
                 if b_name:
@@ -195,8 +232,8 @@ class SwigXmlParser:
         
         return cls
 
-    def _parse_root(self, root: ET.Element) -> Top:
-        # Find module name
+    def _parse_root(self, root: ET.Element) -> Top: # noqa: C901, PLR0912
+        """Parses the root XML element to build the module AST."""
         top_attrs = self._get_attributes(root)
         module_name = top_attrs.get("module", "Unknown")
         
@@ -204,7 +241,7 @@ class SwigXmlParser:
         top = Top(module=module)
         
         # Recursive traversal
-        def visit(node):
+        def visit(node: ET.Element) -> None: # noqa: C901, PLR0912
             for child in node:
                 tag = child.tag
                 if tag == "attributelist":
@@ -237,7 +274,6 @@ class SwigXmlParser:
                     # Check if ignoring? usually not for enums
                     module.enums.append(self._parse_enum(child, attrs))
                 
-
                 elif tag in ("include", "namespace", "module", "top", "insert"):
                     visit(child)
         

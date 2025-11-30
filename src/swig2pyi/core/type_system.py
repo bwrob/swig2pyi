@@ -1,8 +1,15 @@
+
+"""Type normalization and mapping system."""
 import re
+
 from .config import Config
 
+
 class TypeManager:
-    def __init__(self, config: Config):
+    """Manages C++ to Python type conversions based on configuration."""
+
+    def __init__(self, config: Config) -> None:
+        """Initialize with configuration."""
         self.config = config
         self._smart_ptr_regex = self._build_smart_ptr_regex()
         # Regex to strip SWIG type prefixes like p., r., q(const)., a(10).
@@ -16,9 +23,49 @@ class TypeManager:
         return re.compile(rf"^(?:{combined})\s*<(.+)>$")
 
     def normalize_type(self, cpp_type: str) -> str:
+        """Normalize a C++ type string to a valid Python type hint."""
         # 0. Basic cleanup
         cpp_type = cpp_type.strip()
 
+        # 1. Clean SWIG prefixes and C++ qualifiers
+        cpp_type = self._clean_cpp_type(cpp_type)
+
+        # 2. Unwrap Smart Pointers
+        # Check if the type matches a smart pointer pattern.
+        match = self._smart_ptr_regex.match(cpp_type)
+        if match:
+            inner_type = match.group(1)
+            return self.normalize_type(inner_type)
+
+        # 3. Resolve Typedefs (Type Map)
+        mapped_type = self._resolve_typedefs(cpp_type)
+        if mapped_type:
+            return mapped_type
+
+        # 4. Handle Templates (Containers)
+        container_type = self._resolve_containers(cpp_type)
+        if container_type:
+            return container_type
+
+        # 4b. General Template Handling (Fallback)
+        template_type = self._resolve_general_template(cpp_type)
+        if template_type:
+            return template_type
+
+        # 5. Namespace resolution
+        py_type = cpp_type.replace("::", ".")
+
+        # 6. Strip module name if it's the current module
+        if self.config.module_name and py_type.startswith(self.config.module_name + "."):
+            py_type = py_type[len(self.config.module_name) + 1:]
+
+        return py_type
+
+    def to_python(self, cpp_type_str: str) -> str:
+        """Public interface to convert a C++ type string to a Python type hint."""
+        return self.normalize_type(cpp_type_str)
+
+    def _clean_cpp_type(self, cpp_type: str) -> str:
         # 1. Remove SWIG internal type prefixes
         # e.g. p.q(const).char -> char
         # e.g. r.QuantLib::Date -> QuantLib::Date
@@ -30,28 +77,23 @@ class TypeManager:
             cpp_type = new_type
 
         # 1b. Strip standard C++ qualifiers (const, volatile) that might remain or exist
-        # We replace "const " with empty string. 
+        # We replace "const " with empty string.
         cpp_type = cpp_type.replace("const ", "")
         cpp_type = cpp_type.replace("volatile ", "")
         cpp_type = cpp_type.strip()
 
         # Remove trailing reference (&) and pointer (*) characters.
-        while cpp_type and (cpp_type.endswith("&") or cpp_type.endswith("*")):
+        while cpp_type and (cpp_type.endswith(("&", "*"))):
             cpp_type = cpp_type[:-1].strip()
-        
+
         # 1c. Strip surrounding parentheses if present
         # e.g. (Date) -> Date
         while cpp_type.startswith("(") and cpp_type.endswith(")"):
             cpp_type = cpp_type[1:-1].strip()
 
-        # 2. Unwrap Smart Pointers
-        # Check if the type matches a smart pointer pattern.
-        match = self._smart_ptr_regex.match(cpp_type)
-        if match:
-            inner_type = match.group(1)
-            return self.normalize_type(inner_type)
+        return cpp_type
 
-        # 3. Resolve Typedefs (Type Map)
+    def _resolve_typedefs(self, cpp_type: str) -> str | None:
         if cpp_type in self.config.type_map:
             return self.config.type_map[cpp_type]
 
@@ -80,44 +122,36 @@ class TypeManager:
         if cpp_type in basic_types:
             return basic_types[cpp_type]
 
-        # 4. Handle Templates (Containers)
+        return None
+
+    def _resolve_containers(self, cpp_type: str) -> str | None:
         for cpp_container, py_abc in self.config.containers.items():
             prefix = cpp_container + "<"
             if cpp_type.startswith(prefix) and cpp_type.endswith(">"):
                 inner_content = cpp_type[len(prefix):-1].strip()
                 normalized_inner = self.normalize_type(inner_content)
                 return f"{py_abc}[{normalized_inner}]"
-        
-        # 4b. General Template Handling (Fallback)
+        return None
+
+    def _resolve_general_template(self, cpp_type: str) -> str | None:
         # If it looks like a template T<Arg>, try to normalize T and Arg.
         # This catches Handle<(Quote)> -> Handle[Quote]
-        if '<' in cpp_type and cpp_type.endswith('>'):
+        if "<" in cpp_type and cpp_type.endswith(">"):
             # Naive split at first <
-            first_bracket = cpp_type.find('<')
+            first_bracket = cpp_type.find("<")
             base = cpp_type[:first_bracket].strip()
             args = cpp_type[first_bracket+1:-1].strip()
-            
+
             # Normalize base (e.g. QuantLib::Handle -> Handle)
             norm_base = self.normalize_type(base)
-            
-            # Normalize args. 
-            # Note: This naive recursion works well for single args. 
-            # For "int, double", normalize_type returns "int, double" which is valid inside [].
+
+            # Normalize args.
+            # Note: This naive recursion works well for single args.
+            # For "int, double", normalize_type returns "int, double"
+            # which is valid inside [].
             norm_args = self.normalize_type(args)
-            
+
             return f"{norm_base}[{norm_args}]"
+        return None
 
-        # 5. Namespace resolution
-        py_type = cpp_type.replace("::", ".")
 
-        # 6. Strip module name if it's the current module
-        if self.config.module_name and py_type.startswith(self.config.module_name + "."):
-            py_type = py_type[len(self.config.module_name) + 1:]
-        
-        return py_type
-
-    def to_python(self, cpp_type_str: str) -> str:
-        """
-        Public interface to convert a C++ type string to a Python type hint.
-        """
-        return self.normalize_type(cpp_type_str)

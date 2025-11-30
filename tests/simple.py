@@ -4,7 +4,6 @@
 # Do not make changes to this file unless you know what you are doing - modify
 # the SWIG interface file instead.
 
-from sys import version_info as _swig_python_version_info
 # Import the low-level C/C++ module
 if getattr(globals().get("__spec__"), "parent", None) or __package__ or "." in __name__:
     from . import _simple
@@ -16,16 +15,17 @@ try:
 except ImportError:
     import __builtin__
 
-def _swig_repr(self):
+
+def _swig_repr(self) -> str:
     try:
         strthis = "proxy of " + self.this.__repr__()
     except __builtin__.Exception:
         strthis = ""
-    return "<%s.%s; %s >" % (self.__class__.__module__, self.__class__.__name__, strthis,)
+    return f"<{self.__class__.__module__}.{self.__class__.__name__}; {strthis} >"
 
 
 def _swig_setattr_nondynamic_instance_variable(set):
-    def set_instance_attr(self, name, value):
+    def set_instance_attr(self, name, value) -> None:
         if name == "this":
             set(self, name, value)
         elif name == "thisown":
@@ -33,42 +33,52 @@ def _swig_setattr_nondynamic_instance_variable(set):
         elif hasattr(self, name) and isinstance(getattr(type(self), name), property):
             set(self, name, value)
         else:
-            raise AttributeError("You cannot add instance attributes to %s" % self)
+            msg = f"You cannot add instance attributes to {self}"
+            raise AttributeError(msg)
+
     return set_instance_attr
 
 
 def _swig_setattr_nondynamic_class_variable(set):
-    def set_class_attr(cls, name, value):
+    def set_class_attr(cls, name, value) -> None:
         if hasattr(cls, name) and not isinstance(getattr(cls, name), property):
             set(cls, name, value)
         else:
-            raise AttributeError("You cannot add class attributes to %s" % cls)
+            msg = f"You cannot add class attributes to {cls}"
+            raise AttributeError(msg)
+
     return set_class_attr
 
 
 def _swig_add_metaclass(metaclass):
-    """Class decorator for adding a metaclass to a SWIG wrapped class - a slimmed down version of six.add_metaclass"""
+    """Class decorator for adding a metaclass to a SWIG wrapped class - a slimmed down version of six.add_metaclass."""
+
     def wrapper(cls):
         return metaclass(cls.__name__, cls.__bases__, cls.__dict__.copy())
+
     return wrapper
 
 
 class _SwigNonDynamicMeta(type):
-    """Meta class to enforce nondynamic attributes (no new attributes) for a class"""
+    """Meta class to enforce nondynamic attributes (no new attributes) for a class."""
+
     __setattr__ = _swig_setattr_nondynamic_class_variable(type.__setattr__)
 
 
-class Test(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
+class Test:
+    thisown = property(
+        lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag"
+    )
     __repr__ = _swig_repr
 
     def foo(self):
         return _simple.Test_foo(self)
 
-    def __init__(self):
+    def __init__(self) -> None:
         _simple.Test_swiginit(self, _simple.new_Test())
+
     __swig_destroy__ = _simple.delete_Test
+
 
 # Register Test in _simple:
 _simple.Test_swigregister(Test)
-

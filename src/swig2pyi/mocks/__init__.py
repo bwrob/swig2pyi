@@ -1,0 +1,1 @@
+"""Mock SWIG interface files."""

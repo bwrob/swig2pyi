@@ -1,10 +1,10 @@
-import pytest
-from swig2pyi.core.parser import SwigXmlParser
-from swig2pyi.core.emitter import StubEmitter
-from swig2pyi.core.type_system import TypeManager
 from swig2pyi.core.config import Config
+from swig2pyi.core.emitter import StubEmitter
+from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.type_system import TypeManager
 
-def test_parse_and_emit_enum():
+
+def test_parse_and_emit_enum() -> None:
     xml = """
     <top>
         <attributelist><attribute name="module" value="Test"/></attributelist>
@@ -52,7 +52,7 @@ def test_parse_and_emit_enum():
     """
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
-    
+
     assert len(top.module.enums) == 1
     color = top.module.enums[0]
     assert color.name == "Color"
@@ -67,26 +67,20 @@ def test_parse_and_emit_enum():
     assert len(shape.enums) == 1
     style = shape.enums[0]
     assert style.name == "Shape::Style"
-    
+
     # Test Emission
     config = Config(
-        module_name="Test",
-        includes=[],
-        type_map={},
-        smart_pointers=[],
-        containers={}
+        module_name="Test", includes=[], type_map={}, smart_pointers=[], containers={}
     )
     tm = TypeManager(config)
     emitter = StubEmitter(tm)
     emitter.emit(top)
     output = emitter.get_output()
-    
-    print(output)
-    
+
     assert "class Color(int):" in output
     assert "Red: int = 0" in output
     assert "Blue: int" in output
-    
+
     assert "class Shape:" in output
     assert "class Style(int):" in output
     assert "Solid: int = 10" in output
