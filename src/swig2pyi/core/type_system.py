@@ -91,7 +91,11 @@ class TypeManager:
         while cpp_type.startswith("(") and cpp_type.endswith(")"):
             cpp_type = cpp_type[1:-1].strip()
 
-        return cpp_type
+        # 1d. Normalize template spacing (remove spaces around <, >, ,)
+        cpp_type = cpp_type.replace(" <", "<").replace("< ", "<")
+        cpp_type = cpp_type.replace(" >", ">").replace("> ", ">")
+        return cpp_type.replace(" ,", ",").replace(", ", ",")
+
 
     def _resolve_typedefs(self, cpp_type: str) -> str | None:
         if cpp_type in self.config.type_map:
@@ -128,9 +132,30 @@ class TypeManager:
         for cpp_container, py_abc in self.config.containers.items():
             prefix = cpp_container + "<"
             if cpp_type.startswith(prefix) and cpp_type.endswith(">"):
-                inner_content = cpp_type[len(prefix):-1].strip()
-                normalized_inner = self.normalize_type(inner_content)
-                return f"{py_abc}[{normalized_inner}]"
+                # Validate bracket balance to ensure strictly one container
+                depth = 0
+                start_index = len(cpp_container) # Points to the first <
+                match_index = -1
+
+                for i in range(start_index, len(cpp_type)):
+                    char = cpp_type[i]
+                    if char == "<":
+                        depth += 1
+                    elif char == ">":
+                        depth -= 1
+                        if depth == 0:
+                            match_index = i
+                            break
+
+                if match_index == len(cpp_type) - 1:
+                    # Valid match
+                    inner_content = cpp_type[len(prefix):-1].strip()
+
+                    # Split args and normalize
+                    args = self._split_template_args(inner_content)
+                    norm_args = [self.normalize_type(a) for a in args]
+
+                    return f"{py_abc}[{', '.join(norm_args)}]"
         return None
 
     def _resolve_general_template(self, cpp_type: str) -> str | None:
@@ -146,12 +171,39 @@ class TypeManager:
             norm_base = self.normalize_type(base)
 
             # Normalize args.
-            # Note: This naive recursion works well for single args.
-            # For "int, double", normalize_type returns "int, double"
-            # which is valid inside [].
-            norm_args = self.normalize_type(args)
+            # Use split to handle multiple args correctly
+            arg_list = self._split_template_args(args)
+            norm_args_list = [self.normalize_type(a) for a in arg_list]
+            norm_args = ", ".join(norm_args_list)
 
             return f"{norm_base}[{norm_args}]"
         return None
+
+    def _split_template_args(self, args: str) -> list[str]:
+        """Split template arguments by comma, respecting nested brackets and parens."""
+        parts = []
+        current = []
+        depth = 0
+        paren_depth = 0
+        for char in args:
+            if char == "<":
+                depth += 1
+            elif char == ">":
+                depth -= 1
+            elif char == "(":
+                paren_depth += 1
+            elif char == ")":
+                paren_depth -= 1
+
+            if char == "," and depth == 0 and paren_depth == 0:
+                parts.append("".join(current).strip())
+                current = []
+            else:
+                current.append(char)
+
+        if current:
+            parts.append("".join(current).strip())
+
+        return parts
 
 

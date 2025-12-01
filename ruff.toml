@@ -9,8 +9,7 @@ target-version = "py310"
     select  = ["ALL"]
 
     [lint.per-file-ignores]
-        "tests/**" = ["S101", "N"]
-        "tests/expected_output/**" = ["N", "I001", "F401", "Q000", "UP045"]
+        "tests/**" = ["N"]
 
 
 [format]

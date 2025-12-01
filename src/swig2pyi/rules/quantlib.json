@@ -30,7 +30,8 @@
   "containers": {
     "std::vector": "list",
     "std::set": "set",
-    "ext::optional": "Optional"
+    "ext::optional": "Optional",
+    "std::pair": "tuple"
   },
   "rename_operators": true,
   "extra_code": [

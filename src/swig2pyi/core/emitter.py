@@ -23,12 +23,11 @@ class StubEmitter:
 
     def emit(self, top: Top) -> None:
         # Suppress strict pyright checks for generated stubs
-        self.write("# pyright: reportUnusedImport=false, reportDeprecated=false, reportExplicitAny=false, reportInvalidTypeVarUse=false")
         self.write("import typing")
         self.write("from typing import Any, Optional, overload, Generic, TypeVar")
         self.write("import collections.abc")
         self.write("")
-        
+
         # Define TypeVar for generics
         self.write("_T = TypeVar('_T')")
         self.write("")
@@ -53,7 +52,7 @@ class StubEmitter:
                 # Skip global operators (they are C++ artifacts usually)
                 if func.name.startswith("operator"):
                     continue
-                
+
                 # Skip Handle members appearing as globals
                 if func.name in ("linkTo", "currentLink", "empty", "values"):
                     continue
@@ -62,12 +61,15 @@ class StubEmitter:
                     continue
 
                 name = func.name
+                if "::" in name:
+                    name = name.split("::")[-1]
+
                 if name not in func_groups:
                     func_groups[name] = []
                 func_groups[name].append(func)
 
         for name, group in func_groups.items():
-            self.visit_function_group(group, is_method=False)
+            self.visit_function_group(name, group, is_method=False)
 
         # Classes
         for cls in module.classes:
@@ -86,9 +88,9 @@ class StubEmitter:
         for item in enum.items:
             # Emit as class variables: NAME: int = VALUE
             # Value is optional, sometimes helpful.
-            
+
             item_name = self._get_sanitized_name(item.name)
-            
+
             val_str = f" = {item.value}" if item.value is not None else ""
             self.write(f"{item_name}: int{val_str}")
             has_items = True
@@ -158,22 +160,25 @@ class StubEmitter:
 
                 # Map operator names for grouping
                 m_name = method.name
+                if "::" in m_name:
+                    m_name = m_name.split("::")[-1]
+
                 if self.tm.config.rename_operators and m_name.startswith("operator"):
                     m_name = self.map_operator(m_name)
 
                 if m_name.startswith("operator"):  # Unmapped operator
                     continue
-                
+
                 # Sanitize method name if it's not an operator (operators are already valid dunders)
                 if not m_name.startswith("__"):
-                     m_name = self._get_sanitized_name(m_name)
+                    m_name = self._get_sanitized_name(m_name)
 
                 if m_name not in method_groups:
                     method_groups[m_name] = []
                 method_groups[m_name].append(method)
 
         for name, group in method_groups.items():
-            self.visit_function_group(group, is_method=True)
+            self.visit_function_group(name, group, is_method=True)
             has_members = True
 
         if not has_members:
@@ -194,27 +199,33 @@ class StubEmitter:
                 type="void",
                 parms=ctor.parms,
                 mname="",
-                minfo=""
+                minfo="",
             )
             # is_method=True because constructors are methods
             sig_tuple = self._get_function_signature(dummy_func, is_method=True)
-            
+
             # Use the full signature tuple as the key for deduplication
             if sig_tuple not in unique_sigs:
-                unique_sigs[sig_tuple] = ctor # Store original ctor for other info if needed
+                unique_sigs[sig_tuple] = (
+                    ctor  # Store original ctor for other info if needed
+                )
 
-        sorted_sigs = sorted(unique_sigs.keys()) # Sort by the tuple itself, which is fine
+        sorted_sigs = sorted(
+            unique_sigs.keys()
+        )  # Sort by the tuple itself, which is fine
 
         use_overload = len(sorted_sigs) > 1
 
         for sig_tuple in sorted_sigs:
-            params_str, ret_type = sig_tuple # Unpack the signature components
+            params_str, ret_type = sig_tuple  # Unpack the signature components
 
             if use_overload:
                 self.write("@overload")
             self.write(f"def __init__({params_str}) -> {ret_type}: ...")
 
-    def visit_function_group(self, group: list[CDecl], is_method: bool) -> None:
+    def visit_function_group(
+        self, group_name: str, group: list[CDecl], is_method: bool
+    ) -> None:
         # Deduplicate by Python signature
         unique_sigs = {}
 
@@ -228,17 +239,16 @@ class StubEmitter:
         # If we have multiple signatures, use @overload
         use_overload = len(sorted_sigs) > 1
 
-        for sig_tuple in sorted_sigs: # Renamed sig to sig_tuple for clarity
+        for sig_tuple in sorted_sigs:  # Renamed sig to sig_tuple for clarity
             func = unique_sigs[sig_tuple]
-            name = func.name
-            if is_method and self.tm.config.rename_operators:
-                name = self.map_operator(name)
-            
-            # Sanitize name if not operator
-            if not name.startswith("__"):
-                name = self._get_sanitized_name(name)
+            name = group_name  # Use stripped/mapped group name
 
-            params_str, ret_type = sig_tuple # Unpack the signature components
+            # Ensure name is sanitized again? No, it was sanitized before grouping.
+            # But map_operator might be needed if logic above was partial?
+            # Above we did mapping and sanitization.
+            # But let's check if name is valid.
+
+            params_str, ret_type = sig_tuple  # Unpack the signature components
 
             if use_overload:
                 self.write("@overload")
@@ -247,7 +257,7 @@ class StubEmitter:
 
     def _get_function_signature(self, func: CDecl, is_method: bool):
         param_parts = self.format_params(func.parms)
-        
+
         if is_method:
             param_parts.insert(0, "self")
 
@@ -262,10 +272,12 @@ class StubEmitter:
             # Single parameter (like 'self' only, or 'self, param')
             # Forcing multi-line if any actual parameters (other than self)
             if is_method and len(func.parms) == 0:
-                full_params = "self" # only self, keep on one line
+                full_params = "self"  # only self, keep on one line
             else:
                 self.indent()
-                params_str = ",\n".join(self.indent_level * "    " + p for p in param_parts)
+                params_str = ",\n".join(
+                    self.indent_level * "    " + p for p in param_parts
+                )
                 self.dedent()
                 full_params = f"\n{params_str},\n" + self.indent_level * "    "
         else:
@@ -290,11 +302,43 @@ class StubEmitter:
     def _get_sanitized_name(self, name: str) -> str:
         # Comprehensive list of Python reserved keywords
         reserved_keywords = {
-            "False", "None", "True", "and", "as", "assert", "async", "await", "break",
-            "class", "continue", "def", "del", "elif", "else", "except", "finally",
-            "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal",
-            "not", "or", "pass", "raise", "return", "try", "while", "with", "yield",
-            "str", "open" # Added 'str' and 'open'
+            "False",
+            "None",
+            "True",
+            "and",
+            "as",
+            "assert",
+            "async",
+            "await",
+            "break",
+            "class",
+            "continue",
+            "def",
+            "del",
+            "elif",
+            "else",
+            "except",
+            "finally",
+            "for",
+            "from",
+            "global",
+            "if",
+            "import",
+            "in",
+            "is",
+            "lambda",
+            "nonlocal",
+            "not",
+            "or",
+            "pass",
+            "raise",
+            "return",
+            "try",
+            "while",
+            "with",
+            "yield",
+            "str",
+            "open",  # Added 'str' and 'open'
         }
         if name in reserved_keywords:
             return name + "_"
@@ -329,5 +373,6 @@ class StubEmitter:
             "operator>=": "__ge__",
             "operator()": "__call__",
             "operator[]": "__getitem__",
+            "operator->": "__deref__",
         }
         return mapping.get(normalized, name)

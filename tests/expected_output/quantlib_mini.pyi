@@ -1,19 +1,6 @@
-# pyright: reportUnusedImport=false, reportDeprecated=false, reportExplicitAny=false, reportInvalidTypeVarUse=false
-import typing
-from typing import Any, Optional, overload, Generic, TypeVar
-import collections.abc
+from typing import Any, TypeVar, overload
 
-_T = TypeVar('_T')
-
-class Handle(Generic[_T]):
-    def __init__(self, p: Optional[_T] = ...) -> None: ...
-    def currentLink(self) -> _T: ...
-    def empty(self) -> bool: ...
-    def __deref__(self) -> _T: ...
-class RelinkableHandle(Handle[_T]):
-    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...
-class TimeSeries(Generic[_T]):
-    def __init__(self) -> None: ...
+_T = TypeVar("_T")
 
 class Weekday(int):
     Sunday: int = 1
@@ -159,6 +146,7 @@ def as_swap_index(
 def makeQuoteHandle(
     value: float,
 ) -> RelinkableHandle[Quote]: ...
+
 class Period:
     @overload
     def __init__(
@@ -2586,12 +2574,10 @@ class CubicInterpolation:
         Kruger: int
         Harmonic: int
 
-
 class MixedInterpolation:
     class Behavior(int):
         ShareRanges: int
         SplitRanges: int
-
 
 class BackwardFlat:
     def __init__(self) -> None: ...
@@ -4196,7 +4182,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: Optional[int],
+        roundingDigits: int | None,
     ) -> None: ...
     @overload
     def __init__(
@@ -4206,7 +4192,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: Optional[int],
+        roundingDigits: int | None,
         compounding: Compounding,
     ) -> None: ...
     @overload
@@ -4217,7 +4203,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: Optional[int],
+        roundingDigits: int | None,
         compounding: Compounding,
         frequency: Frequency,
     ) -> None: ...
@@ -5581,14 +5567,14 @@ class SimpleQuote(Quote):
     @overload
     def __init__(
         self,
-        value: Optional[float],
+        value: float | None,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
     @overload
     def setValue(
         self,
-        value: Optional[float],
+        value: float | None,
     ) -> None: ...
     @overload
     def setValue(self) -> None: ...

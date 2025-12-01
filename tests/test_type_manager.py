@@ -70,3 +70,28 @@ def test_complex_stripping(type_manager) -> None:
         type_manager.to_python("const boost::shared_ptr<const QuantLib::Real> &")
         == "float"
     )
+
+
+def test_nested_templates(type_manager) -> None:
+    # std::pair is not in containers map, so generic fallback
+    # std::vector IS in containers map -> list
+    # Rate -> float
+    input_type = "std::pair<std::vector<QuantLib::Rate>, std::vector<QuantLib::Volatility>>"
+    # Current implementation doesn't split args, so it might produce std.pair[std::vector<...>, ...]
+    # But we want to verify what it does.
+    # If it fails to split, it won't resolve inner vector to list.
+
+    # We expect std.pair to be resolved as std.pair (dot notation)
+    # and inner vectors to be resolved to list[float].
+    # NOTE: std.pair needs to be mapped or imported if we want it valid.
+    # But here we test normalization structure.
+    expected = "tuple[list[float], list[float]]"
+    assert type_manager.to_python(input_type) == expected
+
+
+def test_spaces_in_template(type_manager) -> None:
+    assert type_manager.to_python("std::vector < float >") == "list[float]"
+
+
+def test_parens_in_template(type_manager) -> None:
+    assert type_manager.to_python("std::vector<(QuantLib::Volatility)>") == "list[float]"
