@@ -15,15 +15,27 @@ class StubEmitter:
         self.indent_level = max(0, self.indent_level - 1)
 
     def write(self, text: str = "") -> None:
-        self.lines.append("    " * self.indent_level + text)
+        line = "    " * self.indent_level + text
+        self.lines.append(line.rstrip())
 
     def get_output(self) -> str:
         return "\n".join(self.lines)
 
     def emit(self, top: Top) -> None:
+        # Suppress strict pyright checks for generated stubs
+        self.write("# pyright: reportUnusedImport=false, reportDeprecated=false, reportExplicitAny=false, reportInvalidTypeVarUse=false")
         self.write("import typing")
-        self.write("from typing import Any, Optional, overload")
+        self.write("from typing import Any, Optional, overload, Generic, TypeVar")
         self.write("import collections.abc")
+        self.write("")
+        
+        # Define TypeVar for generics
+        self.write("_T = TypeVar('_T')")
+        self.write("")
+
+        # Emit extra code from config
+        for line in self.tm.config.extra_code:
+            self.write(line)
         self.write("")
 
         if top.module:
@@ -38,6 +50,17 @@ class StubEmitter:
         func_groups = {}
         for func in module.cdecls:
             if func.kind == "function":
+                # Skip global operators (they are C++ artifacts usually)
+                if func.name.startswith("operator"):
+                    continue
+                
+                # Skip Handle members appearing as globals
+                if func.name in ("linkTo", "currentLink", "empty", "values"):
+                    continue
+
+                if self.should_skip_method(func):
+                    continue
+
                 name = func.name
                 if name not in func_groups:
                     func_groups[name] = []
@@ -63,8 +86,11 @@ class StubEmitter:
         for item in enum.items:
             # Emit as class variables: NAME: int = VALUE
             # Value is optional, sometimes helpful.
+            
+            item_name = self._get_sanitized_name(item.name)
+            
             val_str = f" = {item.value}" if item.value is not None else ""
-            self.write(f"{item.name}: int{val_str}")
+            self.write(f"{item_name}: int{val_str}")
             has_items = True
 
         if not has_items:
@@ -88,18 +114,22 @@ class StubEmitter:
             name = name.split("::")[-1]
 
         # Process bases
-        bases_str = ""
+        base_names = []
         if cls.bases:
             # Normalize base names
             # We use type manager to clean up namespaces, but we assume bases are classes in the same file
             # or imported.
-            base_names = []
             for b in cls.bases:
                 # We can use to_python, which does namespace stripping and checking config.
                 # Assuming base classes are mapped or in the same module.
                 normalized_base = self.tm.to_python(b)
                 base_names.append(normalized_base)
 
+        if cls.is_template:
+            base_names.append("Generic[_T]")
+
+        bases_str = ""
+        if base_names:
             bases_str = "(" + ", ".join(base_names) + ")"
 
         # If kind is struct/class, usually maps to class.
@@ -133,6 +163,10 @@ class StubEmitter:
 
                 if m_name.startswith("operator"):  # Unmapped operator
                     continue
+                
+                # Sanitize method name if it's not an operator (operators are already valid dunders)
+                if not m_name.startswith("__"):
+                     m_name = self._get_sanitized_name(m_name)
 
                 if m_name not in method_groups:
                     method_groups[m_name] = []
@@ -199,6 +233,10 @@ class StubEmitter:
             name = func.name
             if is_method and self.tm.config.rename_operators:
                 name = self.map_operator(name)
+            
+            # Sanitize name if not operator
+            if not name.startswith("__"):
+                name = self._get_sanitized_name(name)
 
             params_str, ret_type = sig_tuple # Unpack the signature components
 
@@ -255,7 +293,8 @@ class StubEmitter:
             "False", "None", "True", "and", "as", "assert", "async", "await", "break",
             "class", "continue", "def", "del", "elif", "else", "except", "finally",
             "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal",
-            "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"
+            "not", "or", "pass", "raise", "return", "try", "while", "with", "yield",
+            "str", "open" # Added 'str' and 'open'
         }
         if name in reserved_keywords:
             return name + "_"

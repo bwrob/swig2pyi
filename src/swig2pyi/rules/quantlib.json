@@ -21,12 +21,27 @@
     "Second": "int",
     "Millisecond": "int",
     "Microsecond": "int",
-    "Time": "float"
+    "Time": "float",
+    "doubleOrNull": "Optional[float]",
+    "QuantLib::DiscountFactor": "float",
+    "QuantLib::BlackVolTermStructure": "Any"
   },
   "smart_pointers": ["boost::shared_ptr", "std::shared_ptr", "ext::shared_ptr"],
   "containers": {
-    "std::vector": "typing.MutableSequence",
-    "std::set": "typing.AbstractSet"
+    "std::vector": "list",
+    "std::set": "set",
+    "ext::optional": "Optional"
   },
-  "rename_operators": true
+  "rename_operators": true,
+  "extra_code": [
+    "class Handle(Generic[_T]):",
+    "    def __init__(self, p: Optional[_T] = ...) -> None: ...",
+    "    def currentLink(self) -> _T: ...",
+    "    def empty(self) -> bool: ...",
+    "    def __deref__(self) -> _T: ...",
+    "class RelinkableHandle(Handle[_T]):",
+    "    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...",
+    "class TimeSeries(Generic[_T]):",
+    "    def __init__(self) -> None: ..."
+  ]
 }

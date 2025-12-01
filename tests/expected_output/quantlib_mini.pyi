@@ -1,6 +1,19 @@
+# pyright: reportUnusedImport=false, reportDeprecated=false, reportExplicitAny=false, reportInvalidTypeVarUse=false
 import typing
-from typing import Any, Optional, overload
+from typing import Any, Optional, overload, Generic, TypeVar
 import collections.abc
+
+_T = TypeVar('_T')
+
+class Handle(Generic[_T]):
+    def __init__(self, p: Optional[_T] = ...) -> None: ...
+    def currentLink(self) -> _T: ...
+    def empty(self) -> bool: ...
+    def __deref__(self) -> _T: ...
+class RelinkableHandle(Handle[_T]):
+    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...
+class TimeSeries(Generic[_T]):
+    def __init__(self) -> None: ...
 
 class Weekday(int):
     Sunday: int = 1
@@ -71,6 +84,7 @@ class Compounding(int):
     SimpleThenCompounded: int
     CompoundedThenSimple: int
 
+def reset() -> None: ...
 def daysBetween(
     arg0: Date,
     arg1: Date,
@@ -131,6 +145,11 @@ def close_enough(
     y: float,
     n: int,
 ) -> bool: ...
+def numberOfEvaluations() -> int: ...
+def dates() -> list[Date]: ...
+def firstDate() -> Date: ...
+def lastDate() -> Date: ...
+def size() -> int: ...
 def as_iborindex(
     index: InterestRateIndex,
 ) -> IborIndex: ...
@@ -240,19 +259,19 @@ class DateParser:
     def __init__(self) -> None: ...
     def parseFormatted(
         self,
-        str: str,
+        str_: str,
         fmt: str,
     ) -> Date: ...
     def parseISO(
         self,
-        str: str,
+        str_: str,
     ) -> Date: ...
 
 class PeriodParser:
     def __init__(self) -> None: ...
     def parse(
         self,
-        str: str,
+        str_: str,
     ) -> Period: ...
 
 class IMM:
@@ -269,7 +288,7 @@ class IMM:
         V: int = 10
         X: int = 11
         Z: int = 12
-    
+
     def __init__(self) -> None: ...
     @overload
     def isIMMdate(
@@ -385,7 +404,7 @@ class ASX:
         V: int = 10
         X: int = 11
         Z: int = 12
-    
+
     def __init__(self) -> None: ...
     @overload
     def isASXdate(
@@ -608,26 +627,26 @@ class Calendar:
         self,
         from_: Date,
         to: Date,
-    ) -> typing.MutableSequence[Date]: ...
+    ) -> list[Date]: ...
     @overload
     def holidayList(
         self,
         from_: Date,
         to: Date,
         includeWeekEnds: bool,
-    ) -> typing.MutableSequence[Date]: ...
+    ) -> list[Date]: ...
     def businessDayList(
         self,
         from_: Date,
         to: Date,
-    ) -> typing.MutableSequence[Date]: ...
+    ) -> list[Date]: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
 
 class Argentina(Calendar):
     class Market(int):
         Merval: int
-    
+
     @overload
     def __init__(
         self,
@@ -640,7 +659,7 @@ class Australia(Calendar):
     class Market(int):
         Settlement: int
         ASX: int
-    
+
     @overload
     def __init__(
         self,
@@ -653,7 +672,7 @@ class Austria(Calendar):
     class Market(int):
         Settlement: int
         Exchange: int
-    
+
     @overload
     def __init__(
         self,
@@ -669,7 +688,7 @@ class Brazil(Calendar):
     class Market(int):
         Settlement: int
         Exchange: int
-    
+
     @overload
     def __init__(
         self,
@@ -682,7 +701,7 @@ class Canada(Calendar):
     class Market(int):
         Settlement: int
         TSX: int
-    
+
     @overload
     def __init__(
         self,
@@ -694,7 +713,7 @@ class Canada(Calendar):
 class Chile(Calendar):
     class Market(int):
         SSE: int
-    
+
     @overload
     def __init__(
         self,
@@ -707,7 +726,7 @@ class China(Calendar):
     class Market(int):
         SSE: int
         IB: int
-    
+
     @overload
     def __init__(
         self,
@@ -719,7 +738,7 @@ class China(Calendar):
 class CzechRepublic(Calendar):
     class Market(int):
         PSE: int
-    
+
     @overload
     def __init__(
         self,
@@ -738,7 +757,7 @@ class France(Calendar):
     class Market(int):
         Settlement: int
         Exchange: int
-    
+
     @overload
     def __init__(
         self,
@@ -753,7 +772,7 @@ class Germany(Calendar):
         FrankfurtStockExchange: int
         Xetra: int
         Eurex: int
-    
+
     @overload
     def __init__(
         self,
@@ -765,7 +784,7 @@ class Germany(Calendar):
 class HongKong(Calendar):
     class Market(int):
         HKEx: int
-    
+
     @overload
     def __init__(
         self,
@@ -780,7 +799,7 @@ class Hungary(Calendar):
 class Iceland(Calendar):
     class Market(int):
         ICEX: int
-    
+
     @overload
     def __init__(
         self,
@@ -792,7 +811,7 @@ class Iceland(Calendar):
 class India(Calendar):
     class Market(int):
         NSE: int
-    
+
     @overload
     def __init__(
         self,
@@ -805,7 +824,7 @@ class Indonesia(Calendar):
     class Market(int):
         BEJ: int
         JSX: int
-    
+
     @overload
     def __init__(
         self,
@@ -819,7 +838,7 @@ class Israel(Calendar):
         Settlement: int
         TASE: int
         SHIR: int
-    
+
     @overload
     def __init__(
         self,
@@ -832,7 +851,7 @@ class Italy(Calendar):
     class Market(int):
         Settlement: int
         Exchange: int
-    
+
     @overload
     def __init__(
         self,
@@ -847,7 +866,7 @@ class Japan(Calendar):
 class Mexico(Calendar):
     class Market(int):
         BMV: int
-    
+
     @overload
     def __init__(
         self,
@@ -860,7 +879,7 @@ class NewZealand(Calendar):
     class Market(int):
         Wellington: int
         Auckland: int
-    
+
     @overload
     def __init__(
         self,
@@ -876,7 +895,7 @@ class Poland(Calendar):
     class Market(int):
         Settlement: int
         WSE: int
-    
+
     @overload
     def __init__(
         self,
@@ -889,7 +908,7 @@ class Romania(Calendar):
     class Market(int):
         Public: int
         BVB: int
-    
+
     @overload
     def __init__(
         self,
@@ -902,7 +921,7 @@ class Russia(Calendar):
     class Market(int):
         Settlement: int
         MOEX: int
-    
+
     @overload
     def __init__(
         self,
@@ -914,7 +933,7 @@ class Russia(Calendar):
 class SaudiArabia(Calendar):
     class Market(int):
         Tadawul: int
-    
+
     @overload
     def __init__(
         self,
@@ -926,7 +945,7 @@ class SaudiArabia(Calendar):
 class Singapore(Calendar):
     class Market(int):
         SGX: int
-    
+
     @overload
     def __init__(
         self,
@@ -938,7 +957,7 @@ class Singapore(Calendar):
 class Slovakia(Calendar):
     class Market(int):
         BSSE: int
-    
+
     @overload
     def __init__(
         self,
@@ -954,7 +973,7 @@ class SouthKorea(Calendar):
     class Market(int):
         Settlement: int
         KRX: int
-    
+
     @overload
     def __init__(
         self,
@@ -972,7 +991,7 @@ class Switzerland(Calendar):
 class Taiwan(Calendar):
     class Market(int):
         TSEC: int
-    
+
     @overload
     def __init__(
         self,
@@ -993,7 +1012,7 @@ class Turkey(Calendar):
 class Ukraine(Calendar):
     class Market(int):
         USE: int
-    
+
     @overload
     def __init__(
         self,
@@ -1007,7 +1026,7 @@ class UnitedKingdom(Calendar):
         Settlement: int
         Exchange: int
         Metals: int
-    
+
     @overload
     def __init__(
         self,
@@ -1025,7 +1044,7 @@ class UnitedStates(Calendar):
         LiborImpact: int
         FederalReserve: int
         SOFR: int
-    
+
     def __init__(
         self,
         m: UnitedStates.Market,
@@ -1086,12 +1105,12 @@ class JointCalendar(Calendar):
     @overload
     def __init__(
         self,
-        arg0: typing.MutableSequence[Calendar],
+        arg0: list[Calendar],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        arg0: typing.MutableSequence[Calendar],
+        arg0: list[Calendar],
         arg1: JointCalendarRule,
     ) -> None: ...
 
@@ -1171,7 +1190,7 @@ class Actual365Fixed(DayCounter):
         Standard: int
         Canadian: int
         NoLeap: int
-    
+
     @overload
     def __init__(
         self,
@@ -1191,7 +1210,7 @@ class Thirty360(DayCounter):
         ISMA: int
         ISDA: int
         NASD: int
-    
+
     @overload
     def __init__(
         self,
@@ -1216,7 +1235,7 @@ class ActualActual(DayCounter):
         Actual365: int
         AFB: int
         Euro: int
-    
+
     @overload
     def __init__(
         self,
@@ -1294,13 +1313,13 @@ class Matrix:
 
 class SalvagingAlgorithm:
     class Type(int):
-        None: int
+        None_: int
         Spectral: int
         Hypersphere: int
         LowerDiagonal: int
         Higham: int
         Principal: int
-    
+
     def __init__(self) -> None: ...
 
 class SVD:
@@ -1323,10 +1342,10 @@ class SymmetricSchurDecomposition:
 
 class DefaultBoundaryCondition:
     class Side(int):
-        None: int
+        None_: int
         Upper: int
         Lower: int
-    
+
     def __init__(self) -> None: ...
 
 class NeumannBC(DefaultBoundaryCondition):
@@ -1605,14 +1624,14 @@ class InterestRate:
         self,
         d1: Date,
         d2: Date,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discountFactor(
         self,
         d1: Date,
         d2: Date,
         refStart: Date,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discountFactor(
         self,
@@ -1620,12 +1639,12 @@ class InterestRate:
         d2: Date,
         refStart: Date,
         refEnd: Date,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discountFactor(
         self,
         t: float,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def compoundFactor(
         self,
@@ -1839,7 +1858,7 @@ class NonhomogeneousBoundaryConstraint(Constraint):
 
 class EndCriteria:
     class Type(int):
-        None: int
+        None_: int
         MaxIterations: int
         StationaryPoint: int
         StationaryFunctionValue: int
@@ -1847,7 +1866,7 @@ class EndCriteria:
         ZeroGradientNorm: int
         FunctionEpsilonTooSmall: int
         Unknown: int
-    
+
     def __init__(
         self,
         maxIteration: int,
@@ -1872,7 +1891,7 @@ class Simplex(OptimizationMethod):
         self,
         lambda_: float,
     ) -> None: ...
-    def lambda(self) -> float: ...
+    def lambda_(self) -> float: ...
 
 class SteepestDescent(OptimizationMethod):
     def __init__(self) -> None: ...
@@ -1978,7 +1997,7 @@ class GaussianSimulatedAnnealing(OptimizationMethod):
         NoResetScheme: int
         ResetToBestPoint: int
         ResetToOrigin: int
-    
+
     @overload
     def __init__(
         self,
@@ -2055,7 +2074,7 @@ class MirrorGaussianSimulatedAnnealing(OptimizationMethod):
         NoResetScheme: int
         ResetToBestPoint: int
         ResetToOrigin: int
-    
+
     @overload
     def __init__(
         self,
@@ -2132,7 +2151,7 @@ class LogNormalSimulatedAnnealing(OptimizationMethod):
         NoResetScheme: int
         ResetToBestPoint: int
         ResetToOrigin: int
-    
+
     @overload
     def __init__(
         self,
@@ -2566,13 +2585,13 @@ class CubicInterpolation:
         Akima: int
         Kruger: int
         Harmonic: int
-    
+
 
 class MixedInterpolation:
     class Behavior(int):
         ShareRanges: int
         SplitRanges: int
-    
+
 
 class BackwardFlat:
     def __init__(self) -> None: ...
@@ -2697,7 +2716,7 @@ class ChebyshevInterpolation:
     class PointsType(int):
         FirstKind: int
         SecondKind: int
-    
+
     @overload
     def __init__(
         self,
@@ -2787,25 +2806,25 @@ class DateGeneration:
         OldCDS: int
         CDS: int
         CDS2015: int
-    
+
     def __init__(self) -> None: ...
 
 class Schedule:
     @overload
     def __init__(
         self,
-        arg0: typing.MutableSequence[Date],
+        arg0: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        arg0: typing.MutableSequence[Date],
+        arg0: list[Date],
         calendar: Calendar,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        arg0: typing.MutableSequence[Date],
+        arg0: list[Date],
         calendar: Calendar,
         convention: BusinessDayConvention,
     ) -> None: ...
@@ -2863,7 +2882,7 @@ class Schedule:
         self,
         refDate: Date,
     ) -> Date: ...
-    def dates(self) -> typing.MutableSequence[Date]: ...
+    def dates(self) -> list[Date]: ...
     def hasIsRegular(self) -> bool: ...
     @overload
     def isRegular(
@@ -2871,7 +2890,7 @@ class Schedule:
         i: int,
     ) -> bool: ...
     @overload
-    def isRegular(self) -> typing.MutableSequence[bool]: ...
+    def isRegular(self) -> list[bool]: ...
     def calendar(self) -> Calendar: ...
     def startDate(self) -> Date: ...
     def endDate(self) -> Date: ...
@@ -2895,7 +2914,7 @@ class Schedule:
 
 class MakeSchedule:
     def __init__(self) -> None: ...
-    def from(
+    def from_(
         self,
         effectiveDate: Date,
     ) -> MakeSchedule: ...
@@ -3386,7 +3405,7 @@ class IntervalPrice:
         Close: int
         High: int
         Low: int
-    
+
     def __init__(
         self,
         arg0: float,
@@ -3410,23 +3429,23 @@ class IntervalPrice:
         self,
         t: IntervalPrice.Type,
     ) -> float: ...
-    def open(self) -> float: ...
+    def open_(self) -> float: ...
     def close(self) -> float: ...
     def high(self) -> float: ...
     def low(self) -> float: ...
     def makeSeries(
         self,
-        d: typing.MutableSequence[Date],
-        open: typing.MutableSequence[float],
-        close: typing.MutableSequence[float],
-        high: typing.MutableSequence[float],
-        low: typing.MutableSequence[float],
+        d: list[Date],
+        open_: list[float],
+        close: list[float],
+        high: list[float],
+        low: list[float],
     ) -> TimeSeries[IntervalPrice]: ...
     def extractValues(
         self,
         arg0: TimeSeries[IntervalPrice],
         t: IntervalPrice.Type,
-    ) -> typing.MutableSequence[float]: ...
+    ) -> list[float]: ...
     def extractComponent(
         self,
         arg0: TimeSeries[IntervalPrice],
@@ -3466,24 +3485,24 @@ class YieldTermStructure(TermStructure):
     def discount(
         self,
         arg0: Date,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discount(
         self,
         arg0: Date,
         extrapolate: bool,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discount(
         self,
         arg0: float,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def discount(
         self,
         arg0: float,
         extrapolate: bool,
-    ) -> DiscountFactor: ...
+    ) -> float: ...
     @overload
     def zeroRate(
         self,
@@ -3632,23 +3651,23 @@ class PiecewiseZeroSpreadedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3656,8 +3675,8 @@ class PiecewiseZeroSpreadedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3666,8 +3685,8 @@ class PiecewiseZeroSpreadedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3679,23 +3698,23 @@ class SpreadedLinearZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3703,8 +3722,8 @@ class SpreadedLinearZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3713,8 +3732,8 @@ class SpreadedLinearZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3726,23 +3745,23 @@ class SpreadedBackwardFlatZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3750,8 +3769,8 @@ class SpreadedBackwardFlatZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3760,8 +3779,8 @@ class SpreadedBackwardFlatZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3773,23 +3792,23 @@ class SpreadedCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3797,8 +3816,8 @@ class SpreadedCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3807,8 +3826,8 @@ class SpreadedCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3820,23 +3839,23 @@ class SpreadedKrugerZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3844,8 +3863,8 @@ class SpreadedKrugerZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3854,8 +3873,8 @@ class SpreadedKrugerZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3867,23 +3886,23 @@ class SpreadedSplineCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3891,8 +3910,8 @@ class SpreadedSplineCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3901,8 +3920,8 @@ class SpreadedSplineCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3914,23 +3933,23 @@ class SpreadedParabolicCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3938,8 +3957,8 @@ class SpreadedParabolicCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3948,8 +3967,8 @@ class SpreadedParabolicCubicZeroInterpolatedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3961,23 +3980,23 @@ class SpreadedMonotonicParabolicCubicZeroInterpolatedTermStructure(YieldTermStru
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
     ) -> None: ...
@@ -3985,8 +4004,8 @@ class SpreadedMonotonicParabolicCubicZeroInterpolatedTermStructure(YieldTermStru
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -3995,8 +4014,8 @@ class SpreadedMonotonicParabolicCubicZeroInterpolatedTermStructure(YieldTermStru
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         comp: Compounding,
         freq: Frequency,
         dc: DayCounter,
@@ -4008,23 +4027,23 @@ class PiecewiseForwardSpreadedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         dc: DayCounter,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         dc: DayCounter,
         factory: BackwardFlat,
     ) -> None: ...
@@ -4034,23 +4053,23 @@ class PiecewiseLinearForwardSpreadedTermStructure(YieldTermStructure):
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         dc: DayCounter,
     ) -> None: ...
     @overload
     def __init__(
         self,
         baseCurve: Handle[YieldTermStructure],
-        spreads: typing.MutableSequence[Handle[Quote]],
-        dates: typing.MutableSequence[Date],
+        spreads: list[Handle[Quote]],
+        dates: list[Date],
         dc: DayCounter,
         factory: Linear,
     ) -> None: ...
@@ -4177,7 +4196,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: ext.optional[int],
+        roundingDigits: Optional[int],
     ) -> None: ...
     @overload
     def __init__(
@@ -4187,7 +4206,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: ext.optional[int],
+        roundingDigits: Optional[int],
         compounding: Compounding,
     ) -> None: ...
     @overload
@@ -4198,7 +4217,7 @@ class UltimateForwardTermStructure(YieldTermStructure):
         ultimateForwardRate: Handle[Quote],
         firstSmoothingPoint: Period,
         alpha: float,
-        roundingDigits: ext.optional[int],
+        roundingDigits: Optional[int],
         compounding: Compounding,
         frequency: Frequency,
     ) -> None: ...
@@ -4209,9 +4228,9 @@ class QuantoTermStructure(YieldTermStructure):
         underlyingDividendTS: Handle[YieldTermStructure],
         riskFreeTS: Handle[YieldTermStructure],
         foreignRiskFreeTS: Handle[YieldTermStructure],
-        underlyingBlackVolTS: Handle[BlackVolTermStructure],
+        underlyingBlackVolTS: Handle[Any],
         strike: float,
-        exchRateBlackVolTS: Handle[BlackVolTermStructure],
+        exchRateBlackVolTS: Handle[Any],
         exchRateATMlevel: float,
         underlyingExchRateCorrelation: float,
     ) -> None: ...
@@ -4232,7 +4251,7 @@ class IndexManager:
         self,
         name: str,
     ) -> bool: ...
-    def histories(self) -> typing.MutableSequence[str]: ...
+    def histories(self) -> list[str]: ...
     def clearHistory(
         self,
         name: str,
@@ -5562,14 +5581,14 @@ class SimpleQuote(Quote):
     @overload
     def __init__(
         self,
-        value: doubleOrNull,
+        value: Optional[float],
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
     @overload
     def setValue(
         self,
-        value: doubleOrNull,
+        value: Optional[float],
     ) -> None: ...
     @overload
     def setValue(self) -> None: ...

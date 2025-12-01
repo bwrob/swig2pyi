@@ -49,6 +49,7 @@ class Class(BaseModel):
     """Represents a C++ class or struct."""
     name: str
     kind: Optional[str] = None  # class, struct
+    is_template: bool = False
     bases: List[str] = []
     classes: List['Class'] = []  # Nested classes
     enums: List[Enum] = []  # Nested enums
@@ -178,11 +179,12 @@ class SwigXmlParser:
                 ))
         return enum_obj
 
-    def _parse_class(self, node: ET.Element, attrs: Dict[str, str]) -> Class: # noqa: C901, PLR0912
+    def _parse_class(self, node: ET.Element, attrs: Dict[str, str], is_template: bool = False) -> Class: # noqa: C901, PLR0912
         """Parses a C++ class or struct declaration."""
         cls = Class(
             name=attrs.get("name", ""),
-            kind=attrs.get("kind")
+            kind=attrs.get("kind"),
+            is_template=is_template
         )
         
         # Helper to parse baselist
@@ -225,7 +227,8 @@ class SwigXmlParser:
             elif child.tag == "class":
                  # Nested class
                  c_attrs = self._get_attributes(child)
-                 cls.classes.append(self._parse_class(child, c_attrs))
+                 # Nested classes inside a template are also templates/generics
+                 cls.classes.append(self._parse_class(child, c_attrs, is_template=is_template))
             elif child.tag == "enum":
                  e_attrs = self._get_attributes(child)
                  cls.enums.append(self._parse_enum(child, e_attrs))
@@ -241,7 +244,15 @@ class SwigXmlParser:
         top = Top(module=module)
         
         # Recursive traversal
-        def visit(node: ET.Element) -> None: # noqa: C901, PLR0912
+        def visit(node: ET.Element, in_template: bool = False) -> None: # noqa: C901, PLR0912
+            # Pre-check for class child if in template
+            has_class_child = False
+            if in_template:
+                for child in node:
+                    if child.tag == "class":
+                        has_class_child = True
+                        break
+
             for child in node:
                 tag = child.tag
                 if tag == "attributelist":
@@ -255,10 +266,13 @@ class SwigXmlParser:
                     if not attrs.get("name"):
                         continue
                         
-                    cls = self._parse_class(child, attrs)
+                    cls = self._parse_class(child, attrs, is_template=in_template)
                     module.classes.append(cls)
                 
                 elif tag == "cdecl":
+                    if in_template and has_class_child:
+                        continue
+
                     attrs = self._get_attributes(child)
                     if attrs.get("feature_ignore") == "1":
                         continue
@@ -274,8 +288,14 @@ class SwigXmlParser:
                     # Check if ignoring? usually not for enums
                     module.enums.append(self._parse_enum(child, attrs))
                 
+                elif tag == "template":
+                    attrs = self._get_attributes(child)
+                    if attrs.get("feature_ignore") == "1":
+                        continue
+                    visit(child, in_template=True)
+
                 elif tag in ("include", "namespace", "module", "top", "insert"):
-                    visit(child)
+                    visit(child, in_template)
         
         visit(root)
         return top

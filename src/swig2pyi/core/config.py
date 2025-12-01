@@ -14,6 +14,7 @@ class Config(BaseModel):
     smart_pointers: list[str]
     containers: dict[str, str]
     rename_operators: bool = False
+    extra_code: list[str] = []
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":

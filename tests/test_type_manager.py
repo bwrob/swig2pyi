@@ -47,17 +47,17 @@ def test_templates(type_manager) -> None:
 def test_containers(type_manager) -> None:
     assert (
         type_manager.to_python("std::vector<QuantLib::Real>")
-        == "typing.MutableSequence[float]"
+        == "list[float]"
     )
     assert (
         type_manager.to_python("std::vector<std::string>")
-        == "typing.MutableSequence[str]"
+        == "list[str]"
     )
 
     # Container with smart pointer
     assert (
         type_manager.to_python("std::vector<boost::shared_ptr<QuantLib::Date>>")
-        == "typing.MutableSequence[Date]"
+        == "list[Date]"
     )
 
 
