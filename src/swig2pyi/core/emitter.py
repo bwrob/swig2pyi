@@ -152,20 +152,33 @@ class StubEmitter:
         unique_sigs = {}
 
         for ctor in group:
-            params = self.format_params(ctor.parms)
-            full_params = f"self, {params}" if params else "self"
+            # Create a dummy CDecl for constructor to reuse _get_function_signature
+            # Constructors have no return type, so we pass "void" which maps to "None"
+            dummy_func = CDecl(
+                name="__init__",
+                kind="function",
+                type="void",
+                parms=ctor.parms,
+                mname="",
+                minfo=""
+            )
+            # is_method=True because constructors are methods
+            sig_tuple = self._get_function_signature(dummy_func, is_method=True)
+            
+            # Use the full signature tuple as the key for deduplication
+            if sig_tuple not in unique_sigs:
+                unique_sigs[sig_tuple] = ctor # Store original ctor for other info if needed
 
-            sig = full_params
-            if sig not in unique_sigs:
-                unique_sigs[sig] = ctor
+        sorted_sigs = sorted(unique_sigs.keys()) # Sort by the tuple itself, which is fine
 
-        sorted_sigs = sorted(unique_sigs.keys())
         use_overload = len(sorted_sigs) > 1
 
-        for sig in sorted_sigs:
+        for sig_tuple in sorted_sigs:
+            params_str, ret_type = sig_tuple # Unpack the signature components
+
             if use_overload:
                 self.write("@overload")
-            self.write(f"def __init__({sig}) -> None: ...")
+            self.write(f"def __init__({params_str}) -> {ret_type}: ...")
 
     def visit_function_group(self, group: list[CDecl], is_method: bool) -> None:
         # Deduplicate by Python signature
@@ -181,14 +194,13 @@ class StubEmitter:
         # If we have multiple signatures, use @overload
         use_overload = len(sorted_sigs) > 1
 
-        for sig in sorted_sigs:
-            func = unique_sigs[sig]
+        for sig_tuple in sorted_sigs: # Renamed sig to sig_tuple for clarity
+            func = unique_sigs[sig_tuple]
             name = func.name
             if is_method and self.tm.config.rename_operators:
                 name = self.map_operator(name)
 
-            # Signature components
-            params_str, ret_type = sig
+            params_str, ret_type = sig_tuple # Unpack the signature components
 
             if use_overload:
                 self.write("@overload")
@@ -196,8 +208,30 @@ class StubEmitter:
             self.write(f"def {name}({params_str}) -> {ret_type}: ...")
 
     def _get_function_signature(self, func: CDecl, is_method: bool):
-        params = self.format_params(func.parms)
-        full_params = (f"self, {params}" if params else "self") if is_method else params
+        param_parts = self.format_params(func.parms)
+        
+        if is_method:
+            param_parts.insert(0, "self")
+
+        if len(param_parts) > 1:
+            # Multi-line parameters
+            self.indent()
+            params_str = ",\n".join(self.indent_level * "    " + p for p in param_parts)
+            self.dedent()
+            # The extra comma makes it consistent even for one parameter
+            full_params = f"\n{params_str},\n" + self.indent_level * "    "
+        elif len(param_parts) == 1:
+            # Single parameter (like 'self' only, or 'self, param')
+            # Forcing multi-line if any actual parameters (other than self)
+            if is_method and len(func.parms) == 0:
+                full_params = "self" # only self, keep on one line
+            else:
+                self.indent()
+                params_str = ",\n".join(self.indent_level * "    " + p for p in param_parts)
+                self.dedent()
+                full_params = f"\n{params_str},\n" + self.indent_level * "    "
+        else:
+            full_params = ""
 
         ret_type = self.tm.to_python(func.type) if func.type else "Any"
         if ret_type == "void":
@@ -215,31 +249,31 @@ class StubEmitter:
         # Destructors usually handled separately or ignored in stubs
         return bool(name.startswith("~"))
 
-    def format_params(self, parms: list[Parm]) -> str:
+    def _get_sanitized_name(self, name: str) -> str:
+        # Comprehensive list of Python reserved keywords
+        reserved_keywords = {
+            "False", "None", "True", "and", "as", "assert", "async", "await", "break",
+            "class", "continue", "def", "del", "elif", "else", "except", "finally",
+            "for", "from", "global", "if", "import", "in", "is", "lambda", "nonlocal",
+            "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"
+        }
+        if name in reserved_keywords:
+            return name + "_"
+        return name
+
+    def format_params(self, parms: list[Parm]) -> list[str]:
         parts = []
         for i, p in enumerate(parms):
             p_name = p.name
             if not p_name:
                 p_name = f"arg{i}"  # Default name if missing
 
-            # Sanitize keywords
-            if p_name in [
-                "from",
-                "in",
-                "global",
-                "lambda",
-                "class",
-                "def",
-                "pass",
-                "None",
-                "yield",
-            ]:
-                p_name += "_"
+            p_name = self._get_sanitized_name(p_name)
 
             p_type = self.tm.to_python(p.type) if p.type else "Any"
             parts.append(f"{p_name}: {p_type}")
 
-        return ", ".join(parts)
+        return parts
 
     def map_operator(self, name: str) -> str:
         normalized = name.replace(" ", "")
