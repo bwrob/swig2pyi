@@ -1,3 +1,5 @@
+from enum import IntEnum
+import re
 from .parser import CDecl, Class, Constructor, Enum, Module, Parm, Top
 from .type_system import TypeManager
 
@@ -80,19 +82,17 @@ class StubEmitter:
         if "::" in name:
             name = name.split("::")[-1]
 
-        # Emit as a class inheriting from int
-        self.write(f"class {name}(int):")
+        # Emit as a class inheriting from IntEnum
+        self.write(f"class {name}(IntEnum):")
         self.indent()
 
         has_items = False
         for item in enum.items:
-            # Emit as class variables: NAME: int = VALUE
-            # Value is optional, sometimes helpful.
-
+            # Emit as class variables: NAME = VALUE
             item_name = self._get_sanitized_name(item.name)
 
             val_str = f" = {item.value}" if item.value is not None else ""
-            self.write(f"{item_name}: int{val_str}")
+            self.write(f"{item_name}{val_str}")
             has_items = True
 
         if not has_items:
@@ -126,6 +126,16 @@ class StubEmitter:
                 # Assuming base classes are mapped or in the same module.
                 normalized_base = self.tm.to_python(b)
                 base_names.append(normalized_base)
+
+                # Handle/RelinkableHandle instantiation: Inherit from wrapped type
+                # Matches Handle[...] or RelinkableHandle[...]
+                match = re.search(
+                    r"(?:^|\.)(?:Handle|RelinkableHandle)\[(.+)\]$", normalized_base
+                )
+                if match:
+                    wrapped_type = match.group(1)
+                    if wrapped_type not in base_names:
+                        base_names.append(wrapped_type)
 
         if cls.is_template:
             base_names.append("Generic[_T]")

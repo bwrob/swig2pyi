@@ -77,10 +77,10 @@ def test_parse_and_emit_enum() -> None:
     emitter.emit(top)
     output = emitter.get_output()
 
-    assert "class Color(int):" in output
-    assert "Red: int = 0" in output
-    assert "Blue: int" in output
+    assert "class Color(IntEnum):" in output
+    assert "Red = 0" in output
+    assert "Blue" in output
 
     assert "class Shape:" in output
-    assert "class Style(int):" in output
-    assert "Solid: int = 10" in output
+    assert "class Style(IntEnum):" in output
+    assert "Solid = 10" in output

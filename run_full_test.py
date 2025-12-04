@@ -19,7 +19,9 @@ def run_full_test() -> None:
     # Point to the FULL quantlib.i
     interface_file = base_dir / "data" / "quantlib-1.40" / "quantlib.i"
     config_file = base_dir.parent / "src" / "swig2pyi" / "rules" / "quantlib.json"
-    output_file = base_dir / "expected_output" / "quantlib_full.pyi"
+    output_dir = base_dir / "expected_output" / "QuantLib"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / "__init__.pyi"
 
     assert interface_file.exists(), f"Interface file not found: {interface_file}"
     assert config_file.exists(), f"Config file not found: {config_file}"

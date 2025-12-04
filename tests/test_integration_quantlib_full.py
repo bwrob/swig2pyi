@@ -9,16 +9,14 @@ from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
 
-def test_quantlib_mini_generation() -> None:
+def test_quantlib_full_generation() -> None:
     base_dir = Path(__file__).parent
-    interface_file = base_dir / "data" / "quantlib-1.40" / "quantlib_mini.i"
+    interface_file = base_dir / "data" / "quantlib-1.40" / "quantlib.i"
     config_file = base_dir.parent / "src" / "swig2pyi" / "rules" / "quantlib.json"
-    expected_output_file = base_dir / "expected_output" / "quantlib_mini.pyi"
+    expected_output_file = base_dir / "expected_output" / "QuantLib" / "__init__.pyi"
 
     assert interface_file.exists()
     assert config_file.exists()
-    # expected_output_file might not exist if we just created it, but we want to verify against it if it does,
-    # or fail if it doesn't (since the user asked to use it as a baseline).
     assert expected_output_file.exists()
 
     config = Config.from_file(config_file)

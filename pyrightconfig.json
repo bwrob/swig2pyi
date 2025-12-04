@@ -4,5 +4,6 @@
         "tests/assets"
     ],
     "pythonVersion": "3.10",
-    "typeCheckingMode": "all"
+    "typeCheckingMode": "strict",
+    "stubPath": "./tests/expected_output"
 }
