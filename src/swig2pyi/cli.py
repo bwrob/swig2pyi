@@ -22,6 +22,9 @@ def main() -> None:
     parser.add_argument(
         "--swig-path", type=str, default="swig", help="Path to swig executable (used only with --interface)"
     )
+    parser.add_argument(
+        "--validate", "-v", action="store_true", help="Run QA validation (ruff/pyright) on the generated file"
+    )
 
     args = parser.parse_args()
 
@@ -40,12 +43,23 @@ def main() -> None:
             if not args.interface.exists():
                 print(f"Error: Interface file not found: {args.interface}", file=sys.stderr)
                 sys.exit(1)
-            generate_from_interface(args.interface, config, args.output, args.swig_path)
+            generate_from_interface(
+                args.interface, 
+                config, 
+                args.output, 
+                args.swig_path,
+                validate=args.validate
+            )
         elif args.xml:
             if not args.xml.exists():
                 print(f"Error: XML file not found: {args.xml}", file=sys.stderr)
                 sys.exit(1)
-            generate_from_xml(args.xml, config, args.output)
+            generate_from_xml(
+                args.xml, 
+                config, 
+                args.output,
+                validate=args.validate
+            )
             
         print(f"Successfully generated stub at {args.output}")
 

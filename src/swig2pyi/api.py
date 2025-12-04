@@ -6,6 +6,7 @@ from typing import Optional
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.qa import QAValidator
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
@@ -15,6 +16,7 @@ def generate_from_interface(
     config: Config,
     output_file: Path,
     swig_path: str = "swig",
+    validate: bool = False,
 ) -> None:
     """
     Generates a Python stub (.pyi) file from a SWIG interface (.i) file.
@@ -24,6 +26,7 @@ def generate_from_interface(
         config: Configuration object.
         output_file: Path to write the generated stub to.
         swig_path: Path to the swig executable.
+        validate: Whether to run QA validation (Ruff/Pyright) on the output.
     """
     runner = SwigRunner(swig_path=swig_path)
     xml_fd, xml_path = tempfile.mkstemp(suffix=".xml")
@@ -32,7 +35,7 @@ def generate_from_interface(
 
     try:
         runner.run(config.includes, interface_file, xml_path_obj)
-        generate_from_xml(xml_path_obj, config, output_file)
+        generate_from_xml(xml_path_obj, config, output_file, validate=validate)
     finally:
         if os.path.exists(xml_path):
             os.unlink(xml_path)
@@ -42,6 +45,7 @@ def generate_from_xml(
     xml_file: Path,
     config: Config,
     output_file: Path,
+    validate: bool = False,
 ) -> None:
     """
     Generates a Python stub (.pyi) file from a pre-generated SWIG XML file.
@@ -50,6 +54,7 @@ def generate_from_xml(
         xml_file: Path to the SWIG XML file.
         config: Configuration object.
         output_file: Path to write the generated stub to.
+        validate: Whether to run QA validation (Ruff/Pyright) on the output.
     """
     parser = SwigXmlParser()
     top = parser.parse_file(xml_file)
@@ -65,3 +70,7 @@ def generate_from_xml(
 
     with open(output_file, "w") as f:
         f.write(output_content)
+
+    if validate:
+        validator = QAValidator()
+        validator.validate(output_file)
