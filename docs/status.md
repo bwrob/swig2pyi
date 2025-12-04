@@ -1,7 +1,7 @@
 # Project Status - Swig2Pyi Refactor
 
-**Date:** December 1, 2025
-**Status:** Operational. Major refactor to XML-based pipeline is complete. Focus shifting to robustness, usability, and code quality.
+**Date:** December 4, 2025
+**Status:** Operational & Validated. Full QuantLib generation successful. Type system significantly hardened.
 
 ## Achievements
 
@@ -12,30 +12,35 @@ The "Universal Pipeline" described in `GUIDELINES.md` is fully implemented:
 *   **Type System:** Configuration-driven mapping (`quantlib.json`) with smart pointer unwrapping and container mapping.
 *   **Stub Emitter:** Emits Python 3 code with type hints, overloads, and sanitized parameter names.
 
-### 2. Integration Verified
-*   Validated against a significant subset of QuantLib 1.40 interfaces (`ql_mini.i` extended).
-*   **Test Coverage:** 13 passing tests covering parser edge cases, type normalization, and integration.
+### 2. Integration Verified (Updated)
+*   **Full QuantLib Suite:** Successfully generated stubs for the entire `quantlib.i` interface (approx. 33k lines of stubs).
+*   **Type Checker Validation:** Generated stubs passed manual `pyright` (strict mode) validation for core usage patterns.
+*   **Test Coverage:** Integration tests updated to run against the full QuantLib library. New unit tests added for inheritance logic and enum typing.
+
+### 3. Feature Enhancements (New)
+*   **Handle/RelinkableHandle Support:** Implemented sophisticated inheritance logic. `Handle[T]` now inherits from `T`, exposing wrapped methods to type checkers (e.g., `YieldTermStructureHandle` exposes `discount()`).
+*   **IntEnum Support:** Enums now inherit from `enum.IntEnum` instead of `int`, ensuring better semantic correctness and type safety.
+*   **PEP 561 Compliance:** Output structure adjusted to `QuantLib/__init__.pyi` for automatic stub discovery by type checkers.
 
 ## Known Issues
-*   **Parameter Name Sanitation:** The `yield` keyword and other Python reserved words need consistent sanitation.
-*   **Complex Templates:** Some complex template types might still require manual mapping.
+*   **Parameter Name Sanitation:** The `yield` keyword and other Python reserved words need consistent sanitation (Mostly addressed, but needs monitoring).
+*   **Complex Templates:** Some deeply nested templates might still require manual mapping, though coverage is good.
 
 ## Roadmap
 
-This roadmap outlines the prioritized steps for further development, addressing newly identified requirements and enhancing the tool's robustness and usability.
+This roadmap outlines the prioritized steps for further development.
 
-1.  **QA Integration (High Priority):**
-    *   **Objective:** Ensure generated `.pyi` files conform to Python coding standards and type-checking rules.
+1.  **CLI & API Separation + Direct XML Input (Next):**
+    *   **Objective:** Refactor `main.py` into `swig2pyi.api` and `swig2pyi.cli`. Implement "Direct XML Input" mode to bypass `swig` execution if XML is pre-generated.
+    *   **Action:** 
+        *   Create `src/swig2pyi/cli.py` and `src/swig2pyi/api.py`.
+        *   Add `--xml-input` flag to CLI.
+        *   Document usage.
+
+2.  **QA Integration (Formalize):**
+    *   **Objective:** Ensure generated `.pyi` files conform to Python coding standards and type-checking rules automatically.
     *   **Action:** Implement a `QAValidator` class or module. This component will run `ruff` (for linting and formatting) and `basedpyright` (for strict type checking) on generated `.pyi` files. The generation process should fail or emit clear warnings if validation checks are not passed.
-2.  **Full Library Stress Test (High Priority):**
-    *   **Objective:** Identify and resolve all remaining parsing errors, type resolution issues, and edge cases.
-    *   **Action:** Run `swig2pyi` against the *entire* QuantLib interface (`quantlib.i`), not just the previously validated subset. This will serve as a comprehensive integration test.
-3.  **CLI & API Separation with Documentation:**
-    *   **Objective:** Provide both a clear programmatic API for integration into other tools and a user-friendly command-line interface, both thoroughly documented.
-    *   **Action:** Refactor the existing `main.py` into distinct `swig2pyi.api` (for the programmatic interface) and `swig2pyi.cli` (for command-line parsing and execution) modules. This includes adding comprehensive Python docstrings for the API and detailed usage instructions for the CLI.
-4.  **Direct XML Input Mode:**
-    *   **Objective:** Enable the tool to process pre-generated SWIG XML files directly, decoupling the stub generation from the SWIG execution step.
-    *   **Action:** Implement functionality to accept an `.xml` file as input, bypassing the `SwigRunner` component. This allows for greater flexibility in build pipelines.
-5.  **Enhancements:**
+
+3.  **Enhancements:**
     *   **Docstrings:** Extract and emit docstrings from SWIG comments into the `.pyi` files for improved code clarity.
     *   **Properties:** Detect and correctly emit public member variables as properties in the generated stubs.
