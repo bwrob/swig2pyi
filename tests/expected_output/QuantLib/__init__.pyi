@@ -1,4 +1,3 @@
-# pyright: reportUnusedImport=false, reportDeprecated=false, reportExplicitAny=false, reportInvalidTypeVarUse=false
 import typing
 from typing import Any, Optional, overload, Generic, TypeVar
 import collections.abc
@@ -15,78 +14,78 @@ class RelinkableHandle(Handle[_T]):
 class TimeSeries(Generic[_T]):
     def __init__(self) -> None: ...
 
-class Weekday(int):
-    Sunday: int = 1
-    Monday: int = 2
-    Tuesday: int = 3
-    Wednesday: int = 4
-    Thursday: int = 5
-    Friday: int = 6
-    Saturday: int = 7
+class Weekday(IntEnum):
+    Sunday = 1
+    Monday = 2
+    Tuesday = 3
+    Wednesday = 4
+    Thursday = 5
+    Friday = 6
+    Saturday = 7
 
-class Month(int):
-    January: int = 1
-    February: int = 2
-    March: int = 3
-    April: int = 4
-    May: int = 5
-    June: int = 6
-    July: int = 7
-    August: int = 8
-    September: int = 9
-    October: int = 10
-    November: int = 11
-    December: int = 12
+class Month(IntEnum):
+    January = 1
+    February = 2
+    March = 3
+    April = 4
+    May = 5
+    June = 6
+    July = 7
+    August = 8
+    September = 9
+    October = 10
+    November = 11
+    December = 12
 
-class TimeUnit(int):
-    Days: int
-    Weeks: int
-    Months: int
-    Years: int
-    Hours: int
-    Minutes: int
-    Seconds: int
-    Milliseconds: int
-    Microseconds: int
+class TimeUnit(IntEnum):
+    Days
+    Weeks
+    Months
+    Years
+    Hours
+    Minutes
+    Seconds
+    Milliseconds
+    Microseconds
 
-class Frequency(int):
-    NoFrequency: int = -1
-    Once: int = 0
-    Annual: int = 1
-    Semiannual: int = 2
-    EveryFourthMonth: int = 3
-    Quarterly: int = 4
-    Bimonthly: int = 6
-    Monthly: int = 12
-    EveryFourthWeek: int = 13
-    Biweekly: int = 26
-    Weekly: int = 52
-    Daily: int = 365
-    OtherFrequency: int = 999
+class Frequency(IntEnum):
+    NoFrequency = -1
+    Once = 0
+    Annual = 1
+    Semiannual = 2
+    EveryFourthMonth = 3
+    Quarterly = 4
+    Bimonthly = 6
+    Monthly = 12
+    EveryFourthWeek = 13
+    Biweekly = 26
+    Weekly = 52
+    Daily = 365
+    OtherFrequency = 999
 
-class BusinessDayConvention(int):
-    Following: int
-    ModifiedFollowing: int
-    Preceding: int
-    ModifiedPreceding: int
-    Unadjusted: int
-    HalfMonthModifiedFollowing: int
-    Nearest: int
+class BusinessDayConvention(IntEnum):
+    Following
+    ModifiedFollowing
+    Preceding
+    ModifiedPreceding
+    Unadjusted
+    HalfMonthModifiedFollowing
+    Nearest
 
-class JointCalendarRule(int):
-    JoinHolidays: int
-    JoinBusinessDays: int
+class JointCalendarRule(IntEnum):
+    JoinHolidays
+    JoinBusinessDays
 
-class Compounding(int):
-    Simple: int
-    Compounded: int
-    Continuous: int
-    SimpleThenCompounded: int
-    CompoundedThenSimple: int
+class Compounding(IntEnum):
+    Simple
+    Compounded
+    Continuous
+    SimpleThenCompounded
+    CompoundedThenSimple
 
-class VolatilityType(int):
-    ShiftedLognormal: int
-    Normal: int
+class VolatilityType(IntEnum):
+    ShiftedLognormal
+    Normal
 
 def reset() -> None: ...
 def daysBetween(
@@ -2607,19 +2606,19 @@ class PeriodParser:
     ) -> Period: ...
 
 class IMM:
-    class Month(int):
-        F: int = 1
-        G: int = 2
-        H: int = 3
-        J: int = 4
-        K: int = 5
-        M: int = 6
-        N: int = 7
-        Q: int = 8
-        U: int = 9
-        V: int = 10
-        X: int = 11
-        Z: int = 12
+    class Month(IntEnum):
+        F = 1
+        G = 2
+        H = 3
+        J = 4
+        K = 5
+        M = 6
+        N = 7
+        Q = 8
+        U = 9
+        V = 10
+        X = 11
+        Z = 12
 
     def __init__(self) -> None: ...
     @overload
@@ -2723,19 +2722,19 @@ class IMM:
     def nextCode(self) -> str: ...
 
 class ASX:
-    class Month(int):
-        F: int = 1
-        G: int = 2
-        H: int = 3
-        J: int = 4
-        K: int = 5
-        M: int = 6
-        N: int = 7
-        Q: int = 8
-        U: int = 9
-        V: int = 10
-        X: int = 11
-        Z: int = 12
+    class Month(IntEnum):
+        F = 1
+        G = 2
+        H = 3
+        J = 4
+        K = 5
+        M = 6
+        N = 7
+        Q = 8
+        U = 9
+        V = 10
+        X = 11
+        Z = 12
 
     def __init__(self) -> None: ...
     @overload
@@ -2976,8 +2975,8 @@ class Calendar:
     def empty(self) -> bool: ...
 
 class Argentina(Calendar):
-    class Market(int):
-        Merval: int
+    class Market(IntEnum):
+        Merval
 
     @overload
     def __init__(
@@ -2988,9 +2987,9 @@ class Argentina(Calendar):
     def __init__(self) -> None: ...
 
 class Australia(Calendar):
-    class Market(int):
-        Settlement: int
-        ASX: int
+    class Market(IntEnum):
+        Settlement
+        ASX
 
     @overload
     def __init__(
@@ -3001,9 +3000,9 @@ class Australia(Calendar):
     def __init__(self) -> None: ...
 
 class Austria(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -3017,9 +3016,9 @@ class Botswana(Calendar):
     def __init__(self) -> None: ...
 
 class Brazil(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -3030,9 +3029,9 @@ class Brazil(Calendar):
     def __init__(self) -> None: ...
 
 class Canada(Calendar):
-    class Market(int):
-        Settlement: int
-        TSX: int
+    class Market(IntEnum):
+        Settlement
+        TSX
 
     @overload
     def __init__(
@@ -3043,8 +3042,8 @@ class Canada(Calendar):
     def __init__(self) -> None: ...
 
 class Chile(Calendar):
-    class Market(int):
-        SSE: int
+    class Market(IntEnum):
+        SSE
 
     @overload
     def __init__(
@@ -3055,9 +3054,9 @@ class Chile(Calendar):
     def __init__(self) -> None: ...
 
 class China(Calendar):
-    class Market(int):
-        SSE: int
-        IB: int
+    class Market(IntEnum):
+        SSE
+        IB
 
     @overload
     def __init__(
@@ -3068,8 +3067,8 @@ class China(Calendar):
     def __init__(self) -> None: ...
 
 class CzechRepublic(Calendar):
-    class Market(int):
-        PSE: int
+    class Market(IntEnum):
+        PSE
 
     @overload
     def __init__(
@@ -3086,9 +3085,9 @@ class Finland(Calendar):
     def __init__(self) -> None: ...
 
 class France(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -3099,11 +3098,11 @@ class France(Calendar):
     def __init__(self) -> None: ...
 
 class Germany(Calendar):
-    class Market(int):
-        Settlement: int
-        FrankfurtStockExchange: int
-        Xetra: int
-        Eurex: int
+    class Market(IntEnum):
+        Settlement
+        FrankfurtStockExchange
+        Xetra
+        Eurex
 
     @overload
     def __init__(
@@ -3114,8 +3113,8 @@ class Germany(Calendar):
     def __init__(self) -> None: ...
 
 class HongKong(Calendar):
-    class Market(int):
-        HKEx: int
+    class Market(IntEnum):
+        HKEx
 
     @overload
     def __init__(
@@ -3129,8 +3128,8 @@ class Hungary(Calendar):
     def __init__(self) -> None: ...
 
 class Iceland(Calendar):
-    class Market(int):
-        ICEX: int
+    class Market(IntEnum):
+        ICEX
 
     @overload
     def __init__(
@@ -3141,8 +3140,8 @@ class Iceland(Calendar):
     def __init__(self) -> None: ...
 
 class India(Calendar):
-    class Market(int):
-        NSE: int
+    class Market(IntEnum):
+        NSE
 
     @overload
     def __init__(
@@ -3153,9 +3152,9 @@ class India(Calendar):
     def __init__(self) -> None: ...
 
 class Indonesia(Calendar):
-    class Market(int):
-        BEJ: int
-        JSX: int
+    class Market(IntEnum):
+        BEJ
+        JSX
 
     @overload
     def __init__(
@@ -3166,10 +3165,10 @@ class Indonesia(Calendar):
     def __init__(self) -> None: ...
 
 class Israel(Calendar):
-    class Market(int):
-        Settlement: int
-        TASE: int
-        SHIR: int
+    class Market(IntEnum):
+        Settlement
+        TASE
+        SHIR
 
     @overload
     def __init__(
@@ -3180,9 +3179,9 @@ class Israel(Calendar):
     def __init__(self) -> None: ...
 
 class Italy(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -3196,8 +3195,8 @@ class Japan(Calendar):
     def __init__(self) -> None: ...
 
 class Mexico(Calendar):
-    class Market(int):
-        BMV: int
+    class Market(IntEnum):
+        BMV
 
     @overload
     def __init__(
@@ -3208,9 +3207,9 @@ class Mexico(Calendar):
     def __init__(self) -> None: ...
 
 class NewZealand(Calendar):
-    class Market(int):
-        Wellington: int
-        Auckland: int
+    class Market(IntEnum):
+        Wellington
+        Auckland
 
     @overload
     def __init__(
@@ -3224,9 +3223,9 @@ class Norway(Calendar):
     def __init__(self) -> None: ...
 
 class Poland(Calendar):
-    class Market(int):
-        Settlement: int
-        WSE: int
+    class Market(IntEnum):
+        Settlement
+        WSE
 
     @overload
     def __init__(
@@ -3237,9 +3236,9 @@ class Poland(Calendar):
     def __init__(self) -> None: ...
 
 class Romania(Calendar):
-    class Market(int):
-        Public: int
-        BVB: int
+    class Market(IntEnum):
+        Public
+        BVB
 
     @overload
     def __init__(
@@ -3250,9 +3249,9 @@ class Romania(Calendar):
     def __init__(self) -> None: ...
 
 class Russia(Calendar):
-    class Market(int):
-        Settlement: int
-        MOEX: int
+    class Market(IntEnum):
+        Settlement
+        MOEX
 
     @overload
     def __init__(
@@ -3263,8 +3262,8 @@ class Russia(Calendar):
     def __init__(self) -> None: ...
 
 class SaudiArabia(Calendar):
-    class Market(int):
-        Tadawul: int
+    class Market(IntEnum):
+        Tadawul
 
     @overload
     def __init__(
@@ -3275,8 +3274,8 @@ class SaudiArabia(Calendar):
     def __init__(self) -> None: ...
 
 class Singapore(Calendar):
-    class Market(int):
-        SGX: int
+    class Market(IntEnum):
+        SGX
 
     @overload
     def __init__(
@@ -3287,8 +3286,8 @@ class Singapore(Calendar):
     def __init__(self) -> None: ...
 
 class Slovakia(Calendar):
-    class Market(int):
-        BSSE: int
+    class Market(IntEnum):
+        BSSE
 
     @overload
     def __init__(
@@ -3302,9 +3301,9 @@ class SouthAfrica(Calendar):
     def __init__(self) -> None: ...
 
 class SouthKorea(Calendar):
-    class Market(int):
-        Settlement: int
-        KRX: int
+    class Market(IntEnum):
+        Settlement
+        KRX
 
     @overload
     def __init__(
@@ -3321,8 +3320,8 @@ class Switzerland(Calendar):
     def __init__(self) -> None: ...
 
 class Taiwan(Calendar):
-    class Market(int):
-        TSEC: int
+    class Market(IntEnum):
+        TSEC
 
     @overload
     def __init__(
@@ -3342,8 +3341,8 @@ class Turkey(Calendar):
     def __init__(self) -> None: ...
 
 class Ukraine(Calendar):
-    class Market(int):
-        USE: int
+    class Market(IntEnum):
+        USE
 
     @overload
     def __init__(
@@ -3354,10 +3353,10 @@ class Ukraine(Calendar):
     def __init__(self) -> None: ...
 
 class UnitedKingdom(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
-        Metals: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
+        Metals
 
     @overload
     def __init__(
@@ -3368,14 +3367,14 @@ class UnitedKingdom(Calendar):
     def __init__(self) -> None: ...
 
 class UnitedStates(Calendar):
-    class Market(int):
-        Settlement: int
-        NYSE: int
-        GovernmentBond: int
-        NERC: int
-        LiborImpact: int
-        FederalReserve: int
-        SOFR: int
+    class Market(IntEnum):
+        Settlement
+        NYSE
+        GovernmentBond
+        NERC
+        LiborImpact
+        FederalReserve
+        SOFR
 
     def __init__(
         self,
@@ -3518,10 +3517,10 @@ class Actual364(DayCounter):
     def __init__(self) -> None: ...
 
 class Actual365Fixed(DayCounter):
-    class Convention(int):
-        Standard: int
-        Canadian: int
-        NoLeap: int
+    class Convention(IntEnum):
+        Standard
+        Canadian
+        NoLeap
 
     @overload
     def __init__(
@@ -3532,16 +3531,16 @@ class Actual365Fixed(DayCounter):
     def __init__(self) -> None: ...
 
 class Thirty360(DayCounter):
-    class Convention(int):
-        USA: int
-        BondBasis: int
-        European: int
-        EurobondBasis: int
-        Italian: int
-        German: int
-        ISMA: int
-        ISDA: int
-        NASD: int
+    class Convention(IntEnum):
+        USA
+        BondBasis
+        European
+        EurobondBasis
+        Italian
+        German
+        ISMA
+        ISDA
+        NASD
 
     @overload
     def __init__(
@@ -3559,14 +3558,14 @@ class Thirty365(DayCounter):
     def __init__(self) -> None: ...
 
 class ActualActual(DayCounter):
-    class Convention(int):
-        ISMA: int
-        Bond: int
-        ISDA: int
-        Historical: int
-        Actual365: int
-        AFB: int
-        Euro: int
+    class Convention(IntEnum):
+        ISMA
+        Bond
+        ISDA
+        Historical
+        Actual365
+        AFB
+        Euro
 
     @overload
     def __init__(
@@ -4226,13 +4225,13 @@ class Matrix:
     def columns(self) -> int: ...
 
 class SalvagingAlgorithm:
-    class Type(int):
-        None_: int
-        Spectral: int
-        Hypersphere: int
-        LowerDiagonal: int
-        Higham: int
-        Principal: int
+    class Type(IntEnum):
+        None_
+        Spectral
+        Hypersphere
+        LowerDiagonal
+        Higham
+        Principal
 
     def __init__(self) -> None: ...
 
@@ -4414,15 +4413,15 @@ class NonhomogeneousBoundaryConstraint(Constraint):
     ) -> None: ...
 
 class EndCriteria:
-    class Type(int):
-        None_: int
-        MaxIterations: int
-        StationaryPoint: int
-        StationaryFunctionValue: int
-        StationaryFunctionAccuracy: int
-        ZeroGradientNorm: int
-        FunctionEpsilonTooSmall: int
-        Unknown: int
+    class Type(IntEnum):
+        None_
+        MaxIterations
+        StationaryPoint
+        StationaryFunctionValue
+        StationaryFunctionAccuracy
+        ZeroGradientNorm
+        FunctionEpsilonTooSmall
+        Unknown
 
     def __init__(
         self,
@@ -4550,10 +4549,10 @@ class ReannealingTrivial:
     def __init__(self) -> None: ...
 
 class GaussianSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
+    class ResetScheme(IntEnum):
+        NoResetScheme
+        ResetToBestPoint
+        ResetToOrigin
 
     @overload
     def __init__(
@@ -4627,10 +4626,10 @@ class GaussianSimulatedAnnealing(OptimizationMethod):
     ) -> None: ...
 
 class MirrorGaussianSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
+    class ResetScheme(IntEnum):
+        NoResetScheme
+        ResetToBestPoint
+        ResetToOrigin
 
     @overload
     def __init__(
@@ -4704,10 +4703,10 @@ class MirrorGaussianSimulatedAnnealing(OptimizationMethod):
     ) -> None: ...
 
 class LogNormalSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
+    class ResetScheme(IntEnum):
+        NoResetScheme
+        ResetToBestPoint
+        ResetToOrigin
 
     @overload
     def __init__(
@@ -5132,22 +5131,22 @@ class SafeBicubicSpline:
     ) -> float: ...
 
 class CubicInterpolation:
-    class DerivativeApprox(int):
-        Spline: int
-        SplineOM1: int
-        SplineOM2: int
-        FourthOrder: int
-        Parabolic: int
-        FritschButland: int
-        Akima: int
-        Kruger: int
-        Harmonic: int
+    class DerivativeApprox(IntEnum):
+        Spline
+        SplineOM1
+        SplineOM2
+        FourthOrder
+        Parabolic
+        FritschButland
+        Akima
+        Kruger
+        Harmonic
 
 
 class MixedInterpolation:
-    class Behavior(int):
-        ShareRanges: int
-        SplitRanges: int
+    class Behavior(IntEnum):
+        ShareRanges
+        SplitRanges
 
 
 class BackwardFlat:
@@ -5270,9 +5269,9 @@ class RichardsonExtrapolation:
     def __call__(self) -> float: ...
 
 class ChebyshevInterpolation:
-    class PointsType(int):
-        FirstKind: int
-        SecondKind: int
+    class PointsType(IntEnum):
+        FirstKind
+        SecondKind
 
     @overload
     def __init__(
@@ -6129,11 +6128,11 @@ class QuantoTermStructure(YieldTermStructure):
     ) -> None: ...
 
 class IntervalPrice:
-    class Type(int):
-        Open: int
-        Close: int
-        High: int
-        Low: int
+    class Type(IntEnum):
+        Open
+        Close
+        High
+        Low
 
     def __init__(
         self,
@@ -7519,17 +7518,17 @@ class Bibor1Y(Bibor):
     def __init__(self) -> None: ...
 
 class DateGeneration:
-    class Rule(int):
-        Backward: int
-        Forward: int
-        Zero: int
-        ThirdWednesday: int
-        ThirdWednesdayInclusive: int
-        Twentieth: int
-        TwentiethIMM: int
-        OldCDS: int
-        CDS: int
-        CDS2015: int
+    class Rule(IntEnum):
+        Backward
+        Forward
+        Zero
+        ThirdWednesday
+        ThirdWednesdayInclusive
+        Twentieth
+        TwentiethIMM
+        OldCDS
+        CDS
+        CDS2015
 
     def __init__(self) -> None: ...
 
@@ -8632,9 +8631,9 @@ class BlackVarianceCurve(Any):
     ) -> None: ...
 
 class BlackVarianceSurface(Any):
-    class Extrapolation(int):
-        ConstantExtrapolation: int
-        InterpolatorDefaultExtrapolation: int
+    class Extrapolation(IntEnum):
+        ConstantExtrapolation
+        InterpolatorDefaultExtrapolation
 
 
 class ConstantOptionletVolatility(OptionletVolatilityStructure):
@@ -10183,15 +10182,15 @@ class NoArbSabrInterpolatedSmileSection(SmileSection):
     def endCriteria(self) -> EndCriteria.Type: ...
 
 class AndreasenHugeVolatilityInterpl(Observable):
-    class InterpolationType(int):
-        PiecewiseConstant: int
-        Linear: int
-        CubicSpline: int
+    class InterpolationType(IntEnum):
+        PiecewiseConstant
+        Linear
+        CubicSpline
 
-    class CalibrationType(int):
-        Call: int = 1
-        Put: int = -1
-        CallPut: int
+    class CalibrationType(IntEnum):
+        Call = 1
+        Put = -1
+        CallPut
 
     @overload
     def __init__(
@@ -10391,10 +10390,10 @@ class CmsMarket:
     ) -> Array: ...
 
 class CmsMarketCalibration:
-    class CalibrationType(int):
-        OnSpread: int
-        OnPrice: int
-        OnForwardCmsPrice: int
+    class CalibrationType(IntEnum):
+        OnSpread
+        OnPrice
+        OnForwardCmsPrice
 
     def __init__(
         self,
@@ -10617,9 +10616,9 @@ class FloatingRateCoupon(Coupon):
     ) -> None: ...
 
 class RateAveraging:
-    class Type(int):
-        Simple: int
-        Compound: int
+    class Type(IntEnum):
+        Simple
+        Compound
 
     def __init__(self) -> None: ...
 
@@ -11308,9 +11307,9 @@ class IborCouponPricer(FloatingRateCouponPricer):
     def setCapletVolatility(self) -> None: ...
 
 class BlackIborCouponPricer(IborCouponPricer):
-    class TimingAdjustment(int):
-        Black76: int
-        BivariateLognormal: int
+    class TimingAdjustment(IntEnum):
+        Black76
+        BivariateLognormal
 
     @overload
     def __init__(
@@ -11613,11 +11612,11 @@ class CmsCouponPricer(FloatingRateCouponPricer):
     def setSwaptionVolatility(self) -> None: ...
 
 class GFunctionFactory:
-    class YieldCurveModel(int):
-        Standard: int
-        ExactYield: int
-        ParallelShifts: int
-        NonParallelShifts: int
+    class YieldCurveModel(IntEnum):
+        Standard
+        ExactYield
+        ParallelShifts
+        NonParallelShifts
 
     def __init__(self) -> None: ...
 
@@ -11983,11 +11982,11 @@ class LinearTsrPricer(CmsCouponPricer):
     ) -> None: ...
 
 class Settings:
-    class Strategy(int):
-        RateBound: int
-        VegaRatio: int
-        PriceThreshold: int
-        BSStdDevs: int
+    class Strategy(IntEnum):
+        RateBound
+        VegaRatio
+        PriceThreshold
+        BSStdDevs
 
     def __init__(self) -> None: ...
     @overload
@@ -12198,10 +12197,10 @@ class RangeAccrualPricerByBgm(RangeAccrualPricer):
     ) -> None: ...
 
 class Duration:
-    class Type(int):
-        Simple: int
-        Macaulay: int
-        Modified: int
+    class Type(IntEnum):
+        Simple
+        Macaulay
+        Modified
 
     def __init__(self) -> None: ...
 
@@ -12794,10 +12793,10 @@ class FractionalDividend(Dividend):
     ) -> None: ...
 
 class Exercise:
-    class Type(int):
-        American: int
-        Bermudan: int
-        European: int
+    class Type(IntEnum):
+        American
+        Bermudan
+        European
 
     def __init__(
         self,
@@ -13079,16 +13078,16 @@ class VarianceGammaProcess(StochasticProcess1D):
     ) -> None: ...
 
 class HestonProcess(StochasticProcess):
-    class Discretization(int):
-        PartialTruncation: int
-        FullTruncation: int
-        Reflection: int
-        NonCentralChiSquareVariance: int
-        QuadraticExponential: int
-        QuadraticExponentialMartingale: int
-        BroadieKayaExactSchemeLobatto: int
-        BroadieKayaExactSchemeLaguerre: int
-        BroadieKayaExactSchemeTrapezoidal: int
+    class Discretization(IntEnum):
+        PartialTruncation
+        FullTruncation
+        Reflection
+        NonCentralChiSquareVariance
+        QuadraticExponential
+        QuadraticExponentialMartingale
+        BroadieKayaExactSchemeLobatto
+        BroadieKayaExactSchemeLaguerre
+        BroadieKayaExactSchemeTrapezoidal
 
     @overload
     def __init__(
@@ -13260,10 +13259,10 @@ class OrnsteinUhlenbeckProcess(StochasticProcess1D):
     def level(self) -> float: ...
 
 class ExtendedOrnsteinUhlenbeckProcess(StochasticProcess1D):
-    class Discretization(int):
-        MidPoint: int
-        Trapezodial: int
-        GaussLobatto: int
+    class Discretization(IntEnum):
+        MidPoint
+        Trapezodial
+        GaussLobatto
 
 
 class ExtOUWithJumpsProcess(StochasticProcess):
@@ -13285,10 +13284,10 @@ class KlugeExtOUProcess(StochasticProcess):
     ) -> None: ...
 
 class GJRGARCHProcess(StochasticProcess):
-    class Discretization(int):
-        PartialTruncation: int
-        FullTruncation: int
-        Reflection: int
+    class Discretization(IntEnum):
+        PartialTruncation
+        FullTruncation
+        Reflection
 
     @overload
     def __init__(
@@ -13501,9 +13500,9 @@ class Payoff:
     ) -> float: ...
 
 class Option(Instrument):
-    class Type(int):
-        Put: int = -1
-        Call: int = 1
+    class Type(IntEnum):
+        Put = -1
+        Call = 1
 
     def __init__(self) -> None: ...
     def payoff(self) -> Payoff: ...
@@ -13535,20 +13534,20 @@ class StrikedTypePayoff(TypePayoff):
     def strike(self) -> float: ...
 
 class DeltaVolQuote(Quote):
-    class DeltaType(int):
-        Spot: int
-        Fwd: int
-        PaSpot: int
-        PaFwd: int
+    class DeltaType(IntEnum):
+        Spot
+        Fwd
+        PaSpot
+        PaFwd
 
-    class AtmType(int):
-        AtmNull: int
-        AtmSpot: int
-        AtmFwd: int
-        AtmDeltaNeutral: int
-        AtmVegaMax: int
-        AtmGammaMax: int
-        AtmPutCall50: int
+    class AtmType(IntEnum):
+        AtmNull
+        AtmSpot
+        AtmFwd
+        AtmDeltaNeutral
+        AtmVegaMax
+        AtmGammaMax
+        AtmPutCall50
 
     @overload
     def __init__(
@@ -13781,15 +13780,15 @@ class PiecewiseTimeDependentHestonModel(CalibratedModel):
     def riskFreeRate(self) -> Handle[YieldTermStructure]: ...
 
 class AnalyticHestonEngine(PricingEngine):
-    class ComplexLogFormula(int):
-        Gatheral: int
-        BranchCorrection: int
-        AndersenPiterbarg: int
-        AndersenPiterbargOptCV: int
-        AsymptoticChF: int
-        AngledContour: int
-        AngledContourNoCV: int
-        OptimalCV: int
+    class ComplexLogFormula(IntEnum):
+        Gatheral
+        BranchCorrection
+        AndersenPiterbarg
+        AndersenPiterbargOptCV
+        AsymptoticChF
+        AngledContour
+        AngledContourNoCV
+        OptimalCV
 
     @overload
     def __init__(
@@ -14022,9 +14021,9 @@ class ExponentialFittingHestonEngine(PricingEngine):
     ) -> None: ...
 
 class AnalyticPTDHestonEngine(PricingEngine):
-    class ComplexLogFormula(int):
-        Gatheral: int
-        AndersenPiterbarg: int
+    class ComplexLogFormula(IntEnum):
+        Gatheral
+        AndersenPiterbarg
 
     @overload
     def __init__(
@@ -14116,14 +14115,14 @@ class IntegralEngine(PricingEngine):
     ) -> None: ...
 
 class LsmBasisSystem:
-    class PolynomialType(int):
-        Monomial: int
-        Laguerre: int
-        Hermite: int
-        Hyperbolic: int
-        Legendre: int
-        Chebyshev: int
-        Chebyshev2nd: int
+    class PolynomialType(IntEnum):
+        Monomial
+        Laguerre
+        Hermite
+        Hyperbolic
+        Legendre
+        Chebyshev
+        Chebyshev2nd
 
     def __init__(self) -> None: ...
 
@@ -14165,12 +14164,12 @@ class AnalyticDividendEuropeanEngine(PricingEngine):
     ) -> None: ...
 
 class QdPlusAmericanEngine(PricingEngine):
-    class SolverType(int):
-        Brent: int
-        Newton: int
-        Ridder: int
-        Halley: int
-        SuperHalley: int
+    class SolverType(IntEnum):
+        Brent
+        Newton
+        Ridder
+        Halley
+        SuperHalley
 
     @overload
     def __init__(
@@ -14238,10 +14237,10 @@ class QdFpTanhSinhIterationScheme(QdFpIterationScheme):
     ) -> None: ...
 
 class QdFpAmericanEngine(PricingEngine):
-    class FixedPointEquation(int):
-        FP_A: int
-        FP_B: int
-        Auto: int
+    class FixedPointEquation(IntEnum):
+        FP_A
+        FP_B
+        Auto
 
     @overload
     def __init__(
@@ -14266,16 +14265,16 @@ class QdFpAmericanEngine(PricingEngine):
     def highPrecisionScheme(self) -> QdFpIterationScheme: ...
 
 class FdmSchemeDesc:
-    class FdmSchemeType(int):
-        HundsdorferType: int
-        DouglasType: int
-        CraigSneydType: int
-        ModifiedCraigSneydType: int
-        ImplicitEulerType: int
-        ExplicitEulerType: int
-        MethodOfLinesType: int
-        TrBDF2Type: int
-        CrankNicolsonType: int
+    class FdmSchemeType(IntEnum):
+        HundsdorferType
+        DouglasType
+        CraigSneydType
+        ModifiedCraigSneydType
+        ImplicitEulerType
+        ExplicitEulerType
+        MethodOfLinesType
+        TrBDF2Type
+        CrankNicolsonType
 
     def __init__(
         self,
@@ -14317,9 +14316,9 @@ class FdmQuantoHelper:
     ) -> None: ...
 
 class FdBlackScholesVanillaEngine(PricingEngine):
-    class CashDividendModel(int):
-        Spot: int
-        Escrowed: int
+    class CashDividendModel(IntEnum):
+        Spot
+        Escrowed
 
     @overload
     def __init__(
@@ -15985,9 +15984,9 @@ class AnalyticTwoAssetCorrelationEngine(PricingEngine):
     ) -> None: ...
 
 class Average:
-    class Type(int):
-        Arithmetic: int
-        Geometric: int
+    class Type(IntEnum):
+        Arithmetic
+        Geometric
 
     def __init__(self) -> None: ...
 
@@ -16123,11 +16122,11 @@ class TurnbullWakemanAsianEngine(PricingEngine):
     ) -> None: ...
 
 class Barrier:
-    class Type(int):
-        DownIn: int
-        UpIn: int
-        DownOut: int
-        UpOut: int
+    class Type(IntEnum):
+        DownIn
+        UpIn
+        DownOut
+        UpOut
 
     def __init__(self) -> None: ...
 
@@ -16237,10 +16236,10 @@ class QuantoBarrierOption(BarrierOption):
     ) -> None: ...
 
 class PartialBarrier:
-    class Range(int):
-        Start: int = 0
-        EndB1: int = 2
-        EndB2: int = 3
+    class Range(IntEnum):
+        Start = 0
+        EndB1 = 2
+        EndB2 = 3
 
     def __init__(self) -> None: ...
 
@@ -16853,11 +16852,11 @@ class VannaVolgaBarrierEngine(PricingEngine):
     ) -> None: ...
 
 class DoubleBarrier:
-    class Type(int):
-        KnockIn: int
-        KnockOut: int
-        KIKO: int
-        KOKI: int
+    class Type(IntEnum):
+        KnockIn
+        KnockOut
+        KIKO
+        KOKI
 
     def __init__(self) -> None: ...
 
@@ -17180,9 +17179,9 @@ class BjerksundStenslandSpreadEngine(PricingEngine):
     ) -> None: ...
 
 class OperatorSplittingSpreadEngine(PricingEngine):
-    class Order(int):
-        First: int
-        Second: int
+    class Order(IntEnum):
+        First
+        Second
 
     @overload
     def __init__(
@@ -17425,9 +17424,9 @@ class TimeBasket:
     ) -> TimeBasket: ...
 
 class Swap(Instrument):
-    class Type(int):
-        Receiver: int = -1
-        Payer: int = 1
+    class Type(IntEnum):
+        Receiver = -1
+        Payer = 1
 
     @overload
     def __init__(
@@ -19498,10 +19497,10 @@ class YYZACPI(YoYInflationIndex):
     def __init__(self) -> None: ...
 
 class CPI:
-    class InterpolationType(int):
-        AsIndex: int
-        Flat: int
-        Linear: int
+    class InterpolationType(IntEnum):
+        AsIndex
+        Flat
+        Linear
 
     def __init__(self) -> None: ...
     def laggedFixing(
@@ -20256,10 +20255,10 @@ class CPISwap(Swap):
     def floatLeg(self) -> Leg: ...
 
 class YoYInflationCapFloor(Instrument):
-    class Type(int):
-        Cap: int
-        Floor: int
-        Collar: int
+    class Type(IntEnum):
+        Cap
+        Floor
+        Collar
 
     def __init__(
         self,
@@ -21015,9 +21014,9 @@ class AnalyticBSMHullWhiteEngine(PricingEngine):
     ) -> None: ...
 
 class BondPrice:
-    class Type(int):
-        Dirty: int
-        Clean: int
+    class Type(IntEnum):
+        Dirty
+        Clean
 
     def __init__(
         self,
@@ -22199,9 +22198,9 @@ class DiscountingBondEngine(PricingEngine):
     ) -> None: ...
 
 class Callability:
-    class Type(int):
-        Call: int
-        Put: int
+    class Type(IntEnum):
+        Call
+        Put
 
     def __init__(
         self,
@@ -23251,10 +23250,10 @@ class BondFunctions:
     ) -> float: ...
 
 class BlackCalibrationHelper(CalibrationHelper):
-    class CalibrationErrorType(int):
-        RelativePriceError: int
-        PriceError: int
-        ImpliedVolError: int
+    class CalibrationErrorType(IntEnum):
+        RelativePriceError
+        PriceError
+        ImpliedVolError
 
     def __init__(self) -> None: ...
     def setPricingEngine(
@@ -23733,10 +23732,10 @@ class HestonModelHelper(BlackCalibrationHelper):
     ) -> None: ...
 
 class CapFloor(Instrument):
-    class Type(int):
-        Cap: int
-        Floor: int
-        Collar: int
+    class Type(IntEnum):
+        Cap
+        Floor
+        Collar
 
     @overload
     def impliedVolatility(
@@ -24282,10 +24281,10 @@ class BondForward(Forward):
     def cleanForwardPrice(self) -> float: ...
 
 class Futures:
-    class Type(int):
-        IMM: int
-        ASX: int
-        Custom: int
+    class Type(IntEnum):
+        IMM
+        ASX
+        Custom
 
     def __init__(self) -> None: ...
 
@@ -24317,13 +24316,13 @@ class OvernightIndexFuture(Instrument):
     def convexityAdjustment(self) -> float: ...
 
 class PerpetualFutures(Instrument):
-    class PayoffType(int):
-        Linear: int
-        Inverse: int
+    class PayoffType(IntEnum):
+        Linear
+        Inverse
 
-    class FundingType(int):
-        FundingWithPreviousSpot: int
-        FundingWithCurrentSpot: int
+    class FundingType(IntEnum):
+        FundingWithPreviousSpot
+        FundingWithCurrentSpot
 
     @overload
     def __init__(
@@ -24362,10 +24361,10 @@ class PerpetualFutures(Instrument):
     ) -> None: ...
 
 class DiscountingPerpetualFuturesEngine(PricingEngine):
-    class InterpolationType(int):
-        PiecewiseConstant: int
-        Linear: int
-        CubicSpline: int
+    class InterpolationType(IntEnum):
+        PiecewiseConstant
+        Linear
+        CubicSpline
 
     @overload
     def __init__(
@@ -24402,10 +24401,10 @@ class DiscountingPerpetualFuturesEngine(PricingEngine):
     ) -> None: ...
 
 class Pillar:
-    class Choice(int):
-        MaturityDate: int
-        LastRelevantDate: int
-        CustomDate: int
+    class Choice(IntEnum):
+        MaturityDate
+        LastRelevantDate
+        CustomDate
 
     def __init__(self) -> None: ...
 
@@ -27520,9 +27519,9 @@ class RiskyBondEngine(PricingEngine):
     ) -> None: ...
 
 class Protection:
-    class Side(int):
-        Buyer: int
-        Seller: int
+    class Side(IntEnum):
+        Buyer
+        Seller
 
     def __init__(self) -> None: ...
 
@@ -27545,9 +27544,9 @@ class FaceValueAccrualClaim(Claim):
     ) -> None: ...
 
 class CreditDefaultSwap(Instrument):
-    class PricingModel(int):
-        Midpoint: int
-        ISDA: int
+    class PricingModel(IntEnum):
+        Midpoint
+        ISDA
 
     @overload
     def __init__(
@@ -27929,17 +27928,17 @@ class IntegralCdsEngine(PricingEngine):
     ) -> None: ...
 
 class IsdaCdsEngine(PricingEngine):
-    class NumericalFix(int):
-        None_: int
-        Taylor: int
+    class NumericalFix(IntEnum):
+        None_
+        Taylor
 
-    class AccrualBias(int):
-        HalfDayBias: int
-        NoBias: int
+    class AccrualBias(IntEnum):
+        HalfDayBias
+        NoBias
 
-    class ForwardsInCouponPeriod(int):
-        Flat: int
-        Piecewise: int
+    class ForwardsInCouponPeriod(IntEnum):
+        Flat
+        Piecewise
 
     @overload
     def __init__(
@@ -28344,10 +28343,10 @@ class InverseCumulativeStudent:
     ) -> float: ...
 
 class Money:
-    class ConversionType(int):
-        NoConversion: int
-        BaseCurrencyConversion: int
-        AutomatedConversion: int
+    class ConversionType(IntEnum):
+        NoConversion
+        BaseCurrencyConversion
+        AutomatedConversion
 
     @overload
     def __init__(
@@ -28366,9 +28365,9 @@ class Money:
     def rounded(self) -> Money: ...
 
 class ExchangeRate:
-    class Type(int):
-        Direct: int
-        Derived: int
+    class Type(IntEnum):
+        Direct
+        Derived
 
     def __init__(
         self,
@@ -28924,10 +28923,10 @@ class FdmLinearOpComposite(FdmLinearOp):
     ) -> Array: ...
 
 class FdmBoundaryCondition:
-    class Side(int):
-        None_: int
-        Upper: int
-        Lower: int
+    class Side(IntEnum):
+        None_
+        Upper
+        Lower
 
     def __init__(self) -> None: ...
     def applyBeforeApplying(
@@ -29245,10 +29244,10 @@ class FdmBlackScholesFwdOp(FdmLinearOpComposite):
     ) -> None: ...
 
 class FdmSquareRootFwdOp(FdmLinearOpComposite):
-    class TransformationType(int):
-        Plain: int
-        Power: int
-        Log: int
+    class TransformationType(IntEnum):
+        Plain
+        Power
+        Log
 
     @overload
     def __init__(
@@ -29420,9 +29419,9 @@ class CraigSneydScheme:
     ) -> None: ...
 
 class ImplicitEulerScheme:
-    class SolverType(int):
-        BiCGstab: int
-        GMRES: int
+    class SolverType(IntEnum):
+        BiCGstab
+        GMRES
 
     @overload
     def __init__(
@@ -30602,9 +30601,9 @@ class SpreadFittingMethod(FittingMethod):
     ) -> None: ...
 
 class Position:
-    class Type(int):
-        Long: int
-        Short: int
+    class Type(IntEnum):
+        Long
+        Short
 
     def __init__(self) -> None: ...
 
@@ -31123,17 +31122,17 @@ class MarkovFunctional(Gaussian1dModel):
     def functionEvaluation(self) -> int: ...
 
 class ModelSettings:
-    class Adjustments(int):
-        AdjustNone: int = 0
-        AdjustDigitals: int = 1 << 0
-        AdjustYts: int = 1 << 1
-        ExtrapolatePayoffFlat: int = 1 << 2
-        NoPayoffExtrapolation: int = 1 << 3
-        KahaleSmile: int = 1 << 4
-        SmileExponentialExtrapolation: int = 1 << 5
-        KahaleInterpolation: int = 1 << 6
-        SmileDeleteArbitragePoints: int = 1 << 7
-        SabrSmile: int = 1 << 8
+    class Adjustments(IntEnum):
+        AdjustNone = 0
+        AdjustDigitals = 1 << 0
+        AdjustYts = 1 << 1
+        ExtrapolatePayoffFlat = 1 << 2
+        NoPayoffExtrapolation = 1 << 3
+        KahaleSmile = 1 << 4
+        SmileExponentialExtrapolation = 1 << 5
+        KahaleInterpolation = 1 << 6
+        SmileDeleteArbitragePoints = 1 << 7
+        SabrSmile = 1 << 8
 
     @overload
     def __init__(
@@ -31212,10 +31211,10 @@ class Gaussian1dCapFloorEngine(PricingEngine):
     ) -> None: ...
 
 class Gaussian1dSwaptionEngine(PricingEngine):
-    class Probabilities(int):
-        None_: int
-        Naive: int
-        Digital: int
+    class Probabilities(IntEnum):
+        None_
+        Naive
+        Digital
 
     @overload
     def __init__(
@@ -31281,10 +31280,10 @@ class Gaussian1dJamshidianSwaptionEngine(PricingEngine):
     ) -> None: ...
 
 class Gaussian1dNonstandardSwaptionEngine(PricingEngine):
-    class Probabilities(int):
-        None_: int
-        Naive: int
-        Digital: int
+    class Probabilities(IntEnum):
+        None_
+        Naive
+        Digital
 
     @overload
     def __init__(
@@ -31356,10 +31355,10 @@ class Gaussian1dNonstandardSwaptionEngine(PricingEngine):
     ) -> None: ...
 
 class Gaussian1dFloatFloatSwaptionEngine(PricingEngine):
-    class Probabilities(int):
-        None_: int
-        Naive: int
-        Digital: int
+    class Probabilities(IntEnum):
+        None_
+        Naive
+        Digital
 
     @overload
     def __init__(
@@ -31684,9 +31683,9 @@ class NoExceptLocalVolSurface(LocalVolSurface):
     ) -> None: ...
 
 class FixedLocalVolSurface(LocalVolTermStructure):
-    class Extrapolation(int):
-        ConstantExtrapolation: int
-        InterpolatorDefaultExtrapolation: int
+    class Extrapolation(IntEnum):
+        ConstantExtrapolation
+        InterpolatorDefaultExtrapolation
 
 
 class GridModelLocalVolSurface(LocalVolTermStructure, CalibratedModel):
@@ -31781,17 +31780,17 @@ class HaltonRsg:
     def dimension(self) -> int: ...
 
 class SobolRsg:
-    class DirectionIntegers(int):
-        Unit: int
-        Jaeckel: int
-        SobolLevitan: int
-        SobolLevitanLemieux: int
-        JoeKuoD5: int
-        JoeKuoD6: int
-        JoeKuoD7: int
-        Kuo: int
-        Kuo2: int
-        Kuo3: int
+    class DirectionIntegers(IntEnum):
+        Unit
+        Jaeckel
+        SobolLevitan
+        SobolLevitanLemieux
+        JoeKuoD5
+        JoeKuoD6
+        JoeKuoD7
+        Kuo
+        Kuo2
+        Kuo3
 
     @overload
     def __init__(
@@ -31969,10 +31968,10 @@ class MTBrownianGeneratorFactory(BrownianGeneratorFactory):
     def __init__(self) -> None: ...
 
 class SobolBrownianGenerator(BrownianGenerator):
-    class Ordering(int):
-        Factors: int
-        Steps: int
-        Diagonal: int
+    class Ordering(IntEnum):
+        Factors
+        Steps
+        Diagonal
 
     @overload
     def __init__(
@@ -32520,10 +32519,10 @@ class BrownianBridge:
     def stdDeviation(self) -> list[float]: ...
 
 class DefaultBoundaryCondition:
-    class Side(int):
-        None_: int
-        Upper: int
-        Lower: int
+    class Side(IntEnum):
+        None_
+        Upper
+        Lower
 
     def __init__(self) -> None: ...
 
@@ -32634,10 +32633,10 @@ class HestonSLVMCModel:
     def leverageFunction(self) -> LocalVolTermStructure: ...
 
 class FdmHestonGreensFct:
-    class Algorithm(int):
-        ZeroCorrelation: int
-        Gaussian: int
-        SemiAnalytical: int
+    class Algorithm(IntEnum):
+        ZeroCorrelation
+        Gaussian
+        SemiAnalytical
 
     def __init__(self) -> None: ...
 
@@ -32995,22 +32994,22 @@ class StrippedOptionletAdapter(OptionletVolatilityStructure):
     ) -> None: ...
 
 class Settlement:
-    class Type(int):
-        Physical: int
-        Cash: int
+    class Type(IntEnum):
+        Physical
+        Cash
 
-    class Method(int):
-        PhysicalOTC: int
-        PhysicalCleared: int
-        CollateralizedCashPrice: int
-        ParYieldCurve: int
+    class Method(IntEnum):
+        PhysicalOTC
+        PhysicalCleared
+        CollateralizedCashPrice
+        ParYieldCurve
 
     def __init__(self) -> None: ...
 
 class Swaption(Option):
-    class PriceType(int):
-        Spot: int
-        Forward: int
+    class PriceType(IntEnum):
+        Spot
+        Forward
 
     @overload
     def __init__(
@@ -33171,9 +33170,9 @@ class FloatFloatSwaption(Instrument):
     def underlyingSwap(self) -> FloatFloatSwap: ...
 
 class BlackSwaptionEngine(PricingEngine):
-    class CashAnnuityModel(int):
-        SwapRate: int
-        DiscountCurve: int
+    class CashAnnuityModel(IntEnum):
+        SwapRate
+        DiscountCurve
 
     @overload
     def __init__(
@@ -33220,9 +33219,9 @@ class BlackSwaptionEngine(PricingEngine):
     ) -> None: ...
 
 class BachelierSwaptionEngine(PricingEngine):
-    class CashAnnuityModel(int):
-        SwapRate: int
-        DiscountCurve: int
+    class CashAnnuityModel(IntEnum):
+        SwapRate
+        DiscountCurve
 
     @overload
     def __init__(
