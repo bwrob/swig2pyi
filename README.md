@@ -11,6 +11,7 @@ It is specifically designed to handle complex libraries like QuantLib, but the a
 ## Features
 
 *   **Universal Pipeline:** Uses SWIG's XML output (`swig -xml`) as the source of truth, avoiding fragile regex parsing of `.i` files.
+*   **Scalable Parsing:** Streams massive XML files into a temporary SQLite database using `sqlmodel`, minimizing RAM usage and allowing complex type resolution via SQL queries.
 *   **Robust Type Mapping:** Configuration-driven mapping (`json`) for C++ to Python types, including smart pointers (`std::shared_ptr`) and containers (`std::vector`).
 *   **Advanced C++ Support:**
     *   Correctly handles C++ inheritance, including template inheritance (e.g., `Handle<T>`).

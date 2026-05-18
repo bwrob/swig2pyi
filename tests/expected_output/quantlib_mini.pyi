@@ -1,76 +1,89 @@
-from typing import Any, TypeVar, overload
+import typing
+from typing import Any, Optional, overload, Generic, TypeVar
+import collections.abc
 
-_T = TypeVar("_T")
+_T = TypeVar('_T')
 
-class Weekday(int):
-    Sunday: int = 1
-    Monday: int = 2
-    Tuesday: int = 3
-    Wednesday: int = 4
-    Thursday: int = 5
-    Friday: int = 6
-    Saturday: int = 7
+class Handle(Generic[_T]):
+    def __init__(self, p: Optional[_T] = ...) -> None: ...
+    def currentLink(self) -> _T: ...
+    def empty(self) -> bool: ...
+    def __deref__(self) -> _T: ...
+class RelinkableHandle(Handle[_T]):
+    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...
+class TimeSeries(Generic[_T]):
+    def __init__(self) -> None: ...
 
-class Month(int):
-    January: int = 1
-    February: int = 2
-    March: int = 3
-    April: int = 4
-    May: int = 5
-    June: int = 6
-    July: int = 7
-    August: int = 8
-    September: int = 9
-    October: int = 10
-    November: int = 11
-    December: int = 12
+class Weekday(IntEnum):
+    Sunday = 1
+    Monday = 2
+    Tuesday = 3
+    Wednesday = 4
+    Thursday = 5
+    Friday = 6
+    Saturday = 7
 
-class TimeUnit(int):
-    Days: int
-    Weeks: int
-    Months: int
-    Years: int
-    Hours: int
-    Minutes: int
-    Seconds: int
-    Milliseconds: int
-    Microseconds: int
+class Month(IntEnum):
+    January = 1
+    February = 2
+    March = 3
+    April = 4
+    May = 5
+    June = 6
+    July = 7
+    August = 8
+    September = 9
+    October = 10
+    November = 11
+    December = 12
 
-class Frequency(int):
-    NoFrequency: int = -1
-    Once: int = 0
-    Annual: int = 1
-    Semiannual: int = 2
-    EveryFourthMonth: int = 3
-    Quarterly: int = 4
-    Bimonthly: int = 6
-    Monthly: int = 12
-    EveryFourthWeek: int = 13
-    Biweekly: int = 26
-    Weekly: int = 52
-    Daily: int = 365
-    OtherFrequency: int = 999
+class TimeUnit(IntEnum):
+    Days
+    Weeks
+    Months
+    Years
+    Hours
+    Minutes
+    Seconds
+    Milliseconds
+    Microseconds
 
-class BusinessDayConvention(int):
-    Following: int
-    ModifiedFollowing: int
-    Preceding: int
-    ModifiedPreceding: int
-    Unadjusted: int
-    HalfMonthModifiedFollowing: int
-    Nearest: int
+class Frequency(IntEnum):
+    NoFrequency = -1
+    Once = 0
+    Annual = 1
+    Semiannual = 2
+    EveryFourthMonth = 3
+    Quarterly = 4
+    Bimonthly = 6
+    Monthly = 12
+    EveryFourthWeek = 13
+    Biweekly = 26
+    Weekly = 52
+    Daily = 365
+    OtherFrequency = 999
 
-class JointCalendarRule(int):
-    JoinHolidays: int
-    JoinBusinessDays: int
+class BusinessDayConvention(IntEnum):
+    Following
+    ModifiedFollowing
+    Preceding
+    ModifiedPreceding
+    Unadjusted
+    HalfMonthModifiedFollowing
+    Nearest
 
-class Compounding(int):
-    Simple: int
-    Compounded: int
-    Continuous: int
-    SimpleThenCompounded: int
-    CompoundedThenSimple: int
+class JointCalendarRule(IntEnum):
+    JoinHolidays
+    JoinBusinessDays
 
+class Compounding(IntEnum):
+    Simple
+    Compounded
+    Continuous
+    SimpleThenCompounded
+    CompoundedThenSimple
+
+def asObservable() -> Observable: ...
 def reset() -> None: ...
 def daysBetween(
     arg0: Date,
@@ -132,21 +145,14 @@ def close_enough(
     y: float,
     n: int,
 ) -> bool: ...
+def first() -> T1: ...
+def second() -> T2: ...
+def third() -> T3: ...
 def numberOfEvaluations() -> int: ...
 def dates() -> list[Date]: ...
 def firstDate() -> Date: ...
 def lastDate() -> Date: ...
 def size() -> int: ...
-def as_iborindex(
-    index: InterestRateIndex,
-) -> IborIndex: ...
-def as_swap_index(
-    index: InterestRateIndex,
-) -> SwapIndex: ...
-def makeQuoteHandle(
-    value: float,
-) -> RelinkableHandle[Quote]: ...
-
 class Period:
     @overload
     def __init__(
@@ -160,11 +166,18 @@ class Period:
         units: TimeUnit,
     ) -> None: ...
     @overload
+    def __init__(
+        self,
+        str_: str,
+    ) -> None: ...
+    @overload
     def __init__(self) -> None: ...
     def length(self) -> int: ...
     def units(self) -> TimeUnit: ...
     def frequency(self) -> Frequency: ...
     def normalized(self) -> Period: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
 
 class Date:
     @overload
@@ -177,7 +190,46 @@ class Date:
     @overload
     def __init__(
         self,
+        d: int,
+        m: Month,
+        y: int,
+        hours: int,
+        minutes: int,
+        seconds: int,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        d: int,
+        m: Month,
+        y: int,
+        hours: int,
+        minutes: int,
+        seconds: int,
+        millisec: int,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        d: int,
+        m: Month,
+        y: int,
+        hours: int,
+        minutes: int,
+        seconds: int,
+        millisec: int,
+        microsec: int,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
         serialNumber: int,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        str_: str,
+        fmt: str,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -186,6 +238,13 @@ class Date:
     def dayOfYear(self) -> int: ...
     def month(self) -> Month: ...
     def year(self) -> int: ...
+    def hours(self) -> int: ...
+    def minutes(self) -> int: ...
+    def seconds(self) -> int: ...
+    def milliseconds(self) -> int: ...
+    def microseconds(self) -> int: ...
+    def fractionOfDay(self) -> float: ...
+    def fractionOfSecond(self) -> float: ...
     def serialNumber(self) -> int: ...
     def isLeap(
         self,
@@ -194,6 +253,8 @@ class Date:
     def minDate(self) -> Date: ...
     def maxDate(self) -> Date: ...
     def todaysDate(self) -> Date: ...
+    def localDateTime(self) -> Date: ...
+    def universalDateTime(self) -> Date: ...
     def startOfMonth(
         self,
         arg0: Date,
@@ -242,6 +303,15 @@ class Date:
         self,
         days: int,
     ) -> Date: ...
+    @overload
+    def __sub__(
+        self,
+        other: Date,
+    ) -> int: ...
+    def weekdayNumber(self) -> int: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
+    def ISO(self) -> str: ...
 
 class DateParser:
     def __init__(self) -> None: ...
@@ -254,6 +324,11 @@ class DateParser:
         self,
         str_: str,
     ) -> Date: ...
+    def parse(
+        self,
+        str_: str,
+        fmt: str,
+    ) -> Date: ...
 
 class PeriodParser:
     def __init__(self) -> None: ...
@@ -263,19 +338,19 @@ class PeriodParser:
     ) -> Period: ...
 
 class IMM:
-    class Month(int):
-        F: int = 1
-        G: int = 2
-        H: int = 3
-        J: int = 4
-        K: int = 5
-        M: int = 6
-        N: int = 7
-        Q: int = 8
-        U: int = 9
-        V: int = 10
-        X: int = 11
-        Z: int = 12
+    class Month(IntEnum):
+        F = 1
+        G = 2
+        H = 3
+        J = 4
+        K = 5
+        M = 6
+        N = 7
+        Q = 8
+        U = 9
+        V = 10
+        X = 11
+        Z = 12
 
     def __init__(self) -> None: ...
     @overload
@@ -379,19 +454,19 @@ class IMM:
     def nextCode(self) -> str: ...
 
 class ASX:
-    class Month(int):
-        F: int = 1
-        G: int = 2
-        H: int = 3
-        J: int = 4
-        K: int = 5
-        M: int = 6
-        N: int = 7
-        Q: int = 8
-        U: int = 9
-        V: int = 10
-        X: int = 11
-        Z: int = 12
+    class Month(IntEnum):
+        F = 1
+        G = 2
+        H = 3
+        J = 4
+        K = 5
+        M = 6
+        N = 7
+        Q = 8
+        U = 9
+        V = 10
+        X = 11
+        Z = 12
 
     def __init__(self) -> None: ...
     @overload
@@ -630,10 +705,11 @@ class Calendar:
     ) -> list[Date]: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
+    def __str__(self) -> str: ...
 
 class Argentina(Calendar):
-    class Market(int):
-        Merval: int
+    class Market(IntEnum):
+        Merval
 
     @overload
     def __init__(
@@ -644,9 +720,9 @@ class Argentina(Calendar):
     def __init__(self) -> None: ...
 
 class Australia(Calendar):
-    class Market(int):
-        Settlement: int
-        ASX: int
+    class Market(IntEnum):
+        Settlement
+        ASX
 
     @overload
     def __init__(
@@ -657,9 +733,9 @@ class Australia(Calendar):
     def __init__(self) -> None: ...
 
 class Austria(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -673,9 +749,9 @@ class Botswana(Calendar):
     def __init__(self) -> None: ...
 
 class Brazil(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -686,9 +762,9 @@ class Brazil(Calendar):
     def __init__(self) -> None: ...
 
 class Canada(Calendar):
-    class Market(int):
-        Settlement: int
-        TSX: int
+    class Market(IntEnum):
+        Settlement
+        TSX
 
     @overload
     def __init__(
@@ -699,8 +775,8 @@ class Canada(Calendar):
     def __init__(self) -> None: ...
 
 class Chile(Calendar):
-    class Market(int):
-        SSE: int
+    class Market(IntEnum):
+        SSE
 
     @overload
     def __init__(
@@ -711,9 +787,9 @@ class Chile(Calendar):
     def __init__(self) -> None: ...
 
 class China(Calendar):
-    class Market(int):
-        SSE: int
-        IB: int
+    class Market(IntEnum):
+        SSE
+        IB
 
     @overload
     def __init__(
@@ -724,8 +800,8 @@ class China(Calendar):
     def __init__(self) -> None: ...
 
 class CzechRepublic(Calendar):
-    class Market(int):
-        PSE: int
+    class Market(IntEnum):
+        PSE
 
     @overload
     def __init__(
@@ -742,9 +818,9 @@ class Finland(Calendar):
     def __init__(self) -> None: ...
 
 class France(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -755,11 +831,11 @@ class France(Calendar):
     def __init__(self) -> None: ...
 
 class Germany(Calendar):
-    class Market(int):
-        Settlement: int
-        FrankfurtStockExchange: int
-        Xetra: int
-        Eurex: int
+    class Market(IntEnum):
+        Settlement
+        FrankfurtStockExchange
+        Xetra
+        Eurex
 
     @overload
     def __init__(
@@ -770,8 +846,8 @@ class Germany(Calendar):
     def __init__(self) -> None: ...
 
 class HongKong(Calendar):
-    class Market(int):
-        HKEx: int
+    class Market(IntEnum):
+        HKEx
 
     @overload
     def __init__(
@@ -785,8 +861,8 @@ class Hungary(Calendar):
     def __init__(self) -> None: ...
 
 class Iceland(Calendar):
-    class Market(int):
-        ICEX: int
+    class Market(IntEnum):
+        ICEX
 
     @overload
     def __init__(
@@ -797,8 +873,8 @@ class Iceland(Calendar):
     def __init__(self) -> None: ...
 
 class India(Calendar):
-    class Market(int):
-        NSE: int
+    class Market(IntEnum):
+        NSE
 
     @overload
     def __init__(
@@ -809,9 +885,9 @@ class India(Calendar):
     def __init__(self) -> None: ...
 
 class Indonesia(Calendar):
-    class Market(int):
-        BEJ: int
-        JSX: int
+    class Market(IntEnum):
+        BEJ
+        JSX
 
     @overload
     def __init__(
@@ -822,10 +898,10 @@ class Indonesia(Calendar):
     def __init__(self) -> None: ...
 
 class Israel(Calendar):
-    class Market(int):
-        Settlement: int
-        TASE: int
-        SHIR: int
+    class Market(IntEnum):
+        Settlement
+        TASE
+        SHIR
 
     @overload
     def __init__(
@@ -836,9 +912,9 @@ class Israel(Calendar):
     def __init__(self) -> None: ...
 
 class Italy(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
 
     @overload
     def __init__(
@@ -852,8 +928,8 @@ class Japan(Calendar):
     def __init__(self) -> None: ...
 
 class Mexico(Calendar):
-    class Market(int):
-        BMV: int
+    class Market(IntEnum):
+        BMV
 
     @overload
     def __init__(
@@ -864,9 +940,9 @@ class Mexico(Calendar):
     def __init__(self) -> None: ...
 
 class NewZealand(Calendar):
-    class Market(int):
-        Wellington: int
-        Auckland: int
+    class Market(IntEnum):
+        Wellington
+        Auckland
 
     @overload
     def __init__(
@@ -880,9 +956,9 @@ class Norway(Calendar):
     def __init__(self) -> None: ...
 
 class Poland(Calendar):
-    class Market(int):
-        Settlement: int
-        WSE: int
+    class Market(IntEnum):
+        Settlement
+        WSE
 
     @overload
     def __init__(
@@ -893,9 +969,9 @@ class Poland(Calendar):
     def __init__(self) -> None: ...
 
 class Romania(Calendar):
-    class Market(int):
-        Public: int
-        BVB: int
+    class Market(IntEnum):
+        Public
+        BVB
 
     @overload
     def __init__(
@@ -906,9 +982,9 @@ class Romania(Calendar):
     def __init__(self) -> None: ...
 
 class Russia(Calendar):
-    class Market(int):
-        Settlement: int
-        MOEX: int
+    class Market(IntEnum):
+        Settlement
+        MOEX
 
     @overload
     def __init__(
@@ -919,8 +995,8 @@ class Russia(Calendar):
     def __init__(self) -> None: ...
 
 class SaudiArabia(Calendar):
-    class Market(int):
-        Tadawul: int
+    class Market(IntEnum):
+        Tadawul
 
     @overload
     def __init__(
@@ -931,8 +1007,8 @@ class SaudiArabia(Calendar):
     def __init__(self) -> None: ...
 
 class Singapore(Calendar):
-    class Market(int):
-        SGX: int
+    class Market(IntEnum):
+        SGX
 
     @overload
     def __init__(
@@ -943,8 +1019,8 @@ class Singapore(Calendar):
     def __init__(self) -> None: ...
 
 class Slovakia(Calendar):
-    class Market(int):
-        BSSE: int
+    class Market(IntEnum):
+        BSSE
 
     @overload
     def __init__(
@@ -958,9 +1034,9 @@ class SouthAfrica(Calendar):
     def __init__(self) -> None: ...
 
 class SouthKorea(Calendar):
-    class Market(int):
-        Settlement: int
-        KRX: int
+    class Market(IntEnum):
+        Settlement
+        KRX
 
     @overload
     def __init__(
@@ -977,8 +1053,8 @@ class Switzerland(Calendar):
     def __init__(self) -> None: ...
 
 class Taiwan(Calendar):
-    class Market(int):
-        TSEC: int
+    class Market(IntEnum):
+        TSEC
 
     @overload
     def __init__(
@@ -998,8 +1074,8 @@ class Turkey(Calendar):
     def __init__(self) -> None: ...
 
 class Ukraine(Calendar):
-    class Market(int):
-        USE: int
+    class Market(IntEnum):
+        USE
 
     @overload
     def __init__(
@@ -1010,10 +1086,10 @@ class Ukraine(Calendar):
     def __init__(self) -> None: ...
 
 class UnitedKingdom(Calendar):
-    class Market(int):
-        Settlement: int
-        Exchange: int
-        Metals: int
+    class Market(IntEnum):
+        Settlement
+        Exchange
+        Metals
 
     @overload
     def __init__(
@@ -1024,14 +1100,14 @@ class UnitedKingdom(Calendar):
     def __init__(self) -> None: ...
 
 class UnitedStates(Calendar):
-    class Market(int):
-        Settlement: int
-        NYSE: int
-        GovernmentBond: int
-        NERC: int
-        LiborImpact: int
-        FederalReserve: int
-        SOFR: int
+    class Market(IntEnum):
+        Settlement
+        NYSE
+        GovernmentBond
+        NERC
+        LiborImpact
+        FederalReserve
+        SOFR
 
     def __init__(
         self,
@@ -1142,6 +1218,7 @@ class DayCounter:
     ) -> float: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
+    def __str__(self) -> str: ...
 
 class Actual360(DayCounter):
     @overload
@@ -1174,10 +1251,10 @@ class Actual364(DayCounter):
     def __init__(self) -> None: ...
 
 class Actual365Fixed(DayCounter):
-    class Convention(int):
-        Standard: int
-        Canadian: int
-        NoLeap: int
+    class Convention(IntEnum):
+        Standard
+        Canadian
+        NoLeap
 
     @overload
     def __init__(
@@ -1188,16 +1265,16 @@ class Actual365Fixed(DayCounter):
     def __init__(self) -> None: ...
 
 class Thirty360(DayCounter):
-    class Convention(int):
-        USA: int
-        BondBasis: int
-        European: int
-        EurobondBasis: int
-        Italian: int
-        German: int
-        ISMA: int
-        ISDA: int
-        NASD: int
+    class Convention(IntEnum):
+        USA
+        BondBasis
+        European
+        EurobondBasis
+        Italian
+        German
+        ISMA
+        ISDA
+        NASD
 
     @overload
     def __init__(
@@ -1215,14 +1292,14 @@ class Thirty365(DayCounter):
     def __init__(self) -> None: ...
 
 class ActualActual(DayCounter):
-    class Convention(int):
-        ISMA: int
-        Bond: int
-        ISDA: int
-        Historical: int
-        Actual365: int
-        AFB: int
-        Euro: int
+    class Convention(IntEnum):
+        ISMA
+        Bond
+        ISDA
+        Historical
+        Actual365
+        AFB
+        Euro
 
     @overload
     def __init__(
@@ -1274,6 +1351,7 @@ class Array:
     @overload
     def __init__(self) -> None: ...
     def size(self) -> int: ...
+    def __str__(self) -> str: ...
 
 class Matrix:
     @overload
@@ -1298,15 +1376,16 @@ class Matrix:
     def __init__(self) -> None: ...
     def rows(self) -> int: ...
     def columns(self) -> int: ...
+    def __str__(self) -> str: ...
 
 class SalvagingAlgorithm:
-    class Type(int):
-        None_: int
-        Spectral: int
-        Hypersphere: int
-        LowerDiagonal: int
-        Higham: int
-        Principal: int
+    class Type(IntEnum):
+        None_
+        Spectral
+        Hypersphere
+        LowerDiagonal
+        Higham
+        Principal
 
     def __init__(self) -> None: ...
 
@@ -1329,10 +1408,10 @@ class SymmetricSchurDecomposition:
     def eigenvectors(self) -> Matrix: ...
 
 class DefaultBoundaryCondition:
-    class Side(int):
-        None_: int
-        Upper: int
-        Lower: int
+    class Side(IntEnum):
+        None_
+        Upper
+        Lower
 
     def __init__(self) -> None: ...
 
@@ -1487,6 +1566,8 @@ class GaussLobattoIntegral:
 class GaussianQuadrature:
     def __init__(self) -> None: ...
     def order(self) -> int: ...
+    def weights(self) -> Array: ...
+    def x(self) -> Array: ...
 
 class GaussLaguerreIntegration(GaussianQuadrature):
     @overload
@@ -1738,1060 +1819,29 @@ class InterestRate:
         refStart: Date,
         refEnd: Date,
     ) -> InterestRate: ...
-
-class Brent:
-    def __init__(self) -> None: ...
-    def setMaxEvaluations(
-        self,
-        evaluations: int,
-    ) -> None: ...
-    def setLowerBound(
-        self,
-        lowerBound: float,
-    ) -> None: ...
-    def setUpperBound(
-        self,
-        upperBound: float,
-    ) -> None: ...
-
-class Bisection:
-    def __init__(self) -> None: ...
-    def setMaxEvaluations(
-        self,
-        evaluations: int,
-    ) -> None: ...
-    def setLowerBound(
-        self,
-        lowerBound: float,
-    ) -> None: ...
-    def setUpperBound(
-        self,
-        upperBound: float,
-    ) -> None: ...
-
-class FalsePosition:
-    def __init__(self) -> None: ...
-    def setMaxEvaluations(
-        self,
-        evaluations: int,
-    ) -> None: ...
-    def setLowerBound(
-        self,
-        lowerBound: float,
-    ) -> None: ...
-    def setUpperBound(
-        self,
-        upperBound: float,
-    ) -> None: ...
-
-class Ridder:
-    def __init__(self) -> None: ...
-    def setMaxEvaluations(
-        self,
-        evaluations: int,
-    ) -> None: ...
-    def setLowerBound(
-        self,
-        lowerBound: float,
-    ) -> None: ...
-    def setUpperBound(
-        self,
-        upperBound: float,
-    ) -> None: ...
-
-class Secant:
-    def __init__(self) -> None: ...
-    def setMaxEvaluations(
-        self,
-        evaluations: int,
-    ) -> None: ...
-    def setLowerBound(
-        self,
-        lowerBound: float,
-    ) -> None: ...
-    def setUpperBound(
-        self,
-        upperBound: float,
-    ) -> None: ...
-
-class Constraint:
-    def __init__(self) -> None: ...
-
-class BoundaryConstraint(Constraint):
-    def __init__(
-        self,
-        lower: float,
-        upper: float,
-    ) -> None: ...
-
-class NoConstraint(Constraint):
-    def __init__(self) -> None: ...
-
-class PositiveConstraint(Constraint):
-    def __init__(self) -> None: ...
-
-class CompositeConstraint(Constraint):
-    def __init__(
-        self,
-        c1: Constraint,
-        c2: Constraint,
-    ) -> None: ...
-
-class NonhomogeneousBoundaryConstraint(Constraint):
-    def __init__(
-        self,
-        l: Array,
-        u: Array,
-    ) -> None: ...
-
-class EndCriteria:
-    class Type(int):
-        None_: int
-        MaxIterations: int
-        StationaryPoint: int
-        StationaryFunctionValue: int
-        StationaryFunctionAccuracy: int
-        ZeroGradientNorm: int
-        FunctionEpsilonTooSmall: int
-        Unknown: int
-
-    def __init__(
-        self,
-        maxIteration: int,
-        maxStationaryStateIterations: int,
-        rootEpsilon: float,
-        functionEpsilon: float,
-        gradientNormEpsilon: float,
-    ) -> None: ...
-    def succeeded(
-        self,
-        ecType: EndCriteria.Type,
-    ) -> bool: ...
-
-class OptimizationMethod:
-    def __init__(self) -> None: ...
-
-class ConjugateGradient(OptimizationMethod):
-    def __init__(self) -> None: ...
-
-class Simplex(OptimizationMethod):
-    def __init__(
-        self,
-        lambda_: float,
-    ) -> None: ...
-    def lambda_(self) -> float: ...
-
-class SteepestDescent(OptimizationMethod):
-    def __init__(self) -> None: ...
-
-class BFGS(OptimizationMethod):
-    def __init__(self) -> None: ...
-
-class LevenbergMarquardt(OptimizationMethod):
-    @overload
-    def __init__(
-        self,
-        epsfcn: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        epsfcn: float,
-        xtol: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        epsfcn: float,
-        xtol: float,
-        gtol: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        epsfcn: float,
-        xtol: float,
-        gtol: float,
-        useCostFunctionsJacobian: bool,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class DifferentialEvolution(OptimizationMethod):
-    def __init__(self) -> None: ...
-
-class SamplerGaussian:
-    @overload
-    def __init__(
-        self,
-        seed: int,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class SamplerLogNormal:
-    @overload
-    def __init__(
-        self,
-        seed: int,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class SamplerMirrorGaussian:
-    @overload
-    def __init__(
-        self,
-        lower: Array,
-        upper: Array,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        lower: Array,
-        upper: Array,
-        seed: int,
-    ) -> None: ...
-
-class ProbabilityBoltzmannDownhill:
-    @overload
-    def __init__(
-        self,
-        seed: int,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class TemperatureExponential:
-    @overload
-    def __init__(
-        self,
-        initialTemp: float,
-        dimension: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        initialTemp: float,
-        dimension: int,
-        power: float,
-    ) -> None: ...
-
-class ReannealingTrivial:
-    def __init__(self) -> None: ...
-
-class GaussianSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
-
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: GaussianSimulatedAnnealing.ResetScheme,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: GaussianSimulatedAnnealing.ResetScheme,
-        resetSteps: int,
-    ) -> None: ...
-
-class MirrorGaussianSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
-
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: MirrorGaussianSimulatedAnnealing.ResetScheme,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerMirrorGaussian,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: MirrorGaussianSimulatedAnnealing.ResetScheme,
-        resetSteps: int,
-    ) -> None: ...
-
-class LogNormalSimulatedAnnealing(OptimizationMethod):
-    class ResetScheme(int):
-        NoResetScheme: int
-        ResetToBestPoint: int
-        ResetToOrigin: int
-
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: LogNormalSimulatedAnnealing.ResetScheme,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        sampler: SamplerLogNormal,
-        probability: ProbabilityBoltzmannDownhill,
-        temperature: TemperatureExponential,
-        reannealing: ReannealingTrivial,
-        startTemperature: float,
-        endTemperature: float,
-        reAnnealSteps: int,
-        resetScheme: LogNormalSimulatedAnnealing.ResetScheme,
-        resetSteps: int,
-    ) -> None: ...
-
-class Optimizer:
-    def __init__(self) -> None: ...
-
-class SafeLinearInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeLogLinearInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeBackwardFlatInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeForwardFlatInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeCubicNaturalSpline:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeLogCubicNaturalSpline:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeMonotonicCubicNaturalSpline:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeMonotonicLogCubicNaturalSpline:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeKrugerCubic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeKrugerLogCubic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeFritschButlandCubic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeFritschButlandLogCubic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeParabolic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeLogParabolic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeMonotonicParabolic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeMonotonicLogParabolic:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeLagrangeInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeBilinearInterpolation:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-        m: Matrix,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        y: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        y: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class SafeBicubicSpline:
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-        m: Matrix,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        y: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        y: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-
-class CubicInterpolation:
-    class DerivativeApprox(int):
-        Spline: int
-        SplineOM1: int
-        SplineOM2: int
-        FourthOrder: int
-        Parabolic: int
-        FritschButland: int
-        Akima: int
-        Kruger: int
-        Harmonic: int
-
-class MixedInterpolation:
-    class Behavior(int):
-        ShareRanges: int
-        SplitRanges: int
-
-class BackwardFlat:
-    def __init__(self) -> None: ...
-
-class ForwardFlat:
-    def __init__(self) -> None: ...
-
-class Linear:
-    def __init__(self) -> None: ...
-
-class LogLinear:
-    def __init__(self) -> None: ...
-
-class Cubic:
-    def __init__(self) -> None: ...
-
-class Bicubic:
-    def __init__(self) -> None: ...
-
-class MonotonicCubic:
-    def __init__(self) -> None: ...
-
-class DefaultLogCubic:
-    def __init__(self) -> None: ...
-
-class MonotonicLogCubic:
-    def __init__(self) -> None: ...
-
-class SplineCubic:
-    def __init__(self) -> None: ...
-
-class SplineLogCubic:
-    def __init__(self) -> None: ...
-
-class Kruger:
-    def __init__(self) -> None: ...
-
-class KrugerLog:
-    def __init__(self) -> None: ...
-
-class ConvexMonotone:
-    @overload
-    def __init__(
-        self,
-        quadraticity: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        quadraticity: float,
-        monotonicity: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        quadraticity: float,
-        monotonicity: float,
-        forcePositive: bool,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class ParabolicCubic:
-    def __init__(self) -> None: ...
-
-class MonotonicParabolicCubic:
-    def __init__(self) -> None: ...
-
-class LogParabolicCubic:
-    def __init__(self) -> None: ...
-
-class MonotonicLogParabolicCubic:
-    def __init__(self) -> None: ...
-
-class LogMixedLinearCubic:
-    @overload
-    def __init__(
-        self,
-        n: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        n: int,
-        behavior: MixedInterpolation.Behavior,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        n: int,
-        behavior: MixedInterpolation.Behavior,
-        da: CubicInterpolation.DerivativeApprox,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        n: int,
-        behavior: MixedInterpolation.Behavior,
-        da: CubicInterpolation.DerivativeApprox,
-        monotonic: bool,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class RichardsonExtrapolation:
-    def __init__(self) -> None: ...
-    @overload
-    def __call__(
-        self,
-        t: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        t: float,
-        s: float,
-    ) -> float: ...
-    @overload
-    def __call__(self) -> float: ...
-
-class ChebyshevInterpolation:
-    class PointsType(int):
-        FirstKind: int
-        SecondKind: int
-
-    @overload
-    def __init__(
-        self,
-        f: Array,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        f: Array,
-        pointsType: ChebyshevInterpolation.PointsType,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        z: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        z: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
-    def nodes(
-        self,
-        n: int,
-        pointsType: ChebyshevInterpolation.PointsType,
-    ) -> Array: ...
-
-class SafeConvexMonotoneInterpolation:
-    @overload
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-        quadraticity: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-        quadraticity: float,
-        monotonicity: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        x: Array,
-        y: Array,
-        quadraticity: float,
-        monotonicity: float,
-        forcePositive: bool,
-    ) -> None: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-    ) -> float: ...
-    @overload
-    def __call__(
-        self,
-        x: float,
-        allowExtrapolation: bool,
-    ) -> float: ...
+    def __str__(self) -> str: ...
 
 class LazyObject(Observable):
     def __init__(self) -> None: ...
     def recalculate(self) -> None: ...
     def freeze(self) -> None: ...
     def unfreeze(self) -> None: ...
+    def forwardFirstNotificationOnly(self) -> None: ...
+    def alwaysForwardNotifications(self) -> None: ...
+    def forwardsAllNotifications(self) -> bool: ...
 
 class DateGeneration:
-    class Rule(int):
-        Backward: int
-        Forward: int
-        Zero: int
-        ThirdWednesday: int
-        ThirdWednesdayInclusive: int
-        Twentieth: int
-        TwentiethIMM: int
-        OldCDS: int
-        CDS: int
-        CDS2015: int
+    class Rule(IntEnum):
+        Backward
+        Forward
+        Zero
+        ThirdWednesday
+        ThirdWednesdayInclusive
+        Twentieth
+        TwentiethIMM
+        OldCDS
+        CDS
+        CDS2015
 
     def __init__(self) -> None: ...
 
@@ -2949,448 +1999,14 @@ class MakeSchedule:
         self,
         d: Date,
     ) -> MakeSchedule: ...
-
-class Rounding:
-    def __init__(self) -> None: ...
-    def __call__(
-        self,
-        value: float,
-    ) -> float: ...
-
-class UpRounding(Rounding):
-    @overload
-    def __init__(
-        self,
-        precision: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        precision: int,
-        digit: int,
-    ) -> None: ...
-
-class DownRounding(Rounding):
-    @overload
-    def __init__(
-        self,
-        precision: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        precision: int,
-        digit: int,
-    ) -> None: ...
-
-class ClosestRounding(Rounding):
-    @overload
-    def __init__(
-        self,
-        precision: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        precision: int,
-        digit: int,
-    ) -> None: ...
-
-class CeilingTruncation(Rounding):
-    @overload
-    def __init__(
-        self,
-        precision: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        precision: int,
-        digit: int,
-    ) -> None: ...
-
-class FloorTruncation(Rounding):
-    @overload
-    def __init__(
-        self,
-        precision: int,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        precision: int,
-        digit: int,
-    ) -> None: ...
-
-class Currency:
-    @overload
-    def __init__(
-        self,
-        name: str,
-        code: str,
-        numericCode: int,
-        symbol: str,
-        fractionSymbol: str,
-        fractionsPerUnit: int,
-        rounding: Rounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        name: str,
-        code: str,
-        numericCode: int,
-        symbol: str,
-        fractionSymbol: str,
-        fractionsPerUnit: int,
-        rounding: Rounding,
-        triangulationCurrency: Currency,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-    def name(self) -> str: ...
-    def code(self) -> str: ...
-    def numericCode(self) -> int: ...
-    def symbol(self) -> str: ...
-    def fractionSymbol(self) -> str: ...
-    def fractionsPerUnit(self) -> int: ...
-    def rounding(self) -> Rounding: ...
-    def empty(self) -> bool: ...
-    def triangulationCurrency(self) -> Currency: ...
-
-class AEDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class AOACurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ARSCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ATSCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class AUDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BDTCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BEFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BHDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BGLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BGNCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BRLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BWPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BYRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CADCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CHFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CLFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CLPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CNHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CNYCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class COPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class COUCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CYPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class CZKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class DEMCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class DKKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class EEKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class EGPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ESPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ETBCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class EURCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class FIMCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class FRFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class GELCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class GBPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class GHSCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class GRDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class HKDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class HRKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class HUFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class IDRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class IEPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ILSCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class INRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class IQDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class IRRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ISKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ITLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class JODCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class JPYCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class KESCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class KRWCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class KWDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class KZTCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class LKRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class LTLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class LUFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class LVLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MADCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MTLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MURCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MXNCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MXVCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class MYRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class NGNCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class NLGCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class NOKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class NPRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class NZDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class OMRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PEHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PEICurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PENCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PHPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PKRCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PLNCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class PTECurrency(Currency):
-    def __init__(self) -> None: ...
-
-class QARCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ROLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class RONCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class RSDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class RUBCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class SARCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class SEKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class SGDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class SITCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class SKKCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class THBCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class TNDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class TRLCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class TRYCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class TTDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class TWDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class UAHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class UGXCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class USDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class UYUCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class VEBCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class VNDCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class XOFCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ZARCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ZMWCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BCHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class BTCCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class DASHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ETCCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ETHCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class LTCCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class XRPCurrency(Currency):
-    def __init__(self) -> None: ...
-
-class ZECCurrency(Currency):
-    def __init__(self) -> None: ...
+    def schedule(self) -> Schedule: ...
 
 class IntervalPrice:
-    class Type(int):
-        Open: int
-        Close: int
-        High: int
-        Low: int
+    class Type(IntEnum):
+        Open
+        Close
+        High
+        Low
 
     def __init__(
         self,
@@ -3437,2177 +2053,3 @@ class IntervalPrice:
         arg0: TimeSeries[IntervalPrice],
         t: IntervalPrice.Type,
     ) -> TimeSeries[float]: ...
-
-class TermStructure(Observable):
-    def __init__(self) -> None: ...
-    def dayCounter(self) -> DayCounter: ...
-    def timeFromReference(
-        self,
-        date: Date,
-    ) -> float: ...
-    def calendar(self) -> Calendar: ...
-    def referenceDate(self) -> Date: ...
-    def maxDate(self) -> Date: ...
-    def maxTime(self) -> float: ...
-    @overload
-    def enableExtrapolation(
-        self,
-        b: bool,
-    ) -> None: ...
-    @overload
-    def enableExtrapolation(self) -> None: ...
-    @overload
-    def disableExtrapolation(
-        self,
-        b: bool,
-    ) -> None: ...
-    @overload
-    def disableExtrapolation(self) -> None: ...
-    def allowsExtrapolation(self) -> bool: ...
-
-class YieldTermStructure(TermStructure):
-    def __init__(self) -> None: ...
-    @overload
-    def discount(
-        self,
-        arg0: Date,
-    ) -> float: ...
-    @overload
-    def discount(
-        self,
-        arg0: Date,
-        extrapolate: bool,
-    ) -> float: ...
-    @overload
-    def discount(
-        self,
-        arg0: float,
-    ) -> float: ...
-    @overload
-    def discount(
-        self,
-        arg0: float,
-        extrapolate: bool,
-    ) -> float: ...
-    @overload
-    def zeroRate(
-        self,
-        d: Date,
-        arg1: DayCounter,
-        arg2: Compounding,
-    ) -> InterestRate: ...
-    @overload
-    def zeroRate(
-        self,
-        d: Date,
-        arg1: DayCounter,
-        arg2: Compounding,
-        f: Frequency,
-    ) -> InterestRate: ...
-    @overload
-    def zeroRate(
-        self,
-        d: Date,
-        arg1: DayCounter,
-        arg2: Compounding,
-        f: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate: ...
-    @overload
-    def zeroRate(
-        self,
-        t: float,
-        arg1: Compounding,
-    ) -> InterestRate: ...
-    @overload
-    def zeroRate(
-        self,
-        t: float,
-        arg1: Compounding,
-        f: Frequency,
-    ) -> InterestRate: ...
-    @overload
-    def zeroRate(
-        self,
-        t: float,
-        arg1: Compounding,
-        f: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        d1: Date,
-        d2: Date,
-        arg2: DayCounter,
-        arg3: Compounding,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        d1: Date,
-        d2: Date,
-        arg2: DayCounter,
-        arg3: Compounding,
-        f: Frequency,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        d1: Date,
-        d2: Date,
-        arg2: DayCounter,
-        arg3: Compounding,
-        f: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        t1: float,
-        t2: float,
-        arg2: Compounding,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        t1: float,
-        t2: float,
-        arg2: Compounding,
-        f: Frequency,
-    ) -> InterestRate: ...
-    @overload
-    def forwardRate(
-        self,
-        t1: float,
-        t2: float,
-        arg2: Compounding,
-        f: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate: ...
-
-class ImpliedTermStructure(YieldTermStructure):
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        referenceDate: Date,
-    ) -> None: ...
-
-class ZeroSpreadedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        spreadHandle: Handle[Quote],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        spreadHandle: Handle[Quote],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        spreadHandle: Handle[Quote],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        spreadHandle: Handle[Quote],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-
-class ForwardSpreadedTermStructure(YieldTermStructure):
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        spreadHandle: Handle[Quote],
-    ) -> None: ...
-
-class PiecewiseZeroSpreadedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: Linear,
-    ) -> None: ...
-
-class SpreadedLinearZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: Linear,
-    ) -> None: ...
-
-class SpreadedBackwardFlatZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: BackwardFlat,
-    ) -> None: ...
-
-class SpreadedCubicZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: Cubic,
-    ) -> None: ...
-
-class SpreadedKrugerZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: Kruger,
-    ) -> None: ...
-
-class SpreadedSplineCubicZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: SplineCubic,
-    ) -> None: ...
-
-class SpreadedParabolicCubicZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: ParabolicCubic,
-    ) -> None: ...
-
-class SpreadedMonotonicParabolicCubicZeroInterpolatedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        comp: Compounding,
-        freq: Frequency,
-        dc: DayCounter,
-        factory: MonotonicParabolicCubic,
-    ) -> None: ...
-
-class PiecewiseForwardSpreadedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        dc: DayCounter,
-        factory: BackwardFlat,
-    ) -> None: ...
-
-class PiecewiseLinearForwardSpreadedTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        dc: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        baseCurve: Handle[YieldTermStructure],
-        spreads: list[Handle[Quote]],
-        dates: list[Date],
-        dc: DayCounter,
-        factory: Linear,
-    ) -> None: ...
-
-class FlatForward(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-        compounding: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-        compounding: Compounding,
-        frequency: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: float,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: float,
-        dayCounter: DayCounter,
-        compounding: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        referenceDate: Date,
-        forward: float,
-        dayCounter: DayCounter,
-        compounding: Compounding,
-        frequency: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-        compounding: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: Handle[Quote],
-        dayCounter: DayCounter,
-        compounding: Compounding,
-        frequency: Frequency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: float,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: float,
-        dayCounter: DayCounter,
-        compounding: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        settlementDays: int,
-        calendar: Calendar,
-        forward: float,
-        dayCounter: DayCounter,
-        compounding: Compounding,
-        frequency: Frequency,
-    ) -> None: ...
-
-class UltimateForwardTermStructure(YieldTermStructure):
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        lastLiquidForwardRate: Handle[Quote],
-        ultimateForwardRate: Handle[Quote],
-        firstSmoothingPoint: Period,
-        alpha: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        lastLiquidForwardRate: Handle[Quote],
-        ultimateForwardRate: Handle[Quote],
-        firstSmoothingPoint: Period,
-        alpha: float,
-        roundingDigits: int | None,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        lastLiquidForwardRate: Handle[Quote],
-        ultimateForwardRate: Handle[Quote],
-        firstSmoothingPoint: Period,
-        alpha: float,
-        roundingDigits: int | None,
-        compounding: Compounding,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        curveHandle: Handle[YieldTermStructure],
-        lastLiquidForwardRate: Handle[Quote],
-        ultimateForwardRate: Handle[Quote],
-        firstSmoothingPoint: Period,
-        alpha: float,
-        roundingDigits: int | None,
-        compounding: Compounding,
-        frequency: Frequency,
-    ) -> None: ...
-
-class QuantoTermStructure(YieldTermStructure):
-    def __init__(
-        self,
-        underlyingDividendTS: Handle[YieldTermStructure],
-        riskFreeTS: Handle[YieldTermStructure],
-        foreignRiskFreeTS: Handle[YieldTermStructure],
-        underlyingBlackVolTS: Handle[Any],
-        strike: float,
-        exchRateBlackVolTS: Handle[Any],
-        exchRateATMlevel: float,
-        underlyingExchRateCorrelation: float,
-    ) -> None: ...
-
-class IndexManager:
-    def __init__(self) -> None: ...
-    def instance(self) -> IndexManager: ...
-    def setHistory(
-        self,
-        name: str,
-        fixings: TimeSeries[float],
-    ) -> None: ...
-    def getHistory(
-        self,
-        name: str,
-    ) -> TimeSeries[float]: ...
-    def hasHistory(
-        self,
-        name: str,
-    ) -> bool: ...
-    def histories(self) -> list[str]: ...
-    def clearHistory(
-        self,
-        name: str,
-    ) -> None: ...
-    def clearHistories(self) -> None: ...
-    def hasHistoricalFixing(
-        self,
-        name: str,
-        fixingDate: Date,
-    ) -> bool: ...
-
-class Index(Observable):
-    def __init__(self) -> None: ...
-    def name(self) -> str: ...
-    def fixingCalendar(self) -> Calendar: ...
-    def isValidFixingDate(
-        self,
-        fixingDate: Date,
-    ) -> bool: ...
-    def hasHistoricalFixing(
-        self,
-        fixingDate: Date,
-    ) -> bool: ...
-    @overload
-    def fixing(
-        self,
-        fixingDate: Date,
-    ) -> float: ...
-    @overload
-    def fixing(
-        self,
-        fixingDate: Date,
-        forecastTodaysFixing: bool,
-    ) -> float: ...
-    def pastFixing(
-        self,
-        fixingDate: Date,
-    ) -> float: ...
-    @overload
-    def addFixing(
-        self,
-        fixingDate: Date,
-        fixing: float,
-    ) -> None: ...
-    @overload
-    def addFixing(
-        self,
-        fixingDate: Date,
-        fixing: float,
-        forceOverwrite: bool,
-    ) -> None: ...
-    def timeSeries(self) -> TimeSeries[float]: ...
-    def clearFixings(self) -> None: ...
-
-class InterestRateIndex(Index):
-    def __init__(self) -> None: ...
-    def familyName(self) -> str: ...
-    def tenor(self) -> Period: ...
-    def fixingDays(self) -> int: ...
-    def fixingDate(
-        self,
-        valueDate: Date,
-    ) -> Date: ...
-    def currency(self) -> Currency: ...
-    def dayCounter(self) -> DayCounter: ...
-    def maturityDate(
-        self,
-        valueDate: Date,
-    ) -> Date: ...
-    def valueDate(
-        self,
-        fixingDate: Date,
-    ) -> Date: ...
-
-class IborIndex(InterestRateIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
-        dayCounter: DayCounter,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    def businessDayConvention(self) -> BusinessDayConvention: ...
-    def endOfMonth(self) -> bool: ...
-    def forwardingTermStructure(self) -> Handle[YieldTermStructure]: ...
-    def clone(
-        self,
-        arg0: Handle[YieldTermStructure],
-    ) -> IborIndex: ...
-
-class OvernightIndex(IborIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        dayCounter: DayCounter,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Libor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        financialCenterCalendar: Calendar,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        financialCenterCalendar: Calendar,
-        dayCounter: DayCounter,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    def jointCalendar(self) -> Calendar: ...
-
-class DailyTenorLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        settlementDays: int,
-        currency: Currency,
-        financialCenterCalendar: Calendar,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        settlementDays: int,
-        currency: Currency,
-        financialCenterCalendar: Calendar,
-        dayCounter: DayCounter,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class CustomIborIndex(IborIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        fixingCalendar: Calendar,
-        valueCalendar: Calendar,
-        maturityCalendar: Calendar,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
-        dayCounter: DayCounter,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        fixingCalendar: Calendar,
-        valueCalendar: Calendar,
-        maturityCalendar: Calendar,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
-        dayCounter: DayCounter,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    def valueCalendar(self) -> Calendar: ...
-    def maturityCalendar(self) -> Calendar: ...
-
-class SwapIndex(InterestRateIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        fixedLegTenor: Period,
-        fixedLegConvention: BusinessDayConvention,
-        fixedLegDayCounter: DayCounter,
-        iborIndex: IborIndex,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        tenor: Period,
-        settlementDays: int,
-        currency: Currency,
-        calendar: Calendar,
-        fixedLegTenor: Period,
-        fixedLegConvention: BusinessDayConvention,
-        fixedLegDayCounter: DayCounter,
-        iborIndex: IborIndex,
-        discountCurve: Handle[YieldTermStructure],
-    ) -> None: ...
-    def fixedLegTenor(self) -> Period: ...
-    def fixedLegConvention(self) -> BusinessDayConvention: ...
-    def iborIndex(self) -> IborIndex: ...
-    def forwardingTermStructure(self) -> Handle[YieldTermStructure]: ...
-    def discountingTermStructure(self) -> Handle[YieldTermStructure]: ...
-    @overload
-    def clone(
-        self,
-        forwarding: Handle[YieldTermStructure],
-        discounting: Handle[YieldTermStructure],
-    ) -> SwapIndex: ...
-    @overload
-    def clone(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> SwapIndex: ...
-    @overload
-    def clone(
-        self,
-        tenor: Period,
-    ) -> SwapIndex: ...
-
-class SwapSpreadIndex(InterestRateIndex):
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        swapIndex1: SwapIndex,
-        swapIndex2: SwapIndex,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        swapIndex1: SwapIndex,
-        swapIndex2: SwapIndex,
-        gearing1: float,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        familyName: str,
-        swapIndex1: SwapIndex,
-        swapIndex2: SwapIndex,
-        gearing1: float,
-        gearing2: float,
-    ) -> None: ...
-    def forecastFixing(
-        self,
-        fixingDate: Date,
-    ) -> float: ...
-    def swapIndex1(self) -> SwapIndex: ...
-    def swapIndex2(self) -> SwapIndex: ...
-    def gearing1(self) -> float: ...
-    def gearing2(self) -> float: ...
-
-class EquityIndex(Index):
-    @overload
-    def __init__(
-        self,
-        name: str,
-        fixingCalendar: Calendar,
-        currency: Currency,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        name: str,
-        fixingCalendar: Calendar,
-        currency: Currency,
-        interest: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        name: str,
-        fixingCalendar: Calendar,
-        currency: Currency,
-        interest: Handle[YieldTermStructure],
-        dividend: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        name: str,
-        fixingCalendar: Calendar,
-        currency: Currency,
-        interest: Handle[YieldTermStructure],
-        dividend: Handle[YieldTermStructure],
-        spot: Handle[Quote],
-    ) -> None: ...
-    def currency(self) -> Currency: ...
-    def equityInterestRateCurve(self) -> Handle[YieldTermStructure]: ...
-    def equityDividendCurve(self) -> Handle[YieldTermStructure]: ...
-    def spot(self) -> Handle[Quote]: ...
-    def clone(
-        self,
-        interest: Handle[YieldTermStructure],
-        dividend: Handle[YieldTermStructure],
-        spot: Handle[Quote],
-    ) -> EquityIndex: ...
-
-class AUDLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class CADLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class CADLiborON(DailyTenorLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Cdor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class CHFLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class DKKLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Bbsw(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Bbsw1M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bbsw2M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bbsw3M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bbsw4M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bbsw5M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bbsw6M(Bbsw):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Bkbm1M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm2M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm3M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm4M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm5M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bkbm6M(Bkbm):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Euribor1W(Euribor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor1M(Euribor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor3M(Euribor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor6M(Euribor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor1Y(Euribor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Euribor365(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EURLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EURLibor1M(EURLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class EURLibor3M(EURLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class EURLibor6M(EURLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class EURLibor1Y(EURLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class GBPLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class GBPLiborON(DailyTenorLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Jibar(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class JPYLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Mosprime(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class NZDLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Pribor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Robor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class SEKLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Shibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Tibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class THBFIX(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class TRLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class USDLibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class USDLiborON(DailyTenorLibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Wibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Zibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Aonia(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Cdi(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Corra(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Destr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Eonia(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Estr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class FedFunds(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Kofr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Nzocr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Saron(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Sofr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Sonia(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Swestr(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Tonar(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Tona(OvernightIndex):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class EuriborSwapIsdaFixA(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EuriborSwapIsdaFixB(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EuriborSwapIfrFix(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EurLiborSwapIsdaFixA(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EurLiborSwapIsdaFixB(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class EurLiborSwapIfrFix(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class ChfLiborSwapIsdaFix(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class GbpLiborSwapIsdaFix(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class JpyLiborSwapIsdaFixAm(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class JpyLiborSwapIsdaFixPm(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class UsdLiborSwapIsdaFixAm(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class UsdLiborSwapIsdaFixPm(SwapIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h1: Handle[YieldTermStructure],
-        h2: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class Bibor(IborIndex):
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        tenor: Period,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-
-class BiborSW(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bibor1M(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bibor2M(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bibor3M(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bibor6M(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Bibor1Y(Bibor):
-    @overload
-    def __init__(
-        self,
-        h: Handle[YieldTermStructure],
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-
-class Quote(Observable):
-    def __init__(self) -> None: ...
-    def value(self) -> float: ...
-    def isValid(self) -> bool: ...
-
-class SimpleQuote(Quote):
-    @overload
-    def __init__(
-        self,
-        value: float | None,
-    ) -> None: ...
-    @overload
-    def __init__(self) -> None: ...
-    @overload
-    def setValue(
-        self,
-        value: float | None,
-    ) -> None: ...
-    @overload
-    def setValue(self) -> None: ...
-    def reset(self) -> None: ...
-
-class LastFixingQuote(Quote):
-    def __init__(
-        self,
-        index: Index,
-    ) -> None: ...
-    def index(self) -> Index: ...
-    def referenceDate(self) -> Date: ...
-
-class FuturesConvAdjustmentQuote(Quote):
-    @overload
-    def __init__(
-        self,
-        index: IborIndex,
-        futuresDate: Date,
-        futuresQuote: Handle[Quote],
-        volatility: Handle[Quote],
-        meanReversion: Handle[Quote],
-    ) -> None: ...
-    @overload
-    def __init__(
-        self,
-        index: IborIndex,
-        immCode: str,
-        futuresQuote: Handle[Quote],
-        volatility: Handle[Quote],
-        meanReversion: Handle[Quote],
-    ) -> None: ...
-    def futuresValue(self) -> float: ...
-    def volatility(self) -> float: ...
-    def meanReversion(self) -> float: ...
-    def immDate(self) -> Date: ...

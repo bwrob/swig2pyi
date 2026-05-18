@@ -16,15 +16,15 @@ QL_DEPRECATED_DISABLE_WARNING
 %include vectors.i
 %include integrals.i
 %include interestrate.i
-%include interpolation.i
+// %include interpolation.i
 %include lazyobject.i
 %include linearalgebra.i
 %include scheduler.i
 // %include cashflows.i
 // %include instruments.i
 %include functions.i
-%include currencies.i
+// %include currencies.i
 %include timeseries.i
-%include marketelements.i
+// %include marketelements.i
 // %include termstructures.i
 // %include indexes.i

@@ -14,15 +14,15 @@ This document outlines the development guidelines, project practices, and archit
 1.  **Input Source:**
     *   *Standard Mode:* `.i` file -> `SwigRunner` executes `swig -xml`.
     *   *XML Mode:* Pre-existing `.xml` file -> Bypasses SWIG execution.
-2.  **Middle-End (Normalization):** Parse the XML into structured data objects using `pydantic-xml`. Normalize C++ types to Python types using `TypeManager`.
-3.  **Backend (Emission):** Iterate over the normalized AST to emit valid, idiomatic Python type stubs (`.pyi`).
+2.  **Middle-End (Normalization):** Parse the XML stream (SAX) and persist nodes to a temporary SQLite database using `sqlmodel`. This solves memory exhaustion on massive XML trees. Normalize C++ types to Python types using `TypeManager`.
+3.  **Backend (Emission):** Query the database to construct an AST and emit valid, idiomatic Python type stubs (`.pyi`).
 4.  **Verification:** Generated stubs must be valid Python syntax and strictly typed.
 
 ### 1.2. Tech Stack & Tooling
 
 *   **Language:** Python 3.12+
 *   **Package Management:** `uv`
-*   **Core Dependencies:** `swig` (Python wrapper), `pydantic` & `pydantic-xml`.
+*   **Core Dependencies:** `swig` (Python wrapper), `sqlmodel`.
 *   **Testing:** `pytest`.
 *   **Linting/Types:** `ruff` & `basedpyright`.
 
@@ -39,8 +39,8 @@ Driven by configuration to avoid hardcoded library rules. Includes module name, 
 ### 2.3. The Runner (`SwigRunner`)
 Executes `swig -xml -DSWIGPYTHON`. Injects mocks and preambles to silence errors caused by the lack of full Python runtime libraries during XML generation.
 
-### 2.4. The Parser (`SwigXmlParser`)
-Declarative schema for SWIG XML using `pydantic-xml`.
+### 2.4. The Parser (`SwigXmlParser` & `sqlmodel`)
+SAX streams the SWIG XML into a temporary SQLite database. The schema is defined declaratively using `sqlmodel` to ensure type safety. AST queries resolve relationships (inheritance, templates) from the DB.
 
 ### 2.5. The Type System (`TypeManager`)
 Translates C++ types to Python types (unwrapping smart pointers, resolving typedefs, mapping templates).
