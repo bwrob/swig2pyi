@@ -1,7 +1,8 @@
+"""Public API for swig2pyi."""
+
 import os
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
@@ -16,10 +17,10 @@ def generate_from_interface(
     config: Config,
     output_file: Path,
     swig_path: str = "swig",
+    *,
     validate: bool = False,
 ) -> None:
-    """
-    Generates a Python stub (.pyi) file from a SWIG interface (.i) file.
+    """Generate a Python stub (.pyi) file from a SWIG interface (.i) file.
 
     Args:
         interface_file: Path to the SWIG interface file.
@@ -27,6 +28,7 @@ def generate_from_interface(
         output_file: Path to write the generated stub to.
         swig_path: Path to the swig executable.
         validate: Whether to run QA validation (Ruff/Pyright) on the output.
+
     """
     runner = SwigRunner(swig_path=swig_path)
     xml_fd, xml_path = tempfile.mkstemp(suffix=".xml")
@@ -37,24 +39,25 @@ def generate_from_interface(
         runner.run(config.includes, interface_file, xml_path_obj)
         generate_from_xml(xml_path_obj, config, output_file, validate=validate)
     finally:
-        if os.path.exists(xml_path):
-            os.unlink(xml_path)
+        if xml_path_obj.exists():
+            xml_path_obj.unlink()
 
 
 def generate_from_xml(
     xml_file: Path,
     config: Config,
     output_file: Path,
+    *,
     validate: bool = False,
 ) -> None:
-    """
-    Generates a Python stub (.pyi) file from a pre-generated SWIG XML file.
+    """Generate a Python stub (.pyi) file from a pre-generated SWIG XML file.
 
     Args:
         xml_file: Path to the SWIG XML file.
         config: Configuration object.
         output_file: Path to write the generated stub to.
         validate: Whether to run QA validation (Ruff/Pyright) on the output.
+
     """
     parser = SwigXmlParser()
     top = parser.parse_file(xml_file)
@@ -65,12 +68,10 @@ def generate_from_xml(
 
     output_content = emitter.get_output()
 
-    # Ensure output directory exists
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_file, "w") as f:
-        f.write(output_content)
+    output_file.write_text(output_content)
 
     if validate:
-        validator = QAValidator()
-        validator.validate(output_file)
+        qa = QAValidator()
+        qa.validate(output_file)

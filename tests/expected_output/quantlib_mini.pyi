@@ -1,11 +1,9 @@
-import typing
-from typing import Any, Optional, overload, Generic, TypeVar
-import collections.abc
+from typing import Generic, TypeVar, overload
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 class Handle(Generic[_T]):
-    def __init__(self, p: Optional[_T] = ...) -> None: ...
+    def __init__(self, p: _T | None = ...) -> None: ...
     def currentLink(self) -> _T: ...
     def empty(self) -> bool: ...
     def __deref__(self) -> _T: ...
@@ -23,6 +21,14 @@ class Weekday(IntEnum):
     Friday = 6
     Saturday = 7
 
+Sunday: Weekday
+Monday: Weekday
+Tuesday: Weekday
+Wednesday: Weekday
+Thursday: Weekday
+Friday: Weekday
+Saturday: Weekday
+
 class Month(IntEnum):
     January = 1
     February = 2
@@ -37,6 +43,19 @@ class Month(IntEnum):
     November = 11
     December = 12
 
+January: Month
+February: Month
+March: Month
+April: Month
+May: Month
+June: Month
+July: Month
+August: Month
+September: Month
+October: Month
+November: Month
+December: Month
+
 class TimeUnit(IntEnum):
     Days
     Weeks
@@ -47,6 +66,16 @@ class TimeUnit(IntEnum):
     Seconds
     Milliseconds
     Microseconds
+
+Days: TimeUnit
+Weeks: TimeUnit
+Months: TimeUnit
+Years: TimeUnit
+Hours: TimeUnit
+Minutes: TimeUnit
+Seconds: TimeUnit
+Milliseconds: TimeUnit
+Microseconds: TimeUnit
 
 class Frequency(IntEnum):
     NoFrequency = -1
@@ -63,6 +92,20 @@ class Frequency(IntEnum):
     Daily = 365
     OtherFrequency = 999
 
+NoFrequency: Frequency
+Once: Frequency
+Annual: Frequency
+Semiannual: Frequency
+EveryFourthMonth: Frequency
+Quarterly: Frequency
+Bimonthly: Frequency
+Monthly: Frequency
+EveryFourthWeek: Frequency
+Biweekly: Frequency
+Weekly: Frequency
+Daily: Frequency
+OtherFrequency: Frequency
+
 class BusinessDayConvention(IntEnum):
     Following
     ModifiedFollowing
@@ -72,9 +115,20 @@ class BusinessDayConvention(IntEnum):
     HalfMonthModifiedFollowing
     Nearest
 
+Following: BusinessDayConvention
+ModifiedFollowing: BusinessDayConvention
+Preceding: BusinessDayConvention
+ModifiedPreceding: BusinessDayConvention
+Unadjusted: BusinessDayConvention
+HalfMonthModifiedFollowing: BusinessDayConvention
+Nearest: BusinessDayConvention
+
 class JointCalendarRule(IntEnum):
     JoinHolidays
     JoinBusinessDays
+
+JoinHolidays: JointCalendarRule
+JoinBusinessDays: JointCalendarRule
 
 class Compounding(IntEnum):
     Simple
@@ -83,6 +137,13 @@ class Compounding(IntEnum):
     SimpleThenCompounded
     CompoundedThenSimple
 
+Simple: Compounding
+Compounded: Compounding
+Continuous: Compounding
+SimpleThenCompounded: Compounding
+CompoundedThenSimple: Compounding
+
+def __deref__() -> T: ...
 def asObservable() -> Observable: ...
 def reset() -> None: ...
 def daysBetween(
@@ -96,12 +157,8 @@ def yearFractionToDate(
     referenceDate: Date,
     t: float,
 ) -> Date: ...
-def inverse(
-    m: Matrix,
-) -> Matrix: ...
-def transpose(
-    m: Matrix,
-) -> Matrix: ...
+def inverse(m: Matrix) -> Matrix: ...
+def transpose(m: Matrix) -> Matrix: ...
 def outerProduct(
     v1: Array,
     v2: Array,
@@ -113,12 +170,10 @@ def pseudoSqrt(
 @overload
 def CholeskyDecomposition(
     m: Matrix,
-) -> Matrix: ...
-@overload
-def CholeskyDecomposition(
-    m: Matrix,
     flexible: bool,
 ) -> Matrix: ...
+@overload
+def CholeskyDecomposition(m: Matrix) -> Matrix: ...
 def CholeskySolveFor(
     L: Matrix,
     b: Array,
@@ -153,6 +208,27 @@ def dates() -> list[Date]: ...
 def firstDate() -> Date: ...
 def lastDate() -> Date: ...
 def size() -> int: ...
+class string:
+    def __init__(self) -> None: ...
+
+class OptionalBool:
+    def __init__(
+        self,
+        t: bool,
+    ) -> None: ...
+
+class OptionalInteger:
+    def __init__(
+        self,
+        t: int,
+    ) -> None: ...
+
+class OptionalFrequency:
+    def __init__(
+        self,
+        t: Frequency,
+    ) -> None: ...
+
 class Period:
     @overload
     def __init__(
@@ -176,8 +252,9 @@ class Period:
     def units(self) -> TimeUnit: ...
     def frequency(self) -> Frequency: ...
     def normalized(self) -> Period: ...
-    def __str__(self) -> str: ...
-    def __repr__(self) -> str: ...
+
+class PeriodVector:
+    def __init__(self) -> None: ...
 
 class Date:
     @overload
@@ -246,38 +323,33 @@ class Date:
     def fractionOfDay(self) -> float: ...
     def fractionOfSecond(self) -> float: ...
     def serialNumber(self) -> int: ...
-    def isLeap(
-        self,
-        y: int,
-    ) -> bool: ...
-    def minDate(self) -> Date: ...
-    def maxDate(self) -> Date: ...
-    def todaysDate(self) -> Date: ...
-    def localDateTime(self) -> Date: ...
-    def universalDateTime(self) -> Date: ...
-    def startOfMonth(
-        self,
-        arg0: Date,
-    ) -> Date: ...
-    def endOfMonth(
-        self,
-        arg0: Date,
-    ) -> Date: ...
-    def isStartOfMonth(
-        self,
-        arg0: Date,
-    ) -> bool: ...
-    def isEndOfMonth(
-        self,
-        arg0: Date,
-    ) -> bool: ...
+    @staticmethod
+    def isLeap(y: int) -> bool: ...
+    @staticmethod
+    def minDate() -> Date: ...
+    @staticmethod
+    def maxDate() -> Date: ...
+    @staticmethod
+    def todaysDate() -> Date: ...
+    @staticmethod
+    def localDateTime() -> Date: ...
+    @staticmethod
+    def universalDateTime() -> Date: ...
+    @staticmethod
+    def startOfMonth(arg0: Date) -> Date: ...
+    @staticmethod
+    def endOfMonth(arg0: Date) -> Date: ...
+    @staticmethod
+    def isStartOfMonth(arg0: Date) -> bool: ...
+    @staticmethod
+    def isEndOfMonth(arg0: Date) -> bool: ...
+    @staticmethod
     def nextWeekday(
-        self,
         arg0: Date,
         arg1: Weekday,
     ) -> Date: ...
+    @staticmethod
     def nthWeekday(
-        self,
         n: int,
         arg1: Weekday,
         m: Month,
@@ -309,33 +381,30 @@ class Date:
         other: Date,
     ) -> int: ...
     def weekdayNumber(self) -> int: ...
-    def __str__(self) -> str: ...
-    def __repr__(self) -> str: ...
     def ISO(self) -> str: ...
 
 class DateParser:
     def __init__(self) -> None: ...
+    @staticmethod
     def parseFormatted(
-        self,
         str_: str,
         fmt: str,
     ) -> Date: ...
-    def parseISO(
-        self,
-        str_: str,
-    ) -> Date: ...
+    @staticmethod
+    def parseISO(str_: str) -> Date: ...
+    @staticmethod
     def parse(
-        self,
         str_: str,
         fmt: str,
     ) -> Date: ...
 
 class PeriodParser:
     def __init__(self) -> None: ...
-    def parse(
-        self,
-        str_: str,
-    ) -> Period: ...
+    @staticmethod
+    def parse(str_: str) -> Period: ...
+
+class DateVector:
+    def __init__(self) -> None: ...
 
 class IMM:
     class Month(IntEnum):
@@ -353,105 +422,91 @@ class IMM:
         Z = 12
 
     def __init__(self) -> None: ...
+    @staticmethod
     @overload
     def isIMMdate(
-        self,
-        d: Date,
-    ) -> bool: ...
-    @overload
-    def isIMMdate(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> bool: ...
+    @staticmethod
+    @overload
+    def isIMMdate(d: Date) -> bool: ...
+    @staticmethod
     @overload
     def isIMMcode(
-        self,
-        code: str,
-    ) -> bool: ...
-    @overload
-    def isIMMcode(
-        self,
         code: str,
         mainCycle: bool,
     ) -> bool: ...
-    def code(
-        self,
-        immDate: Date,
-    ) -> str: ...
+    @staticmethod
+    @overload
+    def isIMMcode(code: str) -> bool: ...
+    @staticmethod
+    def code(immDate: Date) -> str: ...
+    @staticmethod
     @overload
     def date(
-        self,
-        immCode: str,
-    ) -> Date: ...
-    @overload
-    def date(
-        self,
         immCode: str,
         referenceDate: Date,
     ) -> Date: ...
+    @staticmethod
+    @overload
+    def date(immCode: str) -> Date: ...
+    @staticmethod
+    @overload
+    def nextDate() -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
-        d: Date,
-    ) -> Date: ...
-    @overload
-    def nextDate(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
-        immCode: str,
-    ) -> Date: ...
-    @overload
-    def nextDate(
-        self,
         immCode: str,
         mainCycle: bool,
     ) -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
         immCode: str,
         mainCycle: bool,
         referenceDate: Date,
     ) -> Date: ...
+    @staticmethod
     @overload
-    def nextDate(self) -> Date: ...
+    def nextDate(d: Date) -> Date: ...
+    @staticmethod
+    @overload
+    def nextDate(immCode: str) -> Date: ...
+    @staticmethod
+    @overload
+    def nextCode() -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
-        d: Date,
-    ) -> str: ...
-    @overload
-    def nextCode(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
-        immCode: str,
-    ) -> str: ...
-    @overload
-    def nextCode(
-        self,
         immCode: str,
         mainCycle: bool,
     ) -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
         immCode: str,
         mainCycle: bool,
         referenceDate: Date,
     ) -> str: ...
+    @staticmethod
     @overload
-    def nextCode(self) -> str: ...
+    def nextCode(d: Date) -> str: ...
+    @staticmethod
+    @overload
+    def nextCode(immCode: str) -> str: ...
 
 class ASX:
     class Month(IntEnum):
@@ -469,105 +524,91 @@ class ASX:
         Z = 12
 
     def __init__(self) -> None: ...
+    @staticmethod
     @overload
     def isASXdate(
-        self,
-        d: Date,
-    ) -> bool: ...
-    @overload
-    def isASXdate(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> bool: ...
+    @staticmethod
+    @overload
+    def isASXdate(d: Date) -> bool: ...
+    @staticmethod
     @overload
     def isASXcode(
-        self,
-        code: str,
-    ) -> bool: ...
-    @overload
-    def isASXcode(
-        self,
         code: str,
         mainCycle: bool,
     ) -> bool: ...
-    def code(
-        self,
-        asxDate: Date,
-    ) -> str: ...
+    @staticmethod
+    @overload
+    def isASXcode(code: str) -> bool: ...
+    @staticmethod
+    def code(asxDate: Date) -> str: ...
+    @staticmethod
     @overload
     def date(
-        self,
-        asxCode: str,
-    ) -> Date: ...
-    @overload
-    def date(
-        self,
         asxCode: str,
         referenceDate: Date,
     ) -> Date: ...
+    @staticmethod
+    @overload
+    def date(asxCode: str) -> Date: ...
+    @staticmethod
+    @overload
+    def nextDate() -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
-        asxCode: str,
-    ) -> Date: ...
-    @overload
-    def nextDate(
-        self,
         asxCode: str,
         mainCycle: bool,
     ) -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
         asxCode: str,
         mainCycle: bool,
         referenceDate: Date,
     ) -> Date: ...
+    @staticmethod
     @overload
     def nextDate(
-        self,
-        d: Date,
-    ) -> Date: ...
-    @overload
-    def nextDate(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> Date: ...
+    @staticmethod
     @overload
-    def nextDate(self) -> Date: ...
+    def nextDate(asxCode: str) -> Date: ...
+    @staticmethod
+    @overload
+    def nextDate(d: Date) -> Date: ...
+    @staticmethod
+    @overload
+    def nextCode() -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
-        asxCode: str,
-    ) -> str: ...
-    @overload
-    def nextCode(
-        self,
         asxCode: str,
         mainCycle: bool,
     ) -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
         asxCode: str,
         mainCycle: bool,
         referenceDate: Date,
     ) -> str: ...
+    @staticmethod
     @overload
     def nextCode(
-        self,
-        d: Date,
-    ) -> str: ...
-    @overload
-    def nextCode(
-        self,
         d: Date,
         mainCycle: bool,
     ) -> str: ...
+    @staticmethod
     @overload
-    def nextCode(self) -> str: ...
+    def nextCode(asxCode: str) -> str: ...
+    @staticmethod
+    @overload
+    def nextCode(d: Date) -> str: ...
 
 class Calendar:
     def __init__(self) -> None: ...
@@ -705,7 +746,9 @@ class Calendar:
     ) -> list[Date]: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
-    def __str__(self) -> str: ...
+
+class CalendarVector:
+    def __init__(self) -> None: ...
 
 class Argentina(Calendar):
     class Market(IntEnum):
@@ -1218,7 +1261,6 @@ class DayCounter:
     ) -> float: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
-    def __str__(self) -> str: ...
 
 class Actual360(DayCounter):
     @overload
@@ -1328,6 +1370,10 @@ class Business252(DayCounter):
     @overload
     def __init__(self) -> None: ...
 
+class __dummy_0__:
+    def __init__(self) -> None: ...
+    def __deref__(self) -> Observable: ...
+
 class Observable:
     def __init__(self) -> None: ...
 
@@ -1351,7 +1397,6 @@ class Array:
     @overload
     def __init__(self) -> None: ...
     def size(self) -> int: ...
-    def __str__(self) -> str: ...
 
 class Matrix:
     @overload
@@ -1376,7 +1421,6 @@ class Matrix:
     def __init__(self) -> None: ...
     def rows(self) -> int: ...
     def columns(self) -> int: ...
-    def __str__(self) -> str: ...
 
 class SalvagingAlgorithm:
     class Type(IntEnum):
@@ -1407,6 +1451,32 @@ class SymmetricSchurDecomposition:
     def eigenvalues(self) -> Array: ...
     def eigenvectors(self) -> Matrix: ...
 
+class RungeKutta:
+    @overload
+    def __init__(
+        self,
+        eps: float,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        eps: float,
+        h1: float,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        eps: float,
+        h1: float,
+        hmin: float,
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+
+class __dummy_1__:
+    def __init__(self) -> None: ...
+    def __deref__(self) -> DefaultBoundaryCondition: ...
+
 class DefaultBoundaryCondition:
     class Side(IntEnum):
         None_
@@ -1415,12 +1485,20 @@ class DefaultBoundaryCondition:
 
     def __init__(self) -> None: ...
 
+class __dummy_2__:
+    def __init__(self) -> None: ...
+    def __deref__(self) -> NeumannBC: ...
+
 class NeumannBC(DefaultBoundaryCondition):
     def __init__(
         self,
         value: float,
         side: DefaultBoundaryCondition.Side,
     ) -> None: ...
+
+class __dummy_3__:
+    def __init__(self) -> None: ...
+    def __deref__(self) -> DirichletBC: ...
 
 class DirichletBC(DefaultBoundaryCondition):
     def __init__(
@@ -1468,10 +1546,8 @@ class TridiagonalOperator:
         arg0: float,
         arg1: float,
     ) -> None: ...
-    def identity(
-        self,
-        size: int,
-    ) -> TridiagonalOperator: ...
+    @staticmethod
+    def identity(size: int) -> TridiagonalOperator: ...
 
 class DPlus(TridiagonalOperator):
     def __init__(
@@ -1501,10 +1577,93 @@ class DPlusDMinus(TridiagonalOperator):
         h: float,
     ) -> None: ...
 
+class IntVector:
+    def __init__(self) -> None: ...
+
+class UnsignedIntVector:
+    def __init__(self) -> None: ...
+
+class DoubleVector:
+    def __init__(self) -> None: ...
+
+class StrVector:
+    def __init__(self) -> None: ...
+
+class BoolVector:
+    def __init__(self) -> None: ...
+
+class DoubleVectorVector:
+    def __init__(self) -> None: ...
+
+class DoublePair:
+    @overload
+    def __init__(
+        self,
+        first: float,
+        second: float,
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+
+class DoublePairVector:
+    def __init__(self) -> None: ...
+
+class PairDoubleVector:
+    @overload
+    def __init__(
+        self,
+        first: list[float],
+        second: list[float],
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+
+class UnsignedIntPair:
+    @overload
+    def __init__(
+        self,
+        first: int,
+        second: int,
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+
+class UnsignedIntPairVector:
+    def __init__(self) -> None: ...
+
+class NodePair:
+    @overload
+    def __init__(
+        self,
+        first: Date,
+        second: float,
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+
+class NodeVector:
+    def __init__(self) -> None: ...
+
 class SegmentIntegral:
     def __init__(
         self,
         intervals: int,
+    ) -> None: ...
+    def numberOfEvaluations(self) -> int: ...
+
+class TrapezoidIntegralDefault:
+    def __init__(
+        self,
+        accuracy: float,
+        maxIterations: int,
+    ) -> None: ...
+    def numberOfEvaluations(self) -> int: ...
+
+class TrapezoidIntegralMidPoint:
+    def __init__(
+        self,
+        accuracy: float,
+        maxIterations: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
 
@@ -1740,9 +1899,9 @@ class InterestRate:
         self,
         t: float,
     ) -> float: ...
+    @staticmethod
     @overload
     def impliedRate(
-        self,
         compound: float,
         resultDC: DayCounter,
         comp: Compounding,
@@ -1750,9 +1909,9 @@ class InterestRate:
         d1: Date,
         d2: Date,
     ) -> InterestRate: ...
+    @staticmethod
     @overload
     def impliedRate(
-        self,
         compound: float,
         resultDC: DayCounter,
         comp: Compounding,
@@ -1761,9 +1920,9 @@ class InterestRate:
         d2: Date,
         refStart: Date,
     ) -> InterestRate: ...
+    @staticmethod
     @overload
     def impliedRate(
-        self,
         compound: float,
         resultDC: DayCounter,
         comp: Compounding,
@@ -1773,9 +1932,9 @@ class InterestRate:
         refStart: Date,
         refEnd: Date,
     ) -> InterestRate: ...
+    @staticmethod
     @overload
     def impliedRate(
-        self,
         compound: float,
         resultDC: DayCounter,
         comp: Compounding,
@@ -1819,16 +1978,25 @@ class InterestRate:
         refStart: Date,
         refEnd: Date,
     ) -> InterestRate: ...
-    def __str__(self) -> str: ...
+
+class InterestRateVector:
+    def __init__(self) -> None: ...
+
+class __dummy_4__:
+    def __init__(self) -> None: ...
+    def __deref__(self) -> LazyObject: ...
 
 class LazyObject(Observable):
     def __init__(self) -> None: ...
     def recalculate(self) -> None: ...
     def freeze(self) -> None: ...
     def unfreeze(self) -> None: ...
-    def forwardFirstNotificationOnly(self) -> None: ...
-    def alwaysForwardNotifications(self) -> None: ...
-    def forwardsAllNotifications(self) -> bool: ...
+    @staticmethod
+    def forwardFirstNotificationOnly() -> None: ...
+    @staticmethod
+    def alwaysForwardNotifications() -> None: ...
+    @staticmethod
+    def forwardsAllNotifications() -> bool: ...
 
 class DateGeneration:
     class Rule(IntEnum):
@@ -2001,6 +2169,41 @@ class MakeSchedule:
     ) -> MakeSchedule: ...
     def schedule(self) -> Schedule: ...
 
+class RealTimeSeries:
+    @overload
+    def __init__(
+        self,
+        d: list[Date],
+        v: list[float],
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+    def dates(self) -> list[Date]: ...
+    def values(self) -> list[float]: ...
+    def firstDate(self) -> Date: ...
+    def lastDate(self) -> Date: ...
+    def size(self) -> int: ...
+    def empty(self) -> bool: ...
+
+class IntervalPriceTimeSeries:
+    @overload
+    def __init__(
+        self,
+        d: list[Date],
+        v: list[IntervalPrice],
+    ) -> None: ...
+    @overload
+    def __init__(self) -> None: ...
+    def dates(self) -> list[Date]: ...
+    def values(self) -> list[IntervalPrice]: ...
+    def firstDate(self) -> Date: ...
+    def lastDate(self) -> Date: ...
+    def size(self) -> int: ...
+    def empty(self) -> bool: ...
+
+class IntervalPriceVector:
+    def __init__(self) -> None: ...
+
 class IntervalPrice:
     class Type(IntEnum):
         Open
@@ -2035,21 +2238,21 @@ class IntervalPrice:
     def close(self) -> float: ...
     def high(self) -> float: ...
     def low(self) -> float: ...
+    @staticmethod
     def makeSeries(
-        self,
         d: list[Date],
         open_: list[float],
         close: list[float],
         high: list[float],
         low: list[float],
     ) -> TimeSeries[IntervalPrice]: ...
+    @staticmethod
     def extractValues(
-        self,
         arg0: TimeSeries[IntervalPrice],
         t: IntervalPrice.Type,
     ) -> list[float]: ...
+    @staticmethod
     def extractComponent(
-        self,
         arg0: TimeSeries[IntervalPrice],
         t: IntervalPrice.Type,
     ) -> TimeSeries[float]: ...

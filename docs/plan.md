@@ -1,70 +1,28 @@
-# SQLModel Parsing Architecture Plan
+# swig2pyi: Development & Refactoring Plan
 
-## 1. Problem Statement
-The current XML parser reads the entire SWIG XML output into memory and uses a deeply nested object model (`pydantic-xml`). For large libraries like QuantLib, the XML file exceeds 2GB, causing severe memory bloat and making it difficult to resolve relational context (e.g. knowing if a nested function is inside a class template instantiation or an ignored scope).
+## 1. Current Progress (Completed)
+- [x] **SQLite/SQLModel Parser:** Implemented SAX streaming parser that avoids memory exhaustion on massive XML (2GB+).
+- [x] **Static Methods:** Added support for `@staticmethod` detection and signature formatting.
+- [x] **Global Enum Exports:** Enums now export their members to the module level to match SWIG's Python behavior.
+- [x] **Property Detection:** Automatically convert `getFoo`/`setFoo` pairs into Python `@property` blocks.
+- [x] **Symbol Resolution:** Fixed parser to prefer `sym_name` to ensure correct Python-side naming.
 
-## 2. The Solution
-Implement a **streaming SAX parser** (`xml.etree.ElementTree.iterparse`) that reads the XML lazily and immediately inserts nodes into a **temporary SQLite database** using **`sqlmodel`**.
+## 2. Active Tasks (Working On)
+- [ ] **Type Mapping Refinement:** Improving the mapping of C++ templates like `std::vector<T>` to `list[T]` and `Handle<T>` to `Handle[T]`.
+- [ ] **Strict Type Validation:** Running `basedpyright` in strict mode against real QuantLib Python tests and iteratively fixing emitter gaps.
+- [ ] **Member Variable Properties:** Mapping public member variables (not just get/set pairs) to properties.
 
-This provides:
-1. **Low Memory Footprint:** Elements are cleared from memory immediately after insertion.
-2. **Relational Resolution:** Finding all methods of a class, or all items of an enum, becomes a simple SQL query.
-3. **Type Safety:** `sqlmodel` bridges the gap between the declarative models previously used in Pydantic and the relational requirements of SQLite.
+## 3. Remaining Tasks (Next Steps)
+- [ ] **Docstring Extraction:** Extract SWIG-generated docstrings from XML and emit them into the `.pyi` stubs.
+- [ ] **Code Quality Overhaul:** 
+    - Fix all `ruff` linting errors in the generator codebase.
+    - Resolve all `basedpyright` strict-mode errors in the generator codebase.
+- [ ] **Refactoring for Elegance:**
+    - Clean up `parser.py` (it's currently a bit of a monolith).
+    - Modularize `emitter.py` signature and formatting logic.
+    - Decouple the `TypeManager` from hardcoded QuantLib rules where possible.
+- [ ] **Full QuantLib Verification:** Achieve "Zero Errors" on all 50+ QuantLib Python test files using the generated stubs.
 
-## 3. Database Design (SQLModel Schema)
-
-We will define several `SQLModel` entities to represent the SWIG XML nodes:
-
-*   **`Node`**: The base table for major XML tags (`class`, `cdecl`, `template`, `enum`, `constructor`, `destructor`).
-    *   `id`: Primary key.
-    *   `parent_id`: Foreign key referencing the parent `Node` (e.g. the class this method belongs to).
-    *   `tag`: The XML tag (e.g., `'class'`, `'cdecl'`).
-    *   `name`: The target language name of the symbol.
-    *   `kind`: SWIG kind (`'function'`, `'variable'`, `'class'`, `'struct'`).
-    *   `type`: C++ type string (for functions/variables).
-    *   `decl`: C++ declaration string.
-    *   `feature_ignore`: Boolean flag to skip emitting this node.
-*   **`Parm`**: Parameters for constructors and functions (`cdecl`).
-    *   `id`: Primary Key.
-    *   `node_id`: Foreign key to `Node`.
-    *   `name`: Parameter name.
-    *   `type`: Parameter type.
-    *   `idx`: Order index.
-*   **`EnumItem`**: Items within an enumeration.
-    *   `id`: Primary Key.
-    *   `node_id`: Foreign key to `Node` (where `tag == 'enum'`).
-    *   `name`: Item name.
-    *   `value`: Enum value.
-*   **`BaseClass`**: Inheritance relationships.
-    *   `id`: Primary Key.
-    *   `node_id`: Foreign key to `Node` (where `tag == 'class'`).
-    *   `name`: Base class name.
-
-## 4. Execution Tasks
-
-### Task 1: Environment & Dependencies
-- [ ] Remove `pydantic-xml` from `pyproject.toml`.
-- [ ] Add `sqlmodel` to `pyproject.toml`.
-- [ ] Run `uv sync` to update the environment.
-
-### Task 2: Implement SQLModel Schema (`src/swig2pyi/core/schema.py`)
-- [ ] Define `Node`, `Parm`, `EnumItem`, and `BaseClass` as SQLModel classes.
-- [ ] Configure the engine creation logic (using an in-memory or temporary file SQLite database).
-
-### Task 3: Implement SAX Streamer (`src/swig2pyi/core/parser.py`)
-- [ ] Refactor `SwigXmlParser` to use `iterparse`.
-- [ ] Maintain a stack of active `Node` IDs to correctly assign `parent_id`.
-- [ ] As `event == 'end'` is encountered, create the appropriate SQLModel instances and `session.add()` them.
-- [ ] Call `elem.clear()` to free memory.
-- [ ] Call `session.commit()` in batches to maintain performance.
-
-### Task 4: Rebuild AST from DB (`src/swig2pyi/core/parser.py`)
-- [ ] Implement `_build_ast_from_db` to execute SQLModel queries.
-- [ ] Map the SQLModel objects back into the intermediate representation (`Module`, `Class`, `CDecl`, etc.) expected by the `StubEmitter`.
-- [ ] Ensure queries filter out `feature_ignore == True`.
-- [ ] Specifically filter `cdecl` elements that are children of uninstantiated `template` tags (handling SWIG's template nesting artifacts).
-
-### Task 5: Testing & Validation
-- [ ] Update `tests/test_parser.py` to use the new DB backend.
-- [ ] Ensure the full QuantLib integration test passes.
-- [ ] Verify that smaller edge-case files (like `RelinkableQuoteHandle` and missing enums) correctly propagate through the SQL queries.
+## 4. Engineering Standards
+- **TDD:** Every fix for a type-check error must be accompanied by a small unit test or a verified change in the generated QuantLib stub.
+- **YOLO Mode Efficiency:** Commit often, validate against `ruff` and `pyright` every few turns.

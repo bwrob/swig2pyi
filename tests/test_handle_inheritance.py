@@ -1,15 +1,16 @@
-from swig2pyi.core.emitter import StubEmitter
-from swig2pyi.core.parser import Class, Top, Module
 from swig2pyi.core.config import Config
+from swig2pyi.core.emitter import StubEmitter
+from swig2pyi.core.parser import Class, Module, Top
 from swig2pyi.core.type_system import TypeManager
 
-def test_handle_inheritance():
+
+def test_handle_inheritance() -> None:
     cfg = Config(module_name="test", includes=[], type_map={}, smart_pointers=[], containers={}, rename_operators=False)
     tm = TypeManager(cfg)
     emitter = StubEmitter(tm)
-    
+
     classes = []
-    
+
     # Case 1: Handle<MyClass>
     classes.append(Class(
         name="MyHandle",
@@ -17,7 +18,7 @@ def test_handle_inheritance():
         kind="class",
         is_template=False
     ))
-    
+
     # Case 2: RelinkableHandle<MyClass>
     classes.append(Class(
         name="MyRelinkableHandle",
@@ -33,15 +34,14 @@ def test_handle_inheritance():
         kind="class",
         is_template=False
     ))
-    
+
     mod = Module(name="test", classes=classes)
     top = Top(module=mod)
-    
+
     emitter.emit(top)
     output = emitter.get_output()
-    
-    print("Output:\n", output)
-    
+
+
     assert "class MyHandle(Handle[MyClass], MyClass):" in output
     assert "class MyRelinkableHandle(RelinkableHandle[MyClass], MyClass):" in output
     assert "class QuoteHandle(RelinkableHandle[Quote], Quote):" in output

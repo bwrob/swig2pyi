@@ -1,5 +1,5 @@
-
 """Type normalization and mapping system."""
+
 import re
 
 from .config import Config
@@ -12,53 +12,31 @@ class TypeManager:
         """Initialize with configuration."""
         self.config = config
         self._smart_ptr_regex = self._build_smart_ptr_regex()
-        # Regex to strip SWIG type prefixes like p., r., q(const)., a(10).
         self._swig_prefix_regex = re.compile(r"([pqra](\([^)]*\))?\.)")
 
     def _build_smart_ptr_regex(self) -> re.Pattern:
-        # Create a regex pattern to match any of the configured smart pointers.
-        # Example: (?:boost::shared_ptr|std::shared_ptr)\s*<(.+)>
         patterns = [re.escape(ptr) for ptr in self.config.smart_pointers]
-        combined = "|".join(patterns)
-        return re.compile(rf"^(?:{combined})\s*<(.+)>$")
+        return re.compile(rf"^(?:{'|'.join(patterns)})\s*<(.+)>$")
 
     def normalize_type(self, cpp_type: str) -> str:
         """Normalize a C++ type string to a valid Python type hint."""
-        # 0. Basic cleanup
-        cpp_type = cpp_type.strip()
+        cpp_type = self._clean_cpp_type(cpp_type.strip())
 
-        # 1. Clean SWIG prefixes and C++ qualifiers
-        cpp_type = self._clean_cpp_type(cpp_type)
+        if match := self._smart_ptr_regex.match(cpp_type):
+            return self.normalize_type(match.group(1))
 
-        # 2. Unwrap Smart Pointers
-        # Check if the type matches a smart pointer pattern.
-        match = self._smart_ptr_regex.match(cpp_type)
-        if match:
-            inner_type = match.group(1)
-            return self.normalize_type(inner_type)
+        if mapped := self._resolve_typedefs(cpp_type):
+            return mapped
 
-        # 3. Resolve Typedefs (Type Map)
-        mapped_type = self._resolve_typedefs(cpp_type)
-        if mapped_type:
-            return mapped_type
+        if container := self._resolve_containers(cpp_type):
+            return container
 
-        # 4. Handle Templates (Containers)
-        container_type = self._resolve_containers(cpp_type)
-        if container_type:
-            return container_type
+        if template := self._resolve_general_template(cpp_type):
+            return template
 
-        # 4b. General Template Handling (Fallback)
-        template_type = self._resolve_general_template(cpp_type)
-        if template_type:
-            return template_type
-
-        # 5. Namespace resolution
         py_type = cpp_type.replace("::", ".")
-
-        # 6. Strip module name if it's the current module
         if self.config.module_name and py_type.startswith(self.config.module_name + "."):
-            py_type = py_type[len(self.config.module_name) + 1:]
-
+            py_type = py_type[len(self.config.module_name) + 1 :]
         return py_type
 
     def to_python(self, cpp_type_str: str) -> str:
@@ -66,49 +44,36 @@ class TypeManager:
         return self.normalize_type(cpp_type_str)
 
     def _clean_cpp_type(self, cpp_type: str) -> str:
-        # 1. Remove SWIG internal type prefixes
-        # e.g. p.q(const).char -> char
-        # e.g. r.QuantLib::Date -> QuantLib::Date
-        # We iterate because multiple prefixes can exist (e.g. p.r.)
         while True:
             new_type = self._swig_prefix_regex.sub("", cpp_type)
             if new_type == cpp_type:
                 break
             cpp_type = new_type
 
-        # 1b. Strip standard C++ qualifiers (const, volatile) that might remain or exist
-        # We replace "const " with empty string.
-        cpp_type = cpp_type.replace("const ", "")
-        cpp_type = cpp_type.replace("volatile ", "")
-        cpp_type = cpp_type.strip()
-
-        # Remove trailing reference (&) and pointer (*) characters.
+        cpp_type = cpp_type.replace("const ", "").replace("volatile ", "").strip()
         while cpp_type and (cpp_type.endswith(("&", "*"))):
             cpp_type = cpp_type[:-1].strip()
-
-        # 1c. Strip surrounding parentheses if present
-        # e.g. (Date) -> Date
         while cpp_type.startswith("(") and cpp_type.endswith(")"):
             cpp_type = cpp_type[1:-1].strip()
 
-        # 1d. Normalize template spacing (remove spaces around <, >, ,)
-        cpp_type = cpp_type.replace(" <", "<").replace("< ", "<")
-        cpp_type = cpp_type.replace(" >", ">").replace("> ", ">")
-        return cpp_type.replace(" ,", ",").replace(", ", ",")
-
+        return (
+            cpp_type.replace(" <", "<")
+            .replace("< ", "<")
+            .replace(" >", ">")
+            .replace("> ", ">")
+            .replace(" ,", ",")
+            .replace(", ", ",")
+        )
 
     def _resolve_typedefs(self, cpp_type: str) -> str | None:
         if cpp_type in self.config.type_map:
             return self.config.type_map[cpp_type]
 
-        # 3a. Check module namespace prefix for typedefs
-        # e.g. Integer -> QuantLib::Integer
         if self.config.module_name:
-            namespaced_type = f"{self.config.module_name}::{cpp_type}"
-            if namespaced_type in self.config.type_map:
-                return self.config.type_map[namespaced_type]
+            namespaced = f"{self.config.module_name}::{cpp_type}"
+            if namespaced in self.config.type_map:
+                return self.config.type_map[namespaced]
 
-        # 3b. Basic C++ types fallback
         basic_types = {
             "int": "int",
             "long": "int",
@@ -121,89 +86,58 @@ class TypeManager:
             "float": "float",
             "char": "str",
             "void": "None",
-            "bool": "bool"
+            "bool": "bool",
         }
-        if cpp_type in basic_types:
-            return basic_types[cpp_type]
-
-        return None
+        return basic_types.get(cpp_type)
 
     def _resolve_containers(self, cpp_type: str) -> str | None:
         for cpp_container, py_abc in self.config.containers.items():
             prefix = cpp_container + "<"
-            if cpp_type.startswith(prefix) and cpp_type.endswith(">"):
-                # Validate bracket balance to ensure strictly one container
-                depth = 0
-                start_index = len(cpp_container) # Points to the first <
-                match_index = -1
-
-                for i in range(start_index, len(cpp_type)):
-                    char = cpp_type[i]
-                    if char == "<":
-                        depth += 1
-                    elif char == ">":
-                        depth -= 1
-                        if depth == 0:
-                            match_index = i
-                            break
-
-                if match_index == len(cpp_type) - 1:
-                    # Valid match
-                    inner_content = cpp_type[len(prefix):-1].strip()
-
-                    # Split args and normalize
-                    args = self._split_template_args(inner_content)
-                    norm_args = [self.normalize_type(a) for a in args]
-
-                    return f"{py_abc}[{', '.join(norm_args)}]"
+            if cpp_type.startswith(prefix) and cpp_type.endswith(">") and (
+                self._get_matching_bracket_index(cpp_type, len(cpp_container))
+                == len(cpp_type) - 1
+            ):
+                inner = cpp_type[len(prefix) : -1].strip()
+                args = [
+                    self.normalize_type(a) for a in self._split_template_args(inner)
+                ]
+                return f"{py_abc}[{', '.join(args)}]"
         return None
 
+    def _get_matching_bracket_index(self, text: str, start_index: int) -> int:
+        depth = 0
+        for i in range(start_index, len(text)):
+            if text[i] == "<":
+                depth += 1
+            elif text[i] == ">":
+                depth -= 1
+                if depth == 0:
+                    return i
+        return -1
+
     def _resolve_general_template(self, cpp_type: str) -> str | None:
-        # If it looks like a template T<Arg>, try to normalize T and Arg.
-        # This catches Handle<(Quote)> -> Handle[Quote]
         if "<" in cpp_type and cpp_type.endswith(">"):
-            # Naive split at first <
-            first_bracket = cpp_type.find("<")
-            base = cpp_type[:first_bracket].strip()
-            args = cpp_type[first_bracket+1:-1].strip()
-
-            # Normalize base (e.g. QuantLib::Handle -> Handle)
-            norm_base = self.normalize_type(base)
-
-            # Normalize args.
-            # Use split to handle multiple args correctly
-            arg_list = self._split_template_args(args)
-            norm_args_list = [self.normalize_type(a) for a in arg_list]
-            norm_args = ", ".join(norm_args_list)
-
-            return f"{norm_base}[{norm_args}]"
+            idx = cpp_type.find("<")
+            base = self.normalize_type(cpp_type[:idx].strip())
+            args = [
+                self.normalize_type(a)
+                for a in self._split_template_args(cpp_type[idx + 1 : -1].strip())
+            ]
+            return f"{base}[{', '.join(args)}]"
         return None
 
     def _split_template_args(self, args: str) -> list[str]:
         """Split template arguments by comma, respecting nested brackets and parens."""
-        parts = []
-        current = []
-        depth = 0
-        paren_depth = 0
+        parts, current, depth, p_depth = [], [], 0, 0
         for char in args:
-            if char == "<":
-                depth += 1
-            elif char == ">":
-                depth -= 1
-            elif char == "(":
-                paren_depth += 1
-            elif char == ")":
-                paren_depth -= 1
+            depth += (char == "<") - (char == ">")
+            p_depth += (char == "(") - (char == ")")
 
-            if char == "," and depth == 0 and paren_depth == 0:
+            if char == "," and depth == 0 and p_depth == 0:
                 parts.append("".join(current).strip())
                 current = []
             else:
                 current.append(char)
-
         if current:
             parts.append("".join(current).strip())
-
         return parts
-
-

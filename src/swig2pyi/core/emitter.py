@@ -1,194 +1,128 @@
-from enum import IntEnum
+"""Stub emitter for generating .pyi files."""
+
 import re
+
 from .parser import CDecl, Class, Constructor, Enum, Module, Parm, Top
 from .type_system import TypeManager
 
 
 class StubEmitter:
+    """Generates Python type stubs from AST."""
+
     def __init__(self, type_manager: TypeManager) -> None:
+        """Initialize with type manager."""
         self.tm = type_manager
         self.lines: list[str] = []
         self.indent_level = 0
 
     def indent(self) -> None:
+        """Increment indentation level."""
         self.indent_level += 1
 
     def dedent(self) -> None:
+        """Decrement indentation level."""
         self.indent_level = max(0, self.indent_level - 1)
 
     def write(self, text: str = "") -> None:
+        """Write a line of text with current indentation."""
         line = "    " * self.indent_level + text
         self.lines.append(line.rstrip())
 
     def get_output(self) -> str:
+        """Return the accumulated output as a string."""
         return "\n".join(self.lines)
 
     def emit(self, top: Top) -> None:
-        # Suppress strict pyright checks for generated stubs
+        """Generate the full stub output from the Top AST node."""
         self.write("import typing")
         self.write("from typing import Any, Optional, overload, Generic, TypeVar")
         self.write("import collections.abc")
         self.write("")
-
-        # Define TypeVar for generics
         self.write("_T = TypeVar('_T')")
         self.write("")
-
-        # Emit extra code from config
         for line in self.tm.config.extra_code:
             self.write(line)
         self.write("")
-
         if top.module:
             self.visit_module(top.module)
 
     def visit_module(self, module: Module) -> None:
-        # Enums
+        """Visit a module and emit its contents."""
+        self._emit_module_enums(module)
+        self._emit_module_functions(module)
+        for cls in module.classes:
+            self.visit_class(cls)
+
+    def _emit_module_enums(self, module: Module) -> None:
         for enum in module.enums:
             self.visit_enum(enum)
+            name = enum.name.split("::")[-1]
+            for item in enum.items:
+                self.write(f"{self._get_sanitized_name(item.name)}: {name}")
+            self.write("")
 
-        # Group global functions by name
+    def _emit_module_functions(self, module: Module) -> None:
         func_groups = {}
         for func in module.cdecls:
-            if func.kind == "function":
-                # Skip global operators (they are C++ artifacts usually)
-                if func.name.startswith("operator"):
-                    continue
-
-                # Skip Handle members appearing as globals
-                if func.name in ("linkTo", "currentLink", "empty", "values"):
-                    continue
-
-                if self.should_skip_method(func):
-                    continue
-
-                name = func.name
-                if "::" in name:
-                    name = name.split("::")[-1]
-
-                if name not in func_groups:
-                    func_groups[name] = []
-                func_groups[name].append(func)
+            if func.kind != "function":
+                continue
+            if func.name.startswith("operator") or func.name in (
+                "linkTo",
+                "currentLink",
+                "empty",
+                "values",
+            ):
+                continue
+            if self.should_skip_method(func):
+                continue
+            name = func.name.split("::")[-1]
+            func_groups.setdefault(name, []).append(func)
 
         for name, group in func_groups.items():
             self.visit_function_group(name, group, is_method=False)
 
-        # Classes
-        for cls in module.classes:
-            self.visit_class(cls)
-
     def visit_enum(self, enum: Enum) -> None:
-        name = enum.name
-        if "::" in name:
-            name = name.split("::")[-1]
-
-        # Emit as a class inheriting from IntEnum
+        """Emit a Python IntEnum from a C++ enum."""
+        name = enum.name.split("::")[-1]
         self.write(f"class {name}(IntEnum):")
         self.indent()
-
         has_items = False
         for item in enum.items:
-            # Emit as class variables: NAME = VALUE
             item_name = self._get_sanitized_name(item.name)
-
             val_str = f" = {item.value}" if item.value is not None else ""
             self.write(f"{item_name}{val_str}")
             has_items = True
-
         if not has_items:
             self.write("pass")
-
         self.dedent()
         self.write("")
 
     def visit_class(self, cls: Class) -> None:
+        """Emit a Python class from a C++ class/struct."""
         name = cls.name
-
-        # Filter invalid or unwanted classes
-        if name.startswith("std::"):
+        if name.startswith("std::") or "<" in name:
             return
-        if "<" in name:
-            # Template instantiation without %template rename
-            return
+        name = name.split("::")[-1]
 
-        # Normalize namespace (e.g. QuantLib::Date -> Date)
-        if "::" in name:
-            name = name.split("::")[-1]
-
-        # Process bases
-        base_names = []
-        if cls.bases:
-            # Normalize base names
-            # We use type manager to clean up namespaces, but we assume bases are classes in the same file
-            # or imported.
-            for b in cls.bases:
-                # We can use to_python, which does namespace stripping and checking config.
-                # Assuming base classes are mapped or in the same module.
-                normalized_base = self.tm.to_python(b)
-                base_names.append(normalized_base)
-
-                # Handle/RelinkableHandle instantiation: Inherit from wrapped type
-                # Matches Handle[...] or RelinkableHandle[...]
-                match = re.search(
-                    r"(?:^|\.)(?:Handle|RelinkableHandle)\[(.+)\]$", normalized_base
-                )
-                if match:
-                    wrapped_type = match.group(1)
-                    if wrapped_type not in base_names:
-                        base_names.append(wrapped_type)
-
-        if cls.is_template:
-            base_names.append("Generic[_T]")
-
-        bases_str = ""
-        if base_names:
-            bases_str = "(" + ", ".join(base_names) + ")"
-
-        # If kind is struct/class, usually maps to class.
+        bases_str = self._get_bases_str(cls)
         self.write(f"class {name}{bases_str}:")
         self.indent()
 
         has_members = False
-
-        # Nested Enums
-        for enum in cls.enums:
-            self.visit_enum(enum)
+        if cls.enums:
+            for enum in cls.enums:
+                self.visit_enum(enum)
             has_members = True
 
-        # Constructors
         if cls.constructors:
             self.visit_constructor_group(cls.constructors)
             has_members = True
 
-        # Group methods by name
-        method_groups = {}
-        for method in cls.cdecls:
-            if method.kind == "function":
-                # Skip ignored methods or invalid names
-                if self.should_skip_method(method):
-                    continue
+        prop_method_ids = self._emit_properties(cls)
+        if prop_method_ids:
+            has_members = True
 
-                # Map operator names for grouping
-                m_name = method.name
-                if "::" in m_name:
-                    m_name = m_name.split("::")[-1]
-
-                if self.tm.config.rename_operators and m_name.startswith("operator"):
-                    m_name = self.map_operator(m_name)
-
-                if m_name.startswith("operator"):  # Unmapped operator
-                    continue
-
-                # Sanitize method name if it's not an operator (operators are already valid dunders)
-                if not m_name.startswith("__"):
-                    m_name = self._get_sanitized_name(m_name)
-
-                if m_name not in method_groups:
-                    method_groups[m_name] = []
-                method_groups[m_name].append(method)
-
-        for name, group in method_groups.items():
-            self.visit_function_group(name, group, is_method=True)
+        if self._emit_methods(cls, prop_method_ids):
             has_members = True
 
         if not has_members:
@@ -197,121 +131,189 @@ class StubEmitter:
         self.dedent()
         self.write("")
 
-    def visit_constructor_group(self, group: list[Constructor]) -> None:
-        unique_sigs = {}
+    def _get_bases_str(self, cls: Class) -> str:
+        base_names = []
+        if cls.bases:
+            for b in cls.bases:
+                base_names.extend(self._get_base_names(b))
+        if cls.is_template:
+            base_names.append("Generic[_T]")
+        return f"({', '.join(base_names)})" if base_names else ""
 
+    def _get_base_names(self, base_type: str) -> list[str]:
+        names = []
+        normalized_base = self.tm.to_python(base_type)
+        names.append(normalized_base)
+        match = re.search(
+            r"(?:^|\.)(?:Handle|RelinkableHandle)\[(.+)\]$", normalized_base
+        )
+        if match:
+            wrapped_type = match.group(1)
+            if wrapped_type not in names:
+                names.append(wrapped_type)
+        return names
+
+    def _emit_properties(self, cls: Class) -> set[int]:
+        properties = self._collect_properties(cls)
+        prop_method_ids = set()
+        for prop_name, p_info in properties.items():
+            if not p_info["get"]:
+                continue
+            self._emit_property(prop_name, p_info)
+            prop_method_ids.add(id(p_info["get"]))
+            if p_info["set"]:
+                prop_method_ids.add(id(p_info["set"]))
+        return prop_method_ids
+
+    def _collect_properties(self, cls: Class) -> dict:
+        properties = {}
+        prefix_len = 3
+        for method in cls.cdecls:
+            if method.kind != "function":
+                continue
+            m_name = method.name.split("::")[-1]
+            if len(m_name) <= prefix_len or not m_name[prefix_len].isupper():
+                continue
+
+            prop_name = m_name[prefix_len].lower() + m_name[prefix_len + 1 :]
+            if m_name.startswith("get"):
+                properties.setdefault(prop_name, {"get": None, "set": None})["get"] = (
+                    method
+                )
+            elif m_name.startswith("set"):
+                properties.setdefault(prop_name, {"get": None, "set": None})["set"] = (
+                    method
+                )
+        return properties
+
+    def _emit_property(self, prop_name: str, p_info: dict) -> None:
+        ret_type = (
+            self.tm.to_python(p_info["get"].type) if p_info["get"].type else "Any"
+        )
+        if ret_type == "void":
+            ret_type = "None"
+        self.write("@property")
+        self.write(f"def {prop_name}(self) -> {ret_type}: ...")
+        if p_info["set"]:
+            self.write(f"@{prop_name}.setter")
+            p_type = (
+                self.tm.to_python(p_info["set"].parms[0].type)
+                if p_info["set"].parms and p_info["set"].parms[0].type
+                else "Any"
+            )
+            self.write(f"def {prop_name}(self, value: {p_type}) -> None: ...")
+
+    def _emit_methods(self, cls: Class, skip_ids: set[int]) -> bool:
+        method_groups = self._group_methods(cls, skip_ids)
+        for name, group in method_groups.items():
+            self.visit_function_group(name, group, is_method=True)
+        return len(method_groups) > 0
+
+    def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict:
+        method_groups = {}
+        for method in cls.cdecls:
+            if (
+                id(method) in skip_ids
+                or method.kind != "function"
+                or self.should_skip_method(method)
+            ):
+                continue
+
+            m_name = self._get_method_python_name(method)
+            if m_name:
+                method_groups.setdefault(m_name, []).append(method)
+        return method_groups
+
+    def _get_method_python_name(self, method: CDecl) -> str | None:
+        m_name = method.name.split("::")[-1]
+        if self.tm.config.rename_operators and m_name.startswith("operator"):
+            m_name = self.map_operator(m_name)
+
+        if m_name.startswith("operator"):
+            return None
+
+        if not m_name.startswith("__"):
+            m_name = self._get_sanitized_name(m_name)
+        return m_name
+
+    def visit_constructor_group(self, group: list[Constructor]) -> None:
+        """Emit a group of constructors as @overload __init__ methods."""
+        unique_sigs = {}
         for ctor in group:
-            # Create a dummy CDecl for constructor to reuse _get_function_signature
-            # Constructors have no return type, so we pass "void" which maps to "None"
             dummy_func = CDecl(
                 name="__init__",
                 kind="function",
                 type="void",
                 parms=ctor.parms,
-                mname="",
-                minfo="",
+                is_static=False,
             )
-            # is_method=True because constructors are methods
             sig_tuple = self._get_function_signature(dummy_func, is_method=True)
+            unique_sigs.setdefault(sig_tuple, ctor)
 
-            # Use the full signature tuple as the key for deduplication
-            if sig_tuple not in unique_sigs:
-                unique_sigs[sig_tuple] = (
-                    ctor  # Store original ctor for other info if needed
-                )
-
-        sorted_sigs = sorted(
-            unique_sigs.keys()
-        )  # Sort by the tuple itself, which is fine
-
+        sorted_sigs = sorted(unique_sigs.keys())
         use_overload = len(sorted_sigs) > 1
-
         for sig_tuple in sorted_sigs:
-            params_str, ret_type = sig_tuple  # Unpack the signature components
-
+            params_str, ret_type = sig_tuple
             if use_overload:
                 self.write("@overload")
             self.write(f"def __init__({params_str}) -> {ret_type}: ...")
 
     def visit_function_group(
-        self, group_name: str, group: list[CDecl], is_method: bool
+        self, group_name: str, group: list[CDecl], *, is_method: bool
     ) -> None:
-        # Deduplicate by Python signature
+        """Emit a group of functions as @overload methods/functions."""
         unique_sigs = {}
-
         for func in group:
-            sig = self._get_function_signature(func, is_method)
-            if sig not in unique_sigs:
-                unique_sigs[sig] = func
+            sig = self._get_function_signature(func, is_method=is_method)
+            unique_sigs.setdefault(sig, func)
 
         sorted_sigs = sorted(unique_sigs.keys())
-
-        # If we have multiple signatures, use @overload
         use_overload = len(sorted_sigs) > 1
-
-        for sig_tuple in sorted_sigs:  # Renamed sig to sig_tuple for clarity
+        for sig_tuple in sorted_sigs:
             func = unique_sigs[sig_tuple]
-            name = group_name  # Use stripped/mapped group name
-
-            # Ensure name is sanitized again? No, it was sanitized before grouping.
-            # But map_operator might be needed if logic above was partial?
-            # Above we did mapping and sanitization.
-            # But let's check if name is valid.
-
-            params_str, ret_type = sig_tuple  # Unpack the signature components
-
+            params_str, ret_type = sig_tuple
+            if is_method and getattr(func, "is_static", False):
+                self.write("@staticmethod")
             if use_overload:
                 self.write("@overload")
+            self.write(f"def {group_name}({params_str}) -> {ret_type}: ...")
 
-            self.write(f"def {name}({params_str}) -> {ret_type}: ...")
-
-    def _get_function_signature(self, func: CDecl, is_method: bool):
+    def _get_function_signature(
+        self, func: CDecl, *, is_method: bool
+    ) -> tuple[str, str]:
         param_parts = self.format_params(func.parms)
-
-        if is_method:
+        is_static = getattr(func, "is_static", False)
+        if is_method and not is_static:
             param_parts.insert(0, "self")
 
-        if len(param_parts) > 1:
-            # Multi-line parameters
+        if len(param_parts) > 1 or (
+            is_method and not is_static and len(func.parms) > 0
+        ):
             self.indent()
             params_str = ",\n".join(self.indent_level * "    " + p for p in param_parts)
             self.dedent()
-            # The extra comma makes it consistent even for one parameter
             full_params = f"\n{params_str},\n" + self.indent_level * "    "
         elif len(param_parts) == 1:
-            # Single parameter (like 'self' only, or 'self, param')
-            # Forcing multi-line if any actual parameters (other than self)
-            if is_method and len(func.parms) == 0:
-                full_params = "self"  # only self, keep on one line
-            else:
-                self.indent()
-                params_str = ",\n".join(
-                    self.indent_level * "    " + p for p in param_parts
-                )
-                self.dedent()
-                full_params = f"\n{params_str},\n" + self.indent_level * "    "
+            full_params = param_parts[0]
         else:
             full_params = ""
 
         ret_type = self.tm.to_python(func.type) if func.type else "Any"
         if ret_type == "void":
             ret_type = "None"
-
         return (full_params, ret_type)
 
     def should_skip_method(self, method: CDecl) -> bool:
+        """Determine if a method should be excluded from stubs."""
         name = method.name
-        if name.startswith("operator") and not self.tm.config.rename_operators:
+        if name.startswith("operator") and (
+            not self.tm.config.rename_operators or self.map_operator(name) == name
+        ):
             return True
-        if name.startswith("operator") and self.tm.config.rename_operators:
-            if self.map_operator(name) == name:  # Not mapped
-                return True
-        # Destructors usually handled separately or ignored in stubs
         return bool(name.startswith("~"))
 
     def _get_sanitized_name(self, name: str) -> str:
-        # Comprehensive list of Python reserved keywords
-        reserved_keywords = {
+        reserved = {
             "False",
             "None",
             "True",
@@ -348,27 +350,21 @@ class StubEmitter:
             "with",
             "yield",
             "str",
-            "open",  # Added 'str' and 'open'
+            "open",
         }
-        if name in reserved_keywords:
-            return name + "_"
-        return name
+        return name + "_" if name in reserved else name
 
     def format_params(self, parms: list[Parm]) -> list[str]:
+        """Format parameter list for Python function signature."""
         parts = []
         for i, p in enumerate(parms):
-            p_name = p.name
-            if not p_name:
-                p_name = f"arg{i}"  # Default name if missing
-
-            p_name = self._get_sanitized_name(p_name)
-
+            p_name = self._get_sanitized_name(p.name or f"arg{i}")
             p_type = self.tm.to_python(p.type) if p.type else "Any"
             parts.append(f"{p_name}: {p_type}")
-
         return parts
 
     def map_operator(self, name: str) -> str:
+        """Map C++ operator name to Python dunder method name."""
         normalized = name.replace(" ", "")
         mapping = {
             "operator+": "__add__",

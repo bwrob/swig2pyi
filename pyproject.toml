@@ -37,16 +37,17 @@
 
     dev = [
         "basedpyright>=1.31.2",
+        "complexipy>=5.4.1",
         "coverage>=7.10.4",
         "diff-cover>=9.6.0",
         "poethepoet>=0.37.0",
         "pre-commit>=3.7.1",
         "pytest>=8.4.1",
         "pytest-cov>=6.2.1",
-        "quantlib>=1.40",
+        "quantlib==1.40",
         "ruff>=0.12.9",
         "tach>=0.29.0",
-]
+    ]
     docs = [
         "mkdocs>=1.6.1",
         "mkdocs-git-authors-plugin>=0.10.0",

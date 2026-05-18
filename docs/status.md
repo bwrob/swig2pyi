@@ -1,33 +1,27 @@
 # Project Status - Swig2Pyi Refactor
 
 **Date:** May 18, 2026
-**Status:** In Progress - Architecture Refactoring. Transitioning to SQLModel/SQLite for XML parsing to resolve memory exhaustion and complex AST resolution issues.
+**Status:** Operational & Validated. The SQLModel SAX Streaming parser is complete, resolving memory exhaustion while maintaining AST relational integrity.
 
 ## Achievements
 
-### 1. Proof of Concept Complete
-The core concept of generating Python stubs from SWIG XML is validated. Previous in-memory AST approaches successfully mapped basic QuantLib patterns.
+### 1. SQLModel Architecture Complete
+*   **Schema Definition:** Created `src/swig2pyi/core/schema.py` to define relational DB models for SWIG XML nodes.
+*   **SAX Streamer:** Refactored `SwigXmlParser` to lazily insert XML nodes into the SQLite database.
+*   **AST Rebuilder:** Implemented database querying logic to rebuild the standard Pydantic AST for the Emitter.
+*   **TDD Methodology:** Developed under strict Test-Driven Development with dedicated unit, integration, and E2E testing (`test_schema.py`, `test_parser_stream.py`, `test_parser_ast.py`).
 
-### 2. Temporary SQLite Parser Trialed
-A raw SQLite SAX streaming parser was prototyped and verified to reduce RAM usage and allow relational querying for C++ templates and inheritance tracking.
-
-## Current Focus: SQLModel Architecture
-
-We are currently rewriting the parser layer to use `sqlmodel`. This solves the memory constraints of `pydantic-xml` while retaining type-safe models for AST traversal.
+### 2. Integration Verified
+*   The `quantlib_mini` end-to-end integration test passes successfully alongside 19 other unit tests.
 
 ## Roadmap
 
 This roadmap outlines the prioritized steps for further development.
 
-1.  **Refactoring (Current):**
-    *   Design the `sqlmodel` schema.
-    *   Implement SAX streamer to populate the DB.
-    *   Write queries to rebuild the AST for the `StubEmitter`.
-
-2.  **Enhancements (Next):**
+1.  **Enhancements (Next):**
     *   **Docstrings:** Extract and emit docstrings from SWIG comments into the `.pyi` files for improved code clarity.
     *   **Properties:** Detect and correctly emit public member variables as properties in the generated stubs.
 
-3.  **Refinement:**
-    *   Ensure all small unit tests pass against the new parser.
+2.  **Refinement:**
     *   Address `ruff` warnings in generated code (e.g. unused TypeVars) to ensure clean validation runs.
+    *   Test parser performance on the full `quantlib.i` wrapper payload in a separate environment.
