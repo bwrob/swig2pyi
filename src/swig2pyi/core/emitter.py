@@ -36,6 +36,7 @@ class StubEmitter:
         """Generate the full stub output from the Top AST node."""
         self.write("import typing")
         self.write("from typing import Any, Optional, overload, Generic, TypeVar")
+        self.write("from enum import IntEnum")
         self.write("import collections.abc")
         self.write("")
         self.write("_T = TypeVar('_T')")
@@ -89,8 +90,10 @@ class StubEmitter:
         has_items = False
         for item in enum.items:
             item_name = self._get_sanitized_name(item.name)
-            val_str = f" = {item.value}" if item.value is not None else ""
-            self.write(f"{item_name}{val_str}")
+            if item.value is not None:
+                self.write(f"{item_name} = {item.value}")
+            else:
+                self.write(f"{item_name} = ...")
             has_items = True
         if not has_items:
             self.write("pass")

@@ -36,7 +36,9 @@ def generate_from_interface(
     xml_path_obj = Path(xml_path)
 
     try:
-        runner.run(config.includes, interface_file, xml_path_obj)
+        runner.run(
+            config.includes, interface_file, xml_path_obj, module_name=config.module_name
+        )
         generate_from_xml(xml_path_obj, config, output_file, validate=validate)
     finally:
         if xml_path_obj.exists():

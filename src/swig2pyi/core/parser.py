@@ -353,7 +353,7 @@ class SwigXmlParser:
         self,
         session: Session,
         model_type: Any,
-        mapper: Callable,  # noqa: ANN401
+        mapper: Callable,
     ) -> dict:
         res: dict[int, list[Any]] = {}
         for item in session.exec(select(model_type)):

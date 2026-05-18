@@ -22,10 +22,16 @@ class SwigRunner:
         self.swig_path = swig_path
         self.use_module = _SWIG_MODULE_AVAILABLE and swig_path == "swig"
 
-    def run(self, includes: list[str], interface_file: Path, output_xml: Path) -> Path:
+    def run(
+        self,
+        includes: list[str],
+        interface_file: Path,
+        output_xml: Path,
+        module_name: str = "swig2pyi_wrapper",
+    ) -> Path:
         """Execute SWIG to generate XML."""
         cmd, env = self._build_command(includes, output_xml)
-        tmp_path = self._create_wrapper(interface_file)
+        tmp_path = self._create_wrapper(interface_file, module_name)
         cmd.append(str(tmp_path))
 
         try:
@@ -58,8 +64,9 @@ class SwigRunner:
         cmd.extend([f"-I{inc}" for inc in includes])
         return cmd, env
 
-    def _create_wrapper(self, interface_file: Path) -> Path:
-        preamble = """
+    def _create_wrapper(self, interface_file: Path, module_name: str) -> Path:
+        preamble = f"""
+%module {module_name}
 %define apply_cpptypes(x...)
 %enddef
 %define pythoncode(x...)
