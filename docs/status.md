@@ -20,7 +20,7 @@
 ### 3. Modular Architecture Refactored
 *   **Parser Split:** The `SwigXmlParser` monolith has been successfully split into `ast_models.py`, `ingestion.py`, and `builder.py`.
 *   **Emitter Split:** `StubEmitter` logic has been modularized, extracting `naming.py` (sanitization) and `signature.py` (formatting).
-*   **Decoupled Logic:** Ingestion, AST construction, and emission formatting are now separate, high-cohesion components.
+*   **Type System Decoupled:** `TypeManager` is now configuration-driven with `BASIC_TYPES` moved to a class constant, allowing for generic use across different SWIG projects.
 *   **Clean Facade:** `SwigXmlParser` now serves as a clean high-level facade.
 
 ### 4. Integration Verified
