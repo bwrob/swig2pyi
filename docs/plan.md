@@ -19,7 +19,7 @@
     - Resolve major `basedpyright` strict-mode errors in the generator codebase.
 - [x] **Refactoring for Elegance:**
     - Clean up `parser.py` (split into modular components: `ast_models.py`, `ingestion.py`, `builder.py`).
-    - [ ] Modularize `emitter.py` signature and formatting logic.
+    - [x] Modularize `emitter.py` signature and formatting logic (into `naming.py` and `signature.py`).
     - [ ] Decouple the `TypeManager` from hardcoded QuantLib rules where possible.
 - [ ] **Full QuantLib Verification:** Achieve "Zero Errors" on all 50+ QuantLib Python test files using the generated stubs.
 
