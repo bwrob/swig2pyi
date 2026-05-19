@@ -1,12 +1,28 @@
 """Type normalization and mapping system."""
 
 import re
+from typing import ClassVar
 
 from .config import Config
 
 
 class TypeManager:
     """Manages C++ to Python type conversions based on configuration."""
+
+    BASIC_TYPES: ClassVar[dict[str, str]] = {
+        "int": "int",
+        "long": "int",
+        "short": "int",
+        "unsigned int": "int",
+        "unsigned long": "int",
+        "long long": "int",
+        "unsigned long long": "int",
+        "double": "float",
+        "float": "float",
+        "char": "str",
+        "void": "None",
+        "bool": "bool",
+    }
 
     def __init__(self, config: Config) -> None:
         """Initialize with configuration."""
@@ -16,6 +32,8 @@ class TypeManager:
 
     def _build_smart_ptr_regex(self) -> re.Pattern[str]:
         patterns = [re.escape(ptr) for ptr in self.config.smart_pointers]
+        if not patterns:
+            return re.compile(r"$.^")  # Match nothing
         return re.compile(rf"^(?:{'|'.join(patterns)})\s*<(.+)>$")
 
     def normalize_type(self, cpp_type: str) -> str:
@@ -75,21 +93,7 @@ class TypeManager:
             if namespaced in self.config.type_map:
                 return self.config.type_map[namespaced]
 
-        basic_types = {
-            "int": "int",
-            "long": "int",
-            "short": "int",
-            "unsigned int": "int",
-            "unsigned long": "int",
-            "long long": "int",
-            "unsigned long long": "int",
-            "double": "float",
-            "float": "float",
-            "char": "str",
-            "void": "None",
-            "bool": "bool",
-        }
-        return basic_types.get(cpp_type)
+        return self.BASIC_TYPES.get(cpp_type)
 
     def _resolve_containers(self, cpp_type: str) -> str | None:
         for cpp_container, py_abc in self.config.containers.items():
