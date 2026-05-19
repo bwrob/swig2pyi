@@ -1,18 +1,24 @@
 # Project Status - Swig2Pyi Refactor
 
-**Date:** May 18, 2026
-**Status:** Operational & Validated. The SQLModel SAX Streaming parser is complete, resolving memory exhaustion while maintaining AST relational integrity.
+**Date:** May 19, 2026
+**Status:** Operational & Validated. The SQLModel SAX Streaming parser is complete and verified. Member variable properties are now supported.
 
 ## Achievements
 
-### 1. SQLModel Architecture Complete
+### 1. SQLModel Architecture Complete & Fixed
 *   **Schema Definition:** Created `src/swig2pyi/core/schema.py` to define relational DB models for SWIG XML nodes.
 *   **SAX Streamer:** Refactored `SwigXmlParser` to lazily insert XML nodes into the SQLite database.
-*   **AST Rebuilder:** Implemented database querying logic to rebuild the standard Pydantic AST for the Emitter.
-*   **TDD Methodology:** Developed under strict Test-Driven Development with dedicated unit, integration, and E2E testing (`test_schema.py`, `test_parser_stream.py`, `test_parser_ast.py`).
+*   **AST Rebuilder:** Implemented database querying logic to rebuild the standard Pydantic AST for the Emitter. Fixed critical filtering bug in `feature_ignore`.
+*   **TDD Methodology:** Developed under strict Test-Driven Development with dedicated unit, integration, and E2E testing.
 
-### 2. Integration Verified
-*   The `quantlib_mini` end-to-end integration test passes successfully alongside 19 other unit tests.
+### 2. Member Variable Support
+*   **Property Detection:** Successfully implemented detection of public member variables (`kind="variable"` in SWIG XML).
+*   **Emitter Integration:** Updated `StubEmitter` to output member variables as type-annotated attributes in classes.
+*   **Validated:** Verified with `member_vars.i` and real QuantLib types like `DoublePair`.
+
+### 3. Integration Verified
+*   The `quantlib_mini` end-to-end integration test passes with 2157 lines of generated stubs (including enums, overloads, and member variables).
+*   Total 22 tests passing.
 
 ## Roadmap
 

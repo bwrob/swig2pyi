@@ -70,3 +70,39 @@ def test_parse_overloads_structure() -> None:
     assert len(cls.cdecls) == 2
     assert cls.cdecls[0].name == "compute"
     assert cls.cdecls[1].name == "compute"
+
+
+def test_parse_member_variables() -> None:
+    xml = """
+    <top>
+        <attributelist><attribute name="module" value="Test"/></attributelist>
+        <module>
+            <class>
+                <attributelist><attribute name="name" value="Point"/></attributelist>
+                <cdecl>
+                    <attributelist>
+                         <attribute name="kind" value="variable"/>
+                         <attribute name="name" value="x"/>
+                         <attribute name="type" value="double"/>
+                    </attributelist>
+                </cdecl>
+                <cdecl>
+                    <attributelist>
+                         <attribute name="kind" value="variable"/>
+                         <attribute name="name" value="y"/>
+                         <attribute name="type" value="double"/>
+                    </attributelist>
+                </cdecl>
+            </class>
+        </module>
+    </top>
+    """
+    parser = SwigXmlParser()
+    top = parser.parse_string(xml)
+    cls = top.module.classes[0]
+    assert len(cls.cdecls) == 2
+    assert cls.cdecls[0].name == "x"
+    assert cls.cdecls[0].kind == "variable"
+    assert cls.cdecls[1].name == "y"
+    assert cls.cdecls[1].kind == "variable"
+

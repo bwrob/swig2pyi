@@ -11,6 +11,7 @@ try:
 
     _SWIG_MODULE_AVAILABLE = True
 except ImportError:
+    swig = None  # pyright: ignore [reportMissingImports]
     _SWIG_MODULE_AVAILABLE = False
 
 
@@ -42,9 +43,10 @@ class SwigRunner:
 
     def _build_command(
         self, includes: list[str], output_xml: Path
-    ) -> tuple[list[str], dict]:
+    ) -> tuple[list[str], dict[str, str]]:
+        """Build the SWIG command and environment."""
         env = os.environ.copy()
-        if self.use_module:
+        if self.use_module and swig:
             exe = Path(swig.BIN_DIR) / "swig"
             if not exe.exists() and os.name == "nt":
                 exe = exe.with_suffix(".exe")
@@ -65,6 +67,7 @@ class SwigRunner:
         return cmd, env
 
     def _create_wrapper(self, interface_file: Path, module_name: str) -> Path:
+        """Create a temporary SWIG interface file that includes the target."""
         preamble = f"""
 %module {module_name}
 %define apply_cpptypes(x...)
@@ -77,18 +80,23 @@ class SwigRunner:
             tmp.write(preamble)
             return Path(tmp.name)
 
-    def _execute(self, cmd: list[str], env: dict, output_xml: Path) -> Path:
+    def _execute(
+        self, cmd: list[str], env: dict[str, str], output_xml: Path
+    ) -> Path:
+        """Execute the SWIG command."""
         try:
-            subprocess.run(
+            subprocess.run(  # noqa: S603
                 cmd, capture_output=True, text=True, check=True, env=env
             )
-            if output_xml.exists():
-                return output_xml
-            msg = "SWIG did not produce output file."
-            raise RuntimeError(msg)
         except subprocess.CalledProcessError as e:
             msg = f"SWIG failed:\n{e.stderr}"
             raise RuntimeError(msg) from e
-        except Exception as e:
+        except OSError as e:
             msg = f"SWIG execution failed: {e}"
             raise RuntimeError(msg) from e
+
+        if output_xml.exists():
+            return output_xml
+
+        msg = "SWIG did not produce output file."
+        raise RuntimeError(msg)

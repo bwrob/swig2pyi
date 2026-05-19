@@ -37,7 +37,10 @@ def generate_from_interface(
 
     try:
         runner.run(
-            config.includes, interface_file, xml_path_obj, module_name=config.module_name
+            config.includes,
+            interface_file,
+            xml_path_obj,
+            module_name=config.module_name,
         )
         generate_from_xml(xml_path_obj, config, output_file, validate=validate)
     finally:

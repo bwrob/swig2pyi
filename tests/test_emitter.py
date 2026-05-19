@@ -66,3 +66,21 @@ def test_operator_rename(type_manager) -> None:
         other: int,
     ) -> int: ...
 """ in output
+
+
+def test_emit_class_with_variables(type_manager) -> None:
+    # Construct a mock Top with variables
+    var_x = CDecl(name="x", kind="variable", type="int")
+    var_y = CDecl(name="y", kind="variable", type="int")
+    cls = Class(name="Point", kind="class", cdecls=[var_x, var_y], constructors=[])
+    module = Module(name="Test", classes=[cls], cdecls=[])
+    top = Top(module=module)
+
+    emitter = StubEmitter(type_manager)
+    emitter.emit(top)
+    output = emitter.get_output()
+
+    assert "class Point:" in output
+    assert "x: int" in output
+    assert "y: int" in output
+

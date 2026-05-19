@@ -11,10 +11,10 @@ class TypeManager:
     def __init__(self, config: Config) -> None:
         """Initialize with configuration."""
         self.config = config
-        self._smart_ptr_regex = self._build_smart_ptr_regex()
-        self._swig_prefix_regex = re.compile(r"([pqra](\([^)]*\))?\.)")
+        self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
+        self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
 
-    def _build_smart_ptr_regex(self) -> re.Pattern:
+    def _build_smart_ptr_regex(self) -> re.Pattern[str]:
         patterns = [re.escape(ptr) for ptr in self.config.smart_pointers]
         return re.compile(rf"^(?:{'|'.join(patterns)})\s*<(.+)>$")
 
@@ -35,8 +35,9 @@ class TypeManager:
             return template
 
         py_type = cpp_type.replace("::", ".")
-        if self.config.module_name and py_type.startswith(self.config.module_name + "."):
-            py_type = py_type[len(self.config.module_name) + 1 :]
+        prefix = self.config.module_name + "." if self.config.module_name else ""
+        if prefix and py_type.startswith(prefix):
+            py_type = py_type[len(prefix) :]
         return py_type
 
     def to_python(self, cpp_type_str: str) -> str:

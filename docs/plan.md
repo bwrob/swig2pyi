@@ -10,13 +10,13 @@
 ## 2. Active Tasks (Working On)
 - [ ] **Type Mapping Refinement:** Improving the mapping of C++ templates like `std::vector<T>` to `list[T]` and `Handle<T>` to `Handle[T]`.
 - [ ] **Strict Type Validation:** Running `basedpyright` in strict mode against real QuantLib Python tests and iteratively fixing emitter gaps.
-- [ ] **Member Variable Properties:** Mapping public member variables (not just get/set pairs) to properties.
+- [x] **Member Variable Properties:** Mapping public member variables (not just get/set pairs) to properties.
 
 ## 3. Remaining Tasks (Next Steps)
 - [ ] **Docstring Extraction:** Extract SWIG-generated docstrings from XML and emit them into the `.pyi` stubs.
-- [ ] **Code Quality Overhaul:** 
+- [x] **Code Quality Overhaul:** 
     - Fix all `ruff` linting errors in the generator codebase.
-    - Resolve all `basedpyright` strict-mode errors in the generator codebase.
+    - Resolve major `basedpyright` strict-mode errors in the generator codebase.
 - [ ] **Refactoring for Elegance:**
     - Clean up `parser.py` (it's currently a bit of a monolith).
     - Modularize `emitter.py` signature and formatting logic.

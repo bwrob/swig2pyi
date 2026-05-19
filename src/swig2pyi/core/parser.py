@@ -1,10 +1,14 @@
 """SWIG XML parser using relational streaming ingestion."""
 
+from __future__ import annotations
+
 import io
 import xml.etree.ElementTree as ET
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 from pydantic import BaseModel
 from sqlalchemy import Engine, create_engine
@@ -25,6 +29,12 @@ from .schema import (
 from .schema import (
     TopInfo as DbTopInfo,
 )
+
+AstModel: TypeAlias = (
+    "CDecl | Constructor | Destructor | Enum | Class | Module | Top | EnumItem | Parm"
+)
+
+T = TypeVar("T", bound=SQLModel)
 
 
 class Parm(BaseModel):
@@ -84,7 +94,7 @@ class Class(BaseModel):
     constructors: list[Constructor] = []
     destructors: list[Destructor] = []
     cdecls: list[CDecl] = []
-    classes: list["Class"] = []
+    classes: list[Class] = []
     is_template: bool = False
 
 
@@ -121,7 +131,9 @@ class SwigXmlParser:
         engine = self._run_parser(source, db_path)
         return self._build_ast_from_db(engine)
 
-    def _run_parser(self, source: Any, db_path: Path | None = None) -> Engine:  # noqa: ANN401
+    def _run_parser(
+        self, source: str | Path | io.BytesIO, db_path: Path | None = None
+    ) -> Engine:
         if db_path:
             url = f"sqlite:///{db_path}"
             if db_path.exists():
@@ -168,7 +180,7 @@ class SwigXmlParser:
         if attr_list is not None:
             scan(attr_list, counter)
 
-    def _stream_to_db(self, source: Any, engine: Engine) -> None:  # noqa: ANN401
+    def _stream_to_db(self, source: str | Path | io.BytesIO, engine: Engine) -> None:
         context = ET.iterparse(source, events=("start", "end"))  # noqa: S314
         stack: list[tuple[ET.Element, int]] = []
         class_stack: list[int] = []
@@ -325,18 +337,22 @@ class SwigXmlParser:
             parms = self._load_dict(
                 session,
                 DbParm,
-                lambda p: (p.node_id, Parm(name=p.name, type=p.type)),
+                lambda p: (p.node_id or 0, Parm(name=p.name, type=p.type)),
             )
             enums = self._load_dict(
                 session,
                 DbEnumItem,
-                lambda e: (e.node_id, EnumItem(name=e.name, value=e.value)),
+                lambda e: (e.node_id or 0, EnumItem(name=e.name, value=e.value)),
             )
-            bases = self._load_dict(session, DbBaseClass, lambda b: (b.node_id, b.name))
+            bases = self._load_dict(
+                session,
+                DbBaseClass,
+                lambda b: (b.node_id or 0, b.name),
+            )
 
             nodes_by_id = {}
             for db_node in session.exec(
-                select(DbNode).where(not DbNode.feature_ignore)
+                select(DbNode).where(DbNode.feature_ignore == False)  # noqa: E712
             ):
                 model = self._create_model(db_node, parms, enums, bases)
                 if model:
@@ -352,9 +368,9 @@ class SwigXmlParser:
     def _load_dict(
         self,
         session: Session,
-        model_type: Any,
-        mapper: Callable,
-    ) -> dict:
+        model_type: type[T],
+        mapper: Callable[[T], tuple[int, Any]],
+    ) -> dict[int, list[Any]]:
         res: dict[int, list[Any]] = {}
         for item in session.exec(select(model_type)):
             key, val = mapper(item)
@@ -367,7 +383,7 @@ class SwigXmlParser:
         parms: dict[int, list[Parm]],
         enums: dict[int, list[EnumItem]],
         bases: dict[int, list[str]],
-    ) -> Any:  # noqa: ANN401
+    ) -> AstModel | None:
         if db_node.tag == "cdecl":
             if db_node.kind in ("function", "variable"):
                 return CDecl(
@@ -397,34 +413,39 @@ class SwigXmlParser:
             )
         return None
 
-    def _assemble_tree(self, module: Module, nodes_by_id: dict[int, tuple]) -> None:
+    def _assemble_tree(
+        self, module: Module, nodes_by_id: dict[int, tuple[int | None, str, AstModel]]
+    ) -> None:
         for parent_id, tag, model in nodes_by_id.values():
             if parent_id is None:
                 self._add_to_module(module, tag, model)
             elif (parent := nodes_by_id.get(parent_id)) and (p_model := parent[2]):
                 self._add_to_parent(p_model, tag, model)
 
-    def _add_to_module(self, module: Module, tag: str, model: Any) -> None:  # noqa: ANN401
-        if tag == "cdecl":
+    def _add_to_module(self, module: Module, tag: str, model: AstModel) -> None:
+        if tag == "cdecl" and isinstance(model, CDecl):
             module.cdecls.append(model)
-        elif tag == "class":
+        elif tag == "class" and isinstance(model, Class):
             module.classes.append(model)
-        elif tag == "enum":
+        elif tag == "enum" and isinstance(model, Enum):
             module.enums.append(model)
 
     def _add_to_parent(
         self,
-        p_model: Any,
+        p_model: AstModel,
         tag: str,
-        model: Any,  # noqa: ANN401
+        model: AstModel,
     ) -> None:
-        if tag == "cdecl":
+        if not isinstance(p_model, Class):
+            return
+
+        if tag == "cdecl" and isinstance(model, CDecl):
             p_model.cdecls.append(model)
-        elif tag == "constructor":
+        elif tag == "constructor" and isinstance(model, Constructor):
             p_model.constructors.append(model)
-        elif tag == "destructor":
+        elif tag == "destructor" and isinstance(model, Destructor):
             p_model.destructors.append(model)
-        elif tag == "enum":
+        elif tag == "enum" and isinstance(model, Enum):
             p_model.enums.append(model)
-        elif tag == "class":
+        elif tag == "class" and isinstance(model, Class):
             p_model.classes.append(model)

@@ -63,7 +63,7 @@ class StubEmitter:
             self.write("")
 
     def _emit_module_functions(self, module: Module) -> None:
-        func_groups = {}
+        func_groups: dict[str, list[CDecl]] = {}
         for func in module.cdecls:
             if func.kind != "function":
                 continue
@@ -158,7 +158,7 @@ class StubEmitter:
 
     def _emit_properties(self, cls: Class) -> set[int]:
         properties = self._collect_properties(cls)
-        prop_method_ids = set()
+        prop_method_ids: set[int] = set()
         for prop_name, p_info in properties.items():
             if not p_info["get"]:
                 continue
@@ -168,8 +168,8 @@ class StubEmitter:
                 prop_method_ids.add(id(p_info["set"]))
         return prop_method_ids
 
-    def _collect_properties(self, cls: Class) -> dict:
-        properties = {}
+    def _collect_properties(self, cls: Class) -> dict[str, dict[str, CDecl | None]]:
+        properties: dict[str, dict[str, CDecl | None]] = {}
         prefix_len = 3
         for method in cls.cdecls:
             if method.kind != "function":
@@ -189,19 +189,21 @@ class StubEmitter:
                 )
         return properties
 
-    def _emit_property(self, prop_name: str, p_info: dict) -> None:
-        ret_type = (
-            self.tm.to_python(p_info["get"].type) if p_info["get"].type else "Any"
-        )
+    def _emit_property(self, prop_name: str, p_info: dict[str, CDecl | None]) -> None:
+        getter = p_info["get"]
+        if not getter:
+            return
+        ret_type = self.tm.to_python(getter.type) if getter.type else "Any"
         if ret_type == "void":
             ret_type = "None"
         self.write("@property")
         self.write(f"def {prop_name}(self) -> {ret_type}: ...")
-        if p_info["set"]:
+        setter = p_info["set"]
+        if setter:
             self.write(f"@{prop_name}.setter")
             p_type = (
-                self.tm.to_python(p_info["set"].parms[0].type)
-                if p_info["set"].parms and p_info["set"].parms[0].type
+                self.tm.to_python(setter.parms[0].type)
+                if setter.parms and setter.parms[0].type
                 else "Any"
             )
             self.write(f"def {prop_name}(self, value: {p_type}) -> None: ...")
@@ -212,12 +214,12 @@ class StubEmitter:
             self.visit_function_group(name, group, is_method=True)
         return len(method_groups) > 0
 
-    def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict:
-        method_groups = {}
+    def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict[str, list[CDecl]]:
+        method_groups: dict[str, list[CDecl]] = {}
         for method in cls.cdecls:
             if (
                 id(method) in skip_ids
-                or method.kind != "function"
+                or method.kind not in ("function", "variable")
                 or self.should_skip_method(method)
             ):
                 continue
@@ -265,6 +267,15 @@ class StubEmitter:
         self, group_name: str, group: list[CDecl], *, is_method: bool
     ) -> None:
         """Emit a group of functions as @overload methods/functions."""
+        # Handle member variables as properties
+        if is_method and any(getattr(m, "kind", None) == "variable" for m in group):
+            for var in group:
+                ret_type = self.tm.to_python(var.type) if var.type else "Any"
+                if ret_type == "void":
+                    ret_type = "None"
+                self.write(f"{group_name}: {ret_type}")
+            return
+
         unique_sigs = {}
         for func in group:
             sig = self._get_function_signature(func, is_method=is_method)

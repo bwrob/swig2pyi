@@ -1,10 +1,14 @@
-from typing import Optional
+"""SQLModel schema for SWIG XML ingestion."""
+
+from typing import Any, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
 
 class BaseClass(SQLModel, table=True):
-    __tablename__ = "bases"
+    """Database model for a class base."""
+
+    __tablename__: Any = "bases"
 
     id: int | None = Field(default=None, primary_key=True)
     node_id: int | None = Field(default=None, foreign_key="nodes.id")
@@ -12,8 +16,11 @@ class BaseClass(SQLModel, table=True):
 
     node: Optional["Node"] = Relationship(back_populates="bases")
 
+
 class EnumItem(SQLModel, table=True):
-    __tablename__ = "enums"
+    """Database model for an enum item."""
+
+    __tablename__: Any = "enums"
 
     id: int | None = Field(default=None, primary_key=True)
     node_id: int | None = Field(default=None, foreign_key="nodes.id")
@@ -22,8 +29,11 @@ class EnumItem(SQLModel, table=True):
 
     node: Optional["Node"] = Relationship(back_populates="enum_items")
 
+
 class Parm(SQLModel, table=True):
-    __tablename__ = "parms"
+    """Database model for a function parameter."""
+
+    __tablename__: Any = "parms"
 
     id: int | None = Field(default=None, primary_key=True)
     node_id: int | None = Field(default=None, foreign_key="nodes.id")
@@ -33,8 +43,11 @@ class Parm(SQLModel, table=True):
 
     node: Optional["Node"] = Relationship(back_populates="parms")
 
+
 class Node(SQLModel, table=True):
-    __tablename__ = "nodes"
+    """Database model for a SWIG node."""
+
+    __tablename__: Any = "nodes"
 
     id: int | None = Field(default=None, primary_key=True)
     parent_class_id: int | None = Field(default=None, foreign_key="nodes.id")
@@ -53,8 +66,11 @@ class Node(SQLModel, table=True):
     enum_items: list[EnumItem] = Relationship(back_populates="node")
     parms: list[Parm] = Relationship(back_populates="node")
 
+
 class TopInfo(SQLModel, table=True):
-    __tablename__ = "top_info"
+    """Database model for module-level information."""
+
+    __tablename__: Any = "top_info"
 
     id: int | None = Field(default=None, primary_key=True)
     module_name: str
