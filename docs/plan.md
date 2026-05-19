@@ -17,10 +17,10 @@
 - [x] **Code Quality Overhaul:**
     - Fix all `ruff` linting errors in the generator codebase.
     - Resolve major `basedpyright` strict-mode errors in the generator codebase.
-- [ ] **Refactoring for Elegance:**
-    - Clean up `parser.py` (it's currently a bit of a monolith).
-    - Modularize `emitter.py` signature and formatting logic.
-    - Decouple the `TypeManager` from hardcoded QuantLib rules where possible.
+- [x] **Refactoring for Elegance:**
+    - Clean up `parser.py` (split into modular components: `ast_models.py`, `ingestion.py`, `builder.py`).
+    - [ ] Modularize `emitter.py` signature and formatting logic.
+    - [ ] Decouple the `TypeManager` from hardcoded QuantLib rules where possible.
 - [ ] **Full QuantLib Verification:** Achieve "Zero Errors" on all 50+ QuantLib Python test files using the generated stubs.
 
 ## 4. Engineering Standards

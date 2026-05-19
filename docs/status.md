@@ -17,7 +17,12 @@
 *   **Emitter Integration:** Updated `StubEmitter` to output member variables and documentation strings.
 *   **Validated:** Verified with `member_vars.i`, `tests/test_docstrings.py`, and real QuantLib types.
 
-### 3. Integration Verified
+### 3. Modular Architecture Refactored
+*   **Parser Split:** The `SwigXmlParser` monolith has been successfully split into `ast_models.py`, `ingestion.py`, and `builder.py`.
+*   **Decoupled Logic:** Ingestion (streaming/DB) is now decoupled from AST construction, improving maintainability and testability.
+*   **Clean Facade:** `SwigXmlParser` now serves as a clean high-level facade.
+
+### 4. Integration Verified
 *   The `quantlib_mini` end-to-end integration test passes with over 2200 lines of generated stubs.
 *   Total 24 tests passing.
 
