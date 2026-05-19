@@ -3,6 +3,7 @@ from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.type_system import TypeManager
 from swig2pyi.core.config import Config
 
+
 def test_emit_docstrings() -> None:
     xml = """
     <top>
@@ -53,21 +54,22 @@ def test_emit_docstrings() -> None:
         includes=[],
         type_map={"int": "int", "void": "None"},
         smart_pointers=[],
-        containers={}
+        containers={},
     )
     tm = TypeManager(config)
     emitter = StubEmitter(tm)
     emitter.emit(top)
     output = emitter.get_output()
 
-    assert 'class Documented:' in output
+    assert "class Documented:" in output
     assert '    """This is a class docstring"""' in output
-    assert '    def greet(self) -> None: ...' in output
+    assert "    def greet(self) -> None: ..." in output
     assert '    """Say hello to someone"""' in output
-    assert '    answer: int' in output
+    assert "    answer: int" in output
     assert '    """The ultimate answer"""' in output
-    assert 'class Status(IntEnum):' in output
+    assert "class Status(IntEnum):" in output
     assert '    """Enum documentation"""' in output
+
 
 def test_multiline_docstring() -> None:
     xml = """
@@ -88,7 +90,13 @@ def test_multiline_docstring() -> None:
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
 
-    config = Config(module_name="Test", includes=[], type_map={"void": "None"}, smart_pointers=[], containers={})
+    config = Config(
+        module_name="Test",
+        includes=[],
+        type_map={"void": "None"},
+        smart_pointers=[],
+        containers={},
+    )
     tm = TypeManager(config)
     emitter = StubEmitter(tm)
     emitter.emit(top)

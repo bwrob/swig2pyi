@@ -3,7 +3,7 @@
 This document outlines the Test-Driven Development (TDD) and Context-Driven Development strategy for refactoring the SWIG XML parser to use `sqlmodel` and an embedded SQLite database.
 
 ## 1. Context-Driven Modeling (Schema)
-Before touching parsing logic, we will define the domain context (the SQLModel schema). 
+Before touching parsing logic, we will define the domain context (the SQLModel schema).
 - **Tests:** `tests/test_schema.py`
 - **Goal:** Verify that SQLModel definitions correctly capture the required fields (tag, name, type, kind) and relationships (Node -> Parms, Node -> Enums).
 - **TDD Flow:** Write tests that instantiate these models and verify their properties and DB creation. Run tests (they will fail). Implement `src/swig2pyi/core/schema.py`.

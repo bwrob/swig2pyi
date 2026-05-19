@@ -45,14 +45,8 @@ def test_templates(type_manager) -> None:
 
 
 def test_containers(type_manager) -> None:
-    assert (
-        type_manager.to_python("std::vector<QuantLib::Real>")
-        == "list[float]"
-    )
-    assert (
-        type_manager.to_python("std::vector<std::string>")
-        == "list[str]"
-    )
+    assert type_manager.to_python("std::vector<QuantLib::Real>") == "list[float]"
+    assert type_manager.to_python("std::vector<std::string>") == "list[str]"
 
     # Container with smart pointer
     assert (
@@ -76,7 +70,9 @@ def test_nested_templates(type_manager) -> None:
     # std::pair is not in containers map, so generic fallback
     # std::vector IS in containers map -> list
     # Rate -> float
-    input_type = "std::pair<std::vector<QuantLib::Rate>, std::vector<QuantLib::Volatility>>"
+    input_type = (
+        "std::pair<std::vector<QuantLib::Rate>, std::vector<QuantLib::Volatility>>"
+    )
     # Current implementation doesn't split args, so it might produce std.pair[std::vector<...>, ...]
     # But we want to verify what it does.
     # If it fails to split, it won't resolve inner vector to list.
@@ -94,4 +90,6 @@ def test_spaces_in_template(type_manager) -> None:
 
 
 def test_parens_in_template(type_manager) -> None:
-    assert type_manager.to_python("std::vector<(QuantLib::Volatility)>") == "list[float]"
+    assert (
+        type_manager.to_python("std::vector<(QuantLib::Volatility)>") == "list[float]"
+    )

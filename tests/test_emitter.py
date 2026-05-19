@@ -36,12 +36,15 @@ def test_emit_class_with_method(type_manager) -> None:
 
     assert "class MyClass:" in output
     assert "def __init__(self) -> None: ..." in output
-    assert """
+    assert (
+        """
     def myFunc(
         self,
         a: int,
     ) -> int: ...
-""" in output
+"""
+        in output
+    )
 
 
 def test_operator_rename(type_manager) -> None:
@@ -60,12 +63,15 @@ def test_operator_rename(type_manager) -> None:
     emitter.emit(top)
     output = emitter.get_output()
 
-    assert """
+    assert (
+        """
     def __add__(
         self,
         other: int,
     ) -> int: ...
-""" in output
+"""
+        in output
+    )
 
 
 def test_emit_class_with_variables(type_manager) -> None:
@@ -83,4 +89,3 @@ def test_emit_class_with_variables(type_manager) -> None:
     assert "class Point:" in output
     assert "x: int" in output
     assert "y: int" in output
-

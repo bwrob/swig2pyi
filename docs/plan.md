@@ -13,8 +13,8 @@
 - [x] **Member Variable Properties:** Mapping public member variables (not just get/set pairs) to properties.
 
 ## 3. Remaining Tasks (Next Steps)
-- [ ] **Docstring Extraction:** Extract SWIG-generated docstrings from XML and emit them into the `.pyi` stubs.
-- [x] **Code Quality Overhaul:** 
+- [x] **Docstring Extraction:** Extract SWIG-generated docstrings from XML and emit them into the `.pyi` stubs.
+- [x] **Code Quality Overhaul:**
     - Fix all `ruff` linting errors in the generator codebase.
     - Resolve major `basedpyright` strict-mode errors in the generator codebase.
 - [ ] **Refactoring for Elegance:**

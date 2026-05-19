@@ -80,9 +80,7 @@ class SwigRunner:
             tmp.write(preamble)
             return Path(tmp.name)
 
-    def _execute(
-        self, cmd: list[str], env: dict[str, str], output_xml: Path
-    ) -> Path:
+    def _execute(self, cmd: list[str], env: dict[str, str], output_xml: Path) -> Path:
         """Execute the SWIG command."""
         try:
             subprocess.run(  # noqa: S603

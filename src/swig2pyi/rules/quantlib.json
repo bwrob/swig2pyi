@@ -1,48 +1,54 @@
 {
-  "module_name": "QuantLib",
-  "includes": ["tests/data/quantlib-1.40"],
-  "type_map": {
-    "QuantLib::Integer": "int",
-    "QuantLib::BigInteger": "int",
-    "QuantLib::Natural": "int",
-    "QuantLib::Size": "int",
-    "QuantLib::Real": "float",
-    "QuantLib::Decimal": "float",
-    "QuantLib::Time": "float",
-    "QuantLib::Rate": "float",
-    "QuantLib::Spread": "float",
-    "QuantLib::Volatility": "float",
-    "std::string": "str",
-    "bool": "bool",
-    "Day": "int",
-    "Year": "int",
-    "Hour": "int",
-    "Minute": "int",
-    "Second": "int",
-    "Millisecond": "int",
-    "Microsecond": "int",
-    "Time": "float",
-    "doubleOrNull": "Optional[float]",
-    "QuantLib::DiscountFactor": "float",
-    "QuantLib::BlackVolTermStructure": "Any"
-  },
-  "smart_pointers": ["boost::shared_ptr", "std::shared_ptr", "ext::shared_ptr"],
-  "containers": {
-    "std::vector": "list",
-    "std::set": "set",
-    "ext::optional": "Optional",
-    "std::pair": "tuple"
-  },
-  "rename_operators": true,
-  "extra_code": [
-    "class Handle(Generic[_T]):",
-    "    def __init__(self, p: Optional[_T] = ...) -> None: ...",
-    "    def currentLink(self) -> _T: ...",
-    "    def empty(self) -> bool: ...",
-    "    def __deref__(self) -> _T: ...",
-    "class RelinkableHandle(Handle[_T]):",
-    "    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...",
-    "class TimeSeries(Generic[_T]):",
-    "    def __init__(self) -> None: ..."
-  ]
+    "containers": {
+        "ext::optional": "Optional",
+        "std::pair": "tuple",
+        "std::set": "set",
+        "std::vector": "list"
+    },
+    "extra_code": [
+        "class Handle(Generic[_T]):",
+        "    def __init__(self, p: Optional[_T] = ...) -> None: ...",
+        "    def currentLink(self) -> _T: ...",
+        "    def empty(self) -> bool: ...",
+        "    def __deref__(self) -> _T: ...",
+        "class RelinkableHandle(Handle[_T]):",
+        "    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...",
+        "class TimeSeries(Generic[_T]):",
+        "    def __init__(self) -> None: ..."
+    ],
+    "includes": [
+        "tests/data/quantlib-1.40"
+    ],
+    "module_name": "QuantLib",
+    "rename_operators": true,
+    "smart_pointers": [
+        "boost::shared_ptr",
+        "std::shared_ptr",
+        "ext::shared_ptr"
+    ],
+    "type_map": {
+        "Day": "int",
+        "Hour": "int",
+        "Microsecond": "int",
+        "Millisecond": "int",
+        "Minute": "int",
+        "QuantLib::BigInteger": "int",
+        "QuantLib::BlackVolTermStructure": "Any",
+        "QuantLib::Decimal": "float",
+        "QuantLib::DiscountFactor": "float",
+        "QuantLib::Integer": "int",
+        "QuantLib::Natural": "int",
+        "QuantLib::Rate": "float",
+        "QuantLib::Real": "float",
+        "QuantLib::Size": "int",
+        "QuantLib::Spread": "float",
+        "QuantLib::Time": "float",
+        "QuantLib::Volatility": "float",
+        "Second": "int",
+        "Time": "float",
+        "Year": "int",
+        "bool": "bool",
+        "doubleOrNull": "Optional[float]",
+        "std::string": "str"
+    }
 }

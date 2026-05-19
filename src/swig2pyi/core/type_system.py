@@ -94,9 +94,13 @@ class TypeManager:
     def _resolve_containers(self, cpp_type: str) -> str | None:
         for cpp_container, py_abc in self.config.containers.items():
             prefix = cpp_container + "<"
-            if cpp_type.startswith(prefix) and cpp_type.endswith(">") and (
-                self._get_matching_bracket_index(cpp_type, len(cpp_container))
-                == len(cpp_type) - 1
+            if (
+                cpp_type.startswith(prefix)
+                and cpp_type.endswith(">")
+                and (
+                    self._get_matching_bracket_index(cpp_type, len(cpp_container))
+                    == len(cpp_type) - 1
+                )
             ):
                 inner = cpp_type[len(prefix) : -1].strip()
                 args = [

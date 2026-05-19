@@ -11,14 +11,15 @@
 *   **AST Rebuilder:** Implemented database querying logic to rebuild the standard Pydantic AST for the Emitter. Fixed critical filtering bug in `feature_ignore`.
 *   **TDD Methodology:** Developed under strict Test-Driven Development with dedicated unit, integration, and E2E testing.
 
-### 2. Member Variable Support
+### 2. Member Variable & Docstring Support
 *   **Property Detection:** Successfully implemented detection of public member variables (`kind="variable"` in SWIG XML).
-*   **Emitter Integration:** Updated `StubEmitter` to output member variables as type-annotated attributes in classes.
-*   **Validated:** Verified with `member_vars.i` and real QuantLib types like `DoublePair`.
+*   **Docstring Extraction:** Extracted SWIG-generated `feature_docstring` attributes and emitted them into `.pyi` stubs for classes, enums, methods, and variables.
+*   **Emitter Integration:** Updated `StubEmitter` to output member variables and documentation strings.
+*   **Validated:** Verified with `member_vars.i`, `tests/test_docstrings.py`, and real QuantLib types.
 
 ### 3. Integration Verified
-*   The `quantlib_mini` end-to-end integration test passes with 2157 lines of generated stubs (including enums, overloads, and member variables).
-*   Total 22 tests passing.
+*   The `quantlib_mini` end-to-end integration test passes with over 2200 lines of generated stubs.
+*   Total 24 tests passing.
 
 ## Roadmap
 

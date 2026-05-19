@@ -6,7 +6,7 @@ namespace boost {
 }
 
 %define %shared_ptr(T...)
-   // Macro to handle shared_ptr directive. 
+   // Macro to handle shared_ptr directive.
    // In XML generation, we might want to ensure the type is visible as boost::shared_ptr<T>
    %template() boost::shared_ptr<T>;
 %enddef

@@ -18,6 +18,7 @@ def main() -> None:
         _run_generation(args, config)
     except Exception:  # noqa: BLE001
         import traceback  # noqa: PLC0415
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -105,4 +105,3 @@ def test_parse_member_variables() -> None:
     assert cls.cdecls[0].kind == "variable"
     assert cls.cdecls[1].name == "y"
     assert cls.cdecls[1].kind == "variable"
-
