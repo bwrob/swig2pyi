@@ -1,6 +1,6 @@
 from sqlmodel import Session, SQLModel, create_engine
 
-from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.builder import AstBuilder
 from swig2pyi.core.schema import BaseClass as DbBaseClass
 from swig2pyi.core.schema import Node as DbNode
 from swig2pyi.core.schema import Parm as DbParm
@@ -39,8 +39,8 @@ def test_build_ast_from_db() -> None:
         session.add(parm)
         session.commit()
 
-    parser = SwigXmlParser()
-    top = parser._build_ast_from_db(engine)
+    builder = AstBuilder()
+    top = builder.build(engine)
 
     # Assertions
     assert top.module is not None
