@@ -1,6 +1,7 @@
 {
     "containers": {
         "ext::optional": "Optional",
+        "std::map": "dict",
         "std::pair": "tuple",
         "std::set": "set",
         "std::vector": "list"
