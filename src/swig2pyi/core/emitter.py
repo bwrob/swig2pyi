@@ -28,6 +28,20 @@ class StubEmitter:
         line = "    " * self.indent_level + text
         self.lines.append(line.rstrip())
 
+    def _write_docstring(self, doc: str | None) -> None:
+        if not doc:
+            return
+        # Clean up docstring (strip whitespace, ensure triple quotes)
+        doc = doc.strip()
+        if not doc:
+            return
+
+        if "\n" in doc:
+            self.write('"""' + doc)
+            self.write('"""')
+        else:
+            self.write(f'"""{doc}"""')
+
     def get_output(self) -> str:
         """Return the accumulated output as a string."""
         return "\n".join(self.lines)
@@ -87,6 +101,7 @@ class StubEmitter:
         name = enum.name.split("::")[-1]
         self.write(f"class {name}(IntEnum):")
         self.indent()
+        self._write_docstring(enum.docstring)
         has_items = False
         for item in enum.items:
             item_name = self._get_sanitized_name(item.name)
@@ -110,6 +125,7 @@ class StubEmitter:
         bases_str = self._get_bases_str(cls)
         self.write(f"class {name}{bases_str}:")
         self.indent()
+        self._write_docstring(cls.docstring)
 
         has_members = False
         if cls.enums:
@@ -274,6 +290,7 @@ class StubEmitter:
                 if ret_type == "void":
                     ret_type = "None"
                 self.write(f"{group_name}: {ret_type}")
+                self._write_docstring(var.docstring)
             return
 
         unique_sigs = {}
@@ -291,6 +308,8 @@ class StubEmitter:
             if use_overload:
                 self.write("@overload")
             self.write(f"def {group_name}({params_str}) -> {ret_type}: ...")
+            if not use_overload:
+                self._write_docstring(func.docstring)
 
     def _get_function_signature(
         self, func: CDecl, *, is_method: bool

@@ -60,6 +60,7 @@ class Node(SQLModel, table=True):
     feature_ignore: bool = Field(default=False)
     is_template: bool = Field(default=False)
     is_static: bool = Field(default=False)
+    docstring: str | None = Field(default=None)
 
     # Relationships
     bases: list[BaseClass] = Relationship(back_populates="node")

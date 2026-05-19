@@ -53,6 +53,7 @@ class CDecl(BaseModel):
     parms: list[Parm] = []
     decl: str | None = None
     is_static: bool = False
+    docstring: str | None = None
 
 
 class Constructor(BaseModel):
@@ -61,6 +62,7 @@ class Constructor(BaseModel):
     name: str
     parms: list[Parm] = []
     is_static: bool = False
+    docstring: str | None = None
 
 
 class Destructor(BaseModel):
@@ -68,6 +70,7 @@ class Destructor(BaseModel):
 
     name: str
     is_static: bool = False
+    docstring: str | None = None
 
 
 class EnumItem(BaseModel):
@@ -82,6 +85,7 @@ class Enum(BaseModel):
 
     name: str
     items: list[EnumItem] = []
+    docstring: str | None = None
 
 
 class Class(BaseModel):
@@ -96,6 +100,7 @@ class Class(BaseModel):
     cdecls: list[CDecl] = []
     classes: list[Class] = []
     is_template: bool = False
+    docstring: str | None = None
 
 
 class Module(BaseModel):
@@ -284,6 +289,7 @@ class SwigXmlParser:
             feature_ignore=attrs.get("feature_ignore") == "1",
             is_template=parent_template_id is not None,
             is_static=attrs.get("storage") == "static",
+            docstring=attrs.get("feature_docstring"),
         )
         session.add(db_node)
         self._dispatch_extraction(elem, node_id, session)
@@ -393,23 +399,34 @@ class SwigXmlParser:
                     decl=db_node.decl,
                     parms=parms.get(db_node.id, []),
                     is_static=db_node.is_static,
+                    docstring=db_node.docstring,
                 )
         elif db_node.tag == "constructor":
             return Constructor(
                 name=db_node.name,
                 parms=parms.get(db_node.id, []),
                 is_static=db_node.is_static,
+                docstring=db_node.docstring,
             )
         elif db_node.tag == "destructor":
-            return Destructor(name=db_node.name, is_static=db_node.is_static)
+            return Destructor(
+                name=db_node.name,
+                is_static=db_node.is_static,
+                docstring=db_node.docstring,
+            )
         elif db_node.tag == "enum":
-            return Enum(name=db_node.name, items=enums.get(db_node.id, []))
+            return Enum(
+                name=db_node.name,
+                items=enums.get(db_node.id, []),
+                docstring=db_node.docstring,
+            )
         elif db_node.tag == "class":
             return Class(
                 name=db_node.name,
                 kind=db_node.kind,
                 is_template=db_node.is_template,
                 bases=bases.get(db_node.id, []),
+                docstring=db_node.docstring,
             )
         return None
 
