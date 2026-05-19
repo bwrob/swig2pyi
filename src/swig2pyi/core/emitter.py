@@ -1,9 +1,16 @@
 """Stub emitter for generating .pyi files."""
 
-import re
+from __future__ import annotations
 
-from .parser import CDecl, Class, Constructor, Enum, Module, Parm, Top
-from .type_system import TypeManager
+import re
+from typing import TYPE_CHECKING
+
+from .ast_models import CDecl, Class, Constructor, Enum, Module, Top
+from .naming import NameManager
+from .signature import SignatureFormatter
+
+if TYPE_CHECKING:
+    from .type_system import TypeManager
 
 
 class StubEmitter:
@@ -12,6 +19,8 @@ class StubEmitter:
     def __init__(self, type_manager: TypeManager) -> None:
         """Initialize with type manager."""
         self.tm = type_manager
+        self.nm = NameManager(rename_operators=type_manager.config.rename_operators)
+        self.sf = SignatureFormatter(type_manager, self.nm)
         self.lines: list[str] = []
         self.indent_level = 0
 
@@ -73,7 +82,7 @@ class StubEmitter:
             self.visit_enum(enum)
             name = enum.name.split("::")[-1]
             for item in enum.items:
-                self.write(f"{self._get_sanitized_name(item.name)}: {name}")
+                self.write(f"{self.nm.sanitize(item.name)}: {name}")
             self.write("")
 
     def _emit_module_functions(self, module: Module) -> None:
@@ -104,7 +113,7 @@ class StubEmitter:
         self._write_docstring(enum.docstring)
         has_items = False
         for item in enum.items:
-            item_name = self._get_sanitized_name(item.name)
+            item_name = self.nm.sanitize(item.name)
             if item.value is not None:
                 self.write(f"{item_name} = {item.value}")
             else:
@@ -240,22 +249,10 @@ class StubEmitter:
             ):
                 continue
 
-            m_name = self._get_method_python_name(method)
+            m_name = self.nm.get_python_name(method.name)
             if m_name:
                 method_groups.setdefault(m_name, []).append(method)
         return method_groups
-
-    def _get_method_python_name(self, method: CDecl) -> str | None:
-        m_name = method.name.split("::")[-1]
-        if self.tm.config.rename_operators and m_name.startswith("operator"):
-            m_name = self.map_operator(m_name)
-
-        if m_name.startswith("operator"):
-            return None
-
-        if not m_name.startswith("__"):
-            m_name = self._get_sanitized_name(m_name)
-        return m_name
 
     def visit_constructor_group(self, group: list[Constructor]) -> None:
         """Emit a group of constructors as @overload __init__ methods."""
@@ -268,7 +265,9 @@ class StubEmitter:
                 parms=ctor.parms,
                 is_static=False,
             )
-            sig_tuple = self._get_function_signature(dummy_func, is_method=True)
+            sig_tuple = self.sf.get_signature(
+                dummy_func, is_method=True, indent_level=self.indent_level
+            )
             unique_sigs.setdefault(sig_tuple, ctor)
 
         sorted_sigs = sorted(unique_sigs.keys())
@@ -295,7 +294,9 @@ class StubEmitter:
 
         unique_sigs = {}
         for func in group:
-            sig = self._get_function_signature(func, is_method=is_method)
+            sig = self.sf.get_signature(
+                func, is_method=is_method, indent_level=self.indent_level
+            )
             unique_sigs.setdefault(sig, func)
 
         sorted_sigs = sorted(unique_sigs.keys())
@@ -311,107 +312,11 @@ class StubEmitter:
             if not use_overload:
                 self._write_docstring(func.docstring)
 
-    def _get_function_signature(
-        self, func: CDecl, *, is_method: bool
-    ) -> tuple[str, str]:
-        param_parts = self.format_params(func.parms)
-        is_static = getattr(func, "is_static", False)
-        if is_method and not is_static:
-            param_parts.insert(0, "self")
-
-        if len(param_parts) > 1 or (
-            is_method and not is_static and len(func.parms) > 0
-        ):
-            self.indent()
-            params_str = ",\n".join(self.indent_level * "    " + p for p in param_parts)
-            self.dedent()
-            full_params = f"\n{params_str},\n" + self.indent_level * "    "
-        elif len(param_parts) == 1:
-            full_params = param_parts[0]
-        else:
-            full_params = ""
-
-        ret_type = self.tm.to_python(func.type) if func.type else "Any"
-        if ret_type == "void":
-            ret_type = "None"
-        return (full_params, ret_type)
-
     def should_skip_method(self, method: CDecl) -> bool:
         """Determine if a method should be excluded from stubs."""
         name = method.name
         if name.startswith("operator") and (
-            not self.tm.config.rename_operators or self.map_operator(name) == name
+            not self.tm.config.rename_operators or self.nm.map_operator(name) == name
         ):
             return True
         return bool(name.startswith("~"))
-
-    def _get_sanitized_name(self, name: str) -> str:
-        reserved = {
-            "False",
-            "None",
-            "True",
-            "and",
-            "as",
-            "assert",
-            "async",
-            "await",
-            "break",
-            "class",
-            "continue",
-            "def",
-            "del",
-            "elif",
-            "else",
-            "except",
-            "finally",
-            "for",
-            "from",
-            "global",
-            "if",
-            "import",
-            "in",
-            "is",
-            "lambda",
-            "nonlocal",
-            "not",
-            "or",
-            "pass",
-            "raise",
-            "return",
-            "try",
-            "while",
-            "with",
-            "yield",
-            "str",
-            "open",
-        }
-        return name + "_" if name in reserved else name
-
-    def format_params(self, parms: list[Parm]) -> list[str]:
-        """Format parameter list for Python function signature."""
-        parts = []
-        for i, p in enumerate(parms):
-            p_name = self._get_sanitized_name(p.name or f"arg{i}")
-            p_type = self.tm.to_python(p.type) if p.type else "Any"
-            parts.append(f"{p_name}: {p_type}")
-        return parts
-
-    def map_operator(self, name: str) -> str:
-        """Map C++ operator name to Python dunder method name."""
-        normalized = name.replace(" ", "")
-        mapping = {
-            "operator+": "__add__",
-            "operator-": "__sub__",
-            "operator*": "__mul__",
-            "operator/": "__truediv__",
-            "operator==": "__eq__",
-            "operator!=": "__ne__",
-            "operator<": "__lt__",
-            "operator>": "__gt__",
-            "operator<=": "__le__",
-            "operator>=": "__ge__",
-            "operator()": "__call__",
-            "operator[]": "__getitem__",
-            "operator->": "__deref__",
-        }
-        return mapping.get(normalized, name)
