@@ -8,7 +8,10 @@
     },
     "extra_code": [
         "class Handle(Generic[_T]):",
-        "    def __init__(self, p: Optional[_T] = ...) -> None: ...",
+        "    @overload",
+        "    def __init__(self) -> None: ...",
+        "    @overload",
+        "    def __init__(self, p: _T) -> None: ...",
         "    def currentLink(self) -> _T: ...",
         "    def empty(self) -> bool: ...",
         "    def __deref__(self) -> _T: ...",

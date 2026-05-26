@@ -71,7 +71,10 @@ class AstBuilder:
 
             nodes_by_id: dict[int, tuple[int | None, str, AstModel]] = {}
             for db_node in session.exec(
-                select(DbNode).where(DbNode.feature_ignore == False)  # noqa: E712
+                select(DbNode).where(
+                    DbNode.feature_ignore == False,  # noqa: E712
+                    DbNode.parent_template_id is None,
+                )
             ):
                 model = self._create_model(db_node, parms, enums, bases)
                 if model and db_node.id is not None:

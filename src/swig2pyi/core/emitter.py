@@ -53,15 +53,40 @@ class StubEmitter:
 
     def get_output(self) -> str:
         """Return the accumulated output as a string."""
-        return "\n".join(self.lines)
+        body = "\n".join(self.lines)
+        needed_imports: list[str] = []
+
+        # Scan body for utilized typing features using word boundaries
+        typing_symbols = [
+            sym
+            for sym in (
+                "Any",
+                "Optional",
+                "overload",
+                "Generic",
+                "TypeVar",
+                "Union",
+                "Callable",
+            )
+            if re.search(rf"\b{sym}\b", body)
+        ]
+        if typing_symbols:
+            needed_imports.append(f"from typing import {', '.join(typing_symbols)}")
+
+        if re.search(r"\bIntEnum\b", body):
+            needed_imports.append("from enum import IntEnum")
+        if re.search(r"\bcollections\.abc\b", body):
+            needed_imports.append("import collections.abc")
+        if re.search(r"\btyping\.", body):
+            needed_imports.append("import typing")
+
+        header = "\n".join(needed_imports)
+        if header:
+            header += "\n\n"
+        return header + body
 
     def emit(self, top: Top) -> None:
         """Generate the full stub output from the Top AST node."""
-        self.write("import typing")
-        self.write("from typing import Any, Optional, overload, Generic, TypeVar")
-        self.write("from enum import IntEnum")
-        self.write("import collections.abc")
-        self.write("")
         self.write("_T = TypeVar('_T')")
         self.write("")
         for line in self.tm.config.extra_code:
