@@ -7,7 +7,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 @pytest.fixture
-def type_manager():
+def type_manager() -> TypeManager:
     # Minimal config
     config = Config(
         module_name="Test",
@@ -20,7 +20,7 @@ def type_manager():
     return TypeManager(config)
 
 
-def test_emit_class_with_method(type_manager) -> None:
+def test_emit_class_with_method(type_manager: TypeManager) -> None:
     # Construct a mock Top
     cdecl = CDecl(
         name="myFunc", kind="function", type="int", parms=[Parm(name="a", type="int")]
@@ -47,7 +47,7 @@ def test_emit_class_with_method(type_manager) -> None:
     )
 
 
-def test_operator_rename(type_manager) -> None:
+def test_operator_rename(type_manager: TypeManager) -> None:
     # operator+ -> __add__
     cdecl = CDecl(
         name="operator+",
@@ -74,7 +74,7 @@ def test_operator_rename(type_manager) -> None:
     )
 
 
-def test_emit_class_with_variables(type_manager) -> None:
+def test_emit_class_with_variables(type_manager: TypeManager) -> None:
     # Construct a mock Top with variables
     var_x = CDecl(name="x", kind="variable", type="int")
     var_y = CDecl(name="y", kind="variable", type="int")

@@ -69,12 +69,12 @@ class AstBuilder:
                 lambda b: (b.node_id or 0, b.name),
             )
 
-            nodes_by_id = {}
+            nodes_by_id: dict[int, tuple[int | None, str, AstModel]] = {}
             for db_node in session.exec(
                 select(DbNode).where(DbNode.feature_ignore == False)  # noqa: E712
             ):
                 model = self._create_model(db_node, parms, enums, bases)
-                if model:
+                if model and db_node.id is not None:
                     nodes_by_id[db_node.id] = (
                         db_node.parent_class_id,
                         db_node.tag,
@@ -93,7 +93,9 @@ class AstBuilder:
         res: dict[int, list[Any]] = {}
         for item in session.exec(select(model_type)):
             key, val = mapper(item)
-            res.setdefault(key, []).append(val)
+            if key not in res:
+                res[key] = []
+            res[key].append(val)
         return res
 
     def _create_model(
@@ -103,45 +105,49 @@ class AstBuilder:
         enums: dict[int, list[EnumItem]],
         bases: dict[int, list[str]],
     ) -> AstModel | None:
+        if db_node.id is None:
+            return None
+        node_id = db_node.id
+        result = None
         if db_node.tag == "cdecl":
             if db_node.kind in ("function", "variable"):
-                return CDecl(
+                result = CDecl(
                     name=db_node.name,
                     type=db_node.type,
                     kind=db_node.kind,
                     decl=db_node.decl,
-                    parms=parms.get(db_node.id, []),
+                    parms=parms.get(node_id) or [],
                     is_static=db_node.is_static,
                     docstring=db_node.docstring,
                 )
         elif db_node.tag == "constructor":
-            return Constructor(
+            result = Constructor(
                 name=db_node.name,
-                parms=parms.get(db_node.id, []),
+                parms=parms.get(node_id) or [],
                 is_static=db_node.is_static,
                 docstring=db_node.docstring,
             )
         elif db_node.tag == "destructor":
-            return Destructor(
+            result = Destructor(
                 name=db_node.name,
                 is_static=db_node.is_static,
                 docstring=db_node.docstring,
             )
         elif db_node.tag == "enum":
-            return Enum(
+            result = Enum(
                 name=db_node.name,
-                items=enums.get(db_node.id, []),
+                items=enums.get(node_id) or [],
                 docstring=db_node.docstring,
             )
         elif db_node.tag == "class":
-            return Class(
+            result = Class(
                 name=db_node.name,
                 kind=db_node.kind,
                 is_template=db_node.is_template,
-                bases=bases.get(db_node.id, []),
+                bases=bases.get(node_id) or [],
                 docstring=db_node.docstring,
             )
-        return None
+        return result
 
     def _assemble_tree(
         self, module: Module, nodes_by_id: dict[int, tuple[int | None, str, AstModel]]
@@ -169,13 +175,23 @@ class AstBuilder:
         if not isinstance(p_model, Class):
             return
 
+        if tag in ("cdecl", "constructor", "destructor"):
+            self._add_callable_to_parent(p_model, tag, model)
+        elif tag in ("enum", "class"):
+            self._add_type_to_parent(p_model, tag, model)
+
+    def _add_callable_to_parent(
+        self, p_model: Class, tag: str, model: AstModel
+    ) -> None:
         if tag == "cdecl" and isinstance(model, CDecl):
             p_model.cdecls.append(model)
         elif tag == "constructor" and isinstance(model, Constructor):
             p_model.constructors.append(model)
         elif tag == "destructor" and isinstance(model, Destructor):
             p_model.destructors.append(model)
-        elif tag == "enum" and isinstance(model, Enum):
+
+    def _add_type_to_parent(self, p_model: Class, tag: str, model: AstModel) -> None:
+        if tag == "enum" and isinstance(model, Enum):
             p_model.enums.append(model)
         elif tag == "class" and isinstance(model, Class):
             p_model.classes.append(model)

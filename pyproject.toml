@@ -63,3 +63,18 @@
 [tool.uv]
     package          = true
     required-version = ">=0.8.0"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = ["examples", "tests/expected_output"]
+
+[tool.ruff.lint]
+ignore = ["COM", "D203", "D211", "D213"]
+select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004"]
+
+[tool.ruff.format]
+docstring-code-format = true

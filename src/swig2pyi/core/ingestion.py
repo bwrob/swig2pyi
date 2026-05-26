@@ -68,7 +68,7 @@ class XmlIngestor:
                 else:
                     self._handle_end(elem, stack, class_stack, template_stack, session)
 
-            session.exec(
+            session.execute(  # pyright: ignore [reportDeprecated]
                 text(
                     "DELETE FROM nodes WHERE tag = 'cdecl' AND parent_template_id IN "
                     "(SELECT parent_template_id FROM nodes WHERE tag = 'class' "
@@ -164,7 +164,7 @@ class XmlIngestor:
         self._dispatch_extraction(elem, node_id, session)
 
     def _get_attrs(self, node: ET.Element) -> dict[str, str]:
-        attrs = {}
+        attrs: dict[str, str] = {}
         attr_list = node.find("attributelist")
         if attr_list is not None:
             for a in attr_list.findall("attribute"):

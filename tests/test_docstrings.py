@@ -1,7 +1,7 @@
-from swig2pyi.core.parser import SwigXmlParser
-from swig2pyi.core.emitter import StubEmitter
-from swig2pyi.core.type_system import TypeManager
 from swig2pyi.core.config import Config
+from swig2pyi.core.emitter import StubEmitter
+from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.type_system import TypeManager
 
 
 def test_emit_docstrings() -> None:

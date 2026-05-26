@@ -7,12 +7,11 @@ import tempfile
 from pathlib import Path
 
 try:
-    import swig
-
-    _SWIG_MODULE_AVAILABLE = True
+    import swig  # pyright: ignore [reportMissingImports, reportMissingTypeStubs]
 except ImportError:
     swig = None  # pyright: ignore [reportMissingImports]
-    _SWIG_MODULE_AVAILABLE = False
+
+_SWIG_MODULE_AVAILABLE: bool = swig is not None
 
 
 class SwigRunner:

@@ -20,7 +20,7 @@ class SignatureFormatter:
 
     def format_params(self, parms: list[Parm]) -> list[str]:
         """Format parameter list for Python function signature."""
-        parts = []
+        parts: list[str] = []
         for i, p in enumerate(parms):
             p_name = self.nm.sanitize(p.name or f"arg{i}")
             p_type = self.tm.to_python(p.type) if p.type else "Any"

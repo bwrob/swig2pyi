@@ -29,6 +29,7 @@ def test_parse_nested_parmlist() -> None:
     """
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
+    assert top.module is not None
     cls = top.module.classes[0]
     method = cls.cdecls[0]
     assert method.name == "add"
@@ -66,6 +67,7 @@ def test_parse_overloads_structure() -> None:
     """
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
+    assert top.module is not None
     cls = top.module.classes[0]
     assert len(cls.cdecls) == 2
     assert cls.cdecls[0].name == "compute"
@@ -99,6 +101,7 @@ def test_parse_member_variables() -> None:
     """
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
+    assert top.module is not None
     cls = top.module.classes[0]
     assert len(cls.cdecls) == 2
     assert cls.cdecls[0].name == "x"

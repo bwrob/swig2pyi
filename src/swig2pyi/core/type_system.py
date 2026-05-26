@@ -137,7 +137,10 @@ class TypeManager:
 
     def _split_template_args(self, args: str) -> list[str]:
         """Split template arguments by comma, respecting nested brackets and parens."""
-        parts, current, depth, p_depth = [], [], 0, 0
+        parts: list[str] = []
+        current: list[str] = []
+        depth: int = 0
+        p_depth: int = 0
         for char in args:
             depth += (char == "<") - (char == ">")
             p_depth += (char == "(") - (char == ")")

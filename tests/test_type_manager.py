@@ -17,13 +17,13 @@ def type_manager(config: Config) -> TypeManager:
     return TypeManager(config)
 
 
-def test_basic_types(type_manager) -> None:
+def test_basic_types(type_manager: TypeManager) -> None:
     assert type_manager.to_python("QuantLib::Real") == "float"
     assert type_manager.to_python("std::string") == "str"
     assert type_manager.to_python("bool") == "bool"
 
 
-def test_strip_qualifiers(type_manager) -> None:
+def test_strip_qualifiers(type_manager: TypeManager) -> None:
     assert type_manager.to_python("const QuantLib::Real &") == "float"
     assert type_manager.to_python("const std::string *") == "str"
     assert (
@@ -34,17 +34,17 @@ def test_strip_qualifiers(type_manager) -> None:
     assert type_manager.to_python("int") == "int"
 
 
-def test_smart_pointers(type_manager) -> None:
+def test_smart_pointers(type_manager: TypeManager) -> None:
     assert type_manager.to_python("boost::shared_ptr<QuantLib::Date>") == "Date"
 
 
-def test_templates(type_manager) -> None:
+def test_templates(type_manager: TypeManager) -> None:
     # Templates not in type_map or containers are just passed through (or handled generically if I add that)
     # For now, they might be strings
     pass
 
 
-def test_containers(type_manager) -> None:
+def test_containers(type_manager: TypeManager) -> None:
     assert type_manager.to_python("std::vector<QuantLib::Real>") == "list[float]"
     assert type_manager.to_python("std::vector<std::string>") == "list[str]"
 
@@ -55,7 +55,7 @@ def test_containers(type_manager) -> None:
     )
 
 
-def test_complex_stripping(type_manager) -> None:
+def test_complex_stripping(type_manager: TypeManager) -> None:
     # const shared_ptr<const T> &
     # 1. Strip outer const/& -> shared_ptr<const T>
     # 2. Unwrap -> const T
@@ -66,7 +66,7 @@ def test_complex_stripping(type_manager) -> None:
     )
 
 
-def test_nested_templates(type_manager) -> None:
+def test_nested_templates(type_manager: TypeManager) -> None:
     # std::pair is not in containers map, so generic fallback
     # std::vector IS in containers map -> list
     # Rate -> float
@@ -85,11 +85,11 @@ def test_nested_templates(type_manager) -> None:
     assert type_manager.to_python(input_type) == expected
 
 
-def test_spaces_in_template(type_manager) -> None:
+def test_spaces_in_template(type_manager: TypeManager) -> None:
     assert type_manager.to_python("std::vector < float >") == "list[float]"
 
 
-def test_parens_in_template(type_manager) -> None:
+def test_parens_in_template(type_manager: TypeManager) -> None:
     assert (
         type_manager.to_python("std::vector<(QuantLib::Volatility)>") == "list[float]"
     )

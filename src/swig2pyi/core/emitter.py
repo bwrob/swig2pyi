@@ -160,7 +160,7 @@ class StubEmitter:
         self.write("")
 
     def _get_bases_str(self, cls: Class) -> str:
-        base_names = []
+        base_names: list[str] = []
         if cls.bases:
             for b in cls.bases:
                 base_names.extend(self._get_base_names(b))
@@ -169,7 +169,7 @@ class StubEmitter:
         return f"({', '.join(base_names)})" if base_names else ""
 
     def _get_base_names(self, base_type: str) -> list[str]:
-        names = []
+        names: list[str] = []
         normalized_base = self.tm.to_python(base_type)
         names.append(normalized_base)
         match = re.search(
@@ -251,12 +251,14 @@ class StubEmitter:
 
             m_name = self.nm.get_python_name(method.name)
             if m_name:
-                method_groups.setdefault(m_name, []).append(method)
+                if m_name not in method_groups:
+                    method_groups[m_name] = []
+                method_groups[m_name].append(method)
         return method_groups
 
     def visit_constructor_group(self, group: list[Constructor]) -> None:
         """Emit a group of constructors as @overload __init__ methods."""
-        unique_sigs = {}
+        unique_sigs: dict[tuple[str, str], Constructor] = {}
         for ctor in group:
             dummy_func = CDecl(
                 name="__init__",
@@ -268,7 +270,7 @@ class StubEmitter:
             sig_tuple = self.sf.get_signature(
                 dummy_func, is_method=True, indent_level=self.indent_level
             )
-            unique_sigs.setdefault(sig_tuple, ctor)
+            unique_sigs[sig_tuple] = ctor
 
         sorted_sigs = sorted(unique_sigs.keys())
         use_overload = len(sorted_sigs) > 1
@@ -284,20 +286,28 @@ class StubEmitter:
         """Emit a group of functions as @overload methods/functions."""
         # Handle member variables as properties
         if is_method and any(getattr(m, "kind", None) == "variable" for m in group):
-            for var in group:
-                ret_type = self.tm.to_python(var.type) if var.type else "Any"
-                if ret_type == "void":
-                    ret_type = "None"
-                self.write(f"{group_name}: {ret_type}")
-                self._write_docstring(var.docstring)
+            self._emit_variable_group(group_name, group)
             return
 
-        unique_sigs = {}
+        self._emit_overloaded_functions(group_name, group, is_method=is_method)
+
+    def _emit_variable_group(self, group_name: str, group: list[CDecl]) -> None:
+        for var in group:
+            ret_type = self.tm.to_python(var.type) if var.type else "Any"
+            if ret_type == "void":
+                ret_type = "None"
+            self.write(f"{group_name}: {ret_type}")
+            self._write_docstring(var.docstring)
+
+    def _emit_overloaded_functions(
+        self, group_name: str, group: list[CDecl], *, is_method: bool
+    ) -> None:
+        unique_sigs: dict[tuple[str, str], CDecl] = {}
         for func in group:
             sig = self.sf.get_signature(
                 func, is_method=is_method, indent_level=self.indent_level
             )
-            unique_sigs.setdefault(sig, func)
+            unique_sigs[sig] = func
 
         sorted_sigs = sorted(unique_sigs.keys())
         use_overload = len(sorted_sigs) > 1

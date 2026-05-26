@@ -1,7 +1,9 @@
 {
     "ignore": [
         "examples",
-        "tests/assets"
+        "tests/assets",
+        "tests/expected_output",
+        "tests/quantlib_tests"
     ],
     "pythonVersion": "3.10",
     "stubPath": "./tests/expected_output",

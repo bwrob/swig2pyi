@@ -52,7 +52,7 @@ def test_parse_and_emit_enum() -> None:
     """
     parser = SwigXmlParser()
     top = parser.parse_string(xml)
-
+    assert top.module is not None
     assert len(top.module.enums) == 1
     color = top.module.enums[0]
     assert color.name == "Color"

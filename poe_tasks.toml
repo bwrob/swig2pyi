@@ -13,7 +13,7 @@
     test             = { cmd = "pytest", help = "Run tests using pytest." }
     type-check       = { cmd = "basedpyright --project pyrightconfig.json src tests", help = "Check static typing using basedpyright." }
 
-[tasks.code-quality]
+[tool.poe.tasks.code-quality]
     help = "Run all code quality checks."
     ignore_fail = "return_non_zero"
     sequence = [
@@ -25,7 +25,7 @@
         "complexity",
     ]
 
-[tasks.fix]
+[tool.poe.tasks.fix]
     default_item_type = "cmd"
     help = "Code quality fixes using ruff."
     ignore_fail = "return_non_zero"
@@ -34,7 +34,7 @@
         "ruff format",
     ]
 
-[tasks.publish]
+[tool.poe.tasks.publish]
     sequence = [
         "code-quality",
         { cmd = "rm -rf dist" },
@@ -43,6 +43,6 @@
         "publish-docs",
     ]
 
-[tasks.setup]
+[tool.poe.tasks.setup]
     help     = "Set up the development environment."
     sequence = ["install-hooks"]

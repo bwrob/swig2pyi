@@ -16,7 +16,7 @@ def test_handle_inheritance() -> None:
     tm = TypeManager(cfg)
     emitter = StubEmitter(tm)
 
-    classes = []
+    classes: list[Class] = []
 
     # Case 1: Handle<MyClass>
     classes.append(

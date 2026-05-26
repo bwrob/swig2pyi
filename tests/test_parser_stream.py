@@ -36,7 +36,7 @@ def test_stream_to_db() -> None:
 
         with Session(engine) as session:
             # Check TopInfo
-            top = session.exec(select(DbTopInfo := TopInfo)).first()
+            top = session.exec(select(TopInfo)).first()
             assert top is not None
             assert top.module_name == "test_module"
 
