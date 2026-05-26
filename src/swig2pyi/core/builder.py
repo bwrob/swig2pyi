@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from .ast_models import (
     AstModel,
@@ -73,7 +73,7 @@ class AstBuilder:
             for db_node in session.exec(
                 select(DbNode).where(
                     DbNode.feature_ignore == False,  # noqa: E712
-                    DbNode.parent_template_id is None,
+                    col(DbNode.parent_template_id).is_(None),
                 )
             ):
                 model = self._create_model(db_node, parms, enums, bases)

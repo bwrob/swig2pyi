@@ -5,7 +5,7 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
-from sqlalchemy import text
+from sqlalchemy import StaticPool, text
 from sqlmodel import Session, SQLModel, create_engine
 
 from .schema import (
@@ -46,10 +46,15 @@ class XmlIngestor:
             url = f"sqlite:///{db_path}"
             if db_path.exists():
                 db_path.unlink()
+            engine = create_engine(url)
         else:
             url = "sqlite://"
+            engine = create_engine(
+                url,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool,
+            )
 
-        engine = create_engine(url)
         SQLModel.metadata.create_all(engine)
         self._stream_to_db(source, engine)
         return engine
