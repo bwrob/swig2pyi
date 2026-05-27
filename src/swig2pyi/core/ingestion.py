@@ -236,10 +236,11 @@ class XmlIngestor:
         for child in elem:
             if child.tag == "enumitem":
                 attrs = self._get_attrs(child)
+                name = attrs.get("sym_name") or attrs.get("name", "")
                 session.add(
                     DbEnumItem(
                         node_id=node_id,
-                        name=attrs.get("name", ""),
+                        name=name,
                         value=attrs.get("enumvalue"),
                     )
                 )

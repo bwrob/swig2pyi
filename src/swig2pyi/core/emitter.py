@@ -273,6 +273,18 @@ class StubEmitter:
         self.dedent()
         self.write("")
 
+    def _emit_class_enums(self, cls: Class) -> bool:
+        """Emit nested enums and flat class attributes."""
+        if not cls.enums:
+            return False
+        for enum in cls.enums:
+            self.visit_enum(enum)
+            enum_name = enum.name.split("::")[-1]
+            for item in enum.items:
+                item_name = self.nm.sanitize(item.name)
+                self.write(f"{item_name}: {enum_name}")
+        return True
+
     def visit_class(self, cls: Class) -> None:
         """Emit a Python class from a C++ class/struct."""
         name = cls.name
@@ -285,11 +297,7 @@ class StubEmitter:
         self.indent()
         self._write_docstring(cls.docstring)
 
-        has_members = False
-        if cls.enums:
-            for enum in cls.enums:
-                self.visit_enum(enum)
-            has_members = True
+        has_members = self._emit_class_enums(cls)
 
         if cls.constructors:
             self.visit_constructor_group(cls.constructors)
