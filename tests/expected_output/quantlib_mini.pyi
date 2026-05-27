@@ -171,7 +171,7 @@ def pseudoSqrt(
 @overload
 def CholeskyDecomposition(
     m: Matrix,
-    flexible: bool,
+    flexible: bool = ...,
 ) -> Matrix: ...
 @overload
 def CholeskyDecomposition(m: Matrix) -> Matrix: ...
@@ -302,7 +302,7 @@ class Date:
         hours: int,
         minutes: int,
         seconds: int,
-        millisec: int,
+        millisec: int = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -313,8 +313,8 @@ class Date:
         hours: int,
         minutes: int,
         seconds: int,
-        millisec: int,
-        microsec: int,
+        millisec: int = ...,
+        microsec: int = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -488,7 +488,7 @@ class IMM:
     @overload
     def isIMMdate(
         d: Date,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> bool: ...
     @staticmethod
     @overload
@@ -497,7 +497,7 @@ class IMM:
     @overload
     def isIMMcode(
         code: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> bool: ...
     @staticmethod
     @overload
@@ -508,7 +508,7 @@ class IMM:
     @overload
     def date(
         immCode: str,
-        referenceDate: Date,
+        referenceDate: Date = ...,
     ) -> Date: ...
     @staticmethod
     @overload
@@ -519,25 +519,25 @@ class IMM:
     @staticmethod
     @overload
     def nextDate(
-        d: Date,
-        mainCycle: bool,
+        d: Date = ...,
+        mainCycle: bool = ...,
     ) -> Date: ...
     @staticmethod
     @overload
     def nextDate(
         immCode: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> Date: ...
     @staticmethod
     @overload
     def nextDate(
         immCode: str,
-        mainCycle: bool,
-        referenceDate: Date,
+        mainCycle: bool = ...,
+        referenceDate: Date = ...,
     ) -> Date: ...
     @staticmethod
     @overload
-    def nextDate(d: Date) -> Date: ...
+    def nextDate(d: Date = ...) -> Date: ...
     @staticmethod
     @overload
     def nextDate(immCode: str) -> Date: ...
@@ -547,25 +547,25 @@ class IMM:
     @staticmethod
     @overload
     def nextCode(
-        d: Date,
-        mainCycle: bool,
+        d: Date = ...,
+        mainCycle: bool = ...,
     ) -> str: ...
     @staticmethod
     @overload
     def nextCode(
         immCode: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> str: ...
     @staticmethod
     @overload
     def nextCode(
         immCode: str,
-        mainCycle: bool,
-        referenceDate: Date,
+        mainCycle: bool = ...,
+        referenceDate: Date = ...,
     ) -> str: ...
     @staticmethod
     @overload
-    def nextCode(d: Date) -> str: ...
+    def nextCode(d: Date = ...) -> str: ...
     @staticmethod
     @overload
     def nextCode(immCode: str) -> str: ...
@@ -602,7 +602,7 @@ class ASX:
     @overload
     def isASXdate(
         d: Date,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> bool: ...
     @staticmethod
     @overload
@@ -611,7 +611,7 @@ class ASX:
     @overload
     def isASXcode(
         code: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> bool: ...
     @staticmethod
     @overload
@@ -622,7 +622,7 @@ class ASX:
     @overload
     def date(
         asxCode: str,
-        referenceDate: Date,
+        referenceDate: Date = ...,
     ) -> Date: ...
     @staticmethod
     @overload
@@ -634,27 +634,27 @@ class ASX:
     @overload
     def nextDate(
         asxCode: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> Date: ...
     @staticmethod
     @overload
     def nextDate(
         asxCode: str,
-        mainCycle: bool,
-        referenceDate: Date,
+        mainCycle: bool = ...,
+        referenceDate: Date = ...,
     ) -> Date: ...
     @staticmethod
     @overload
     def nextDate(
-        d: Date,
-        mainCycle: bool,
+        d: Date = ...,
+        mainCycle: bool = ...,
     ) -> Date: ...
     @staticmethod
     @overload
     def nextDate(asxCode: str) -> Date: ...
     @staticmethod
     @overload
-    def nextDate(d: Date) -> Date: ...
+    def nextDate(d: Date = ...) -> Date: ...
     @staticmethod
     @overload
     def nextCode() -> str: ...
@@ -662,27 +662,27 @@ class ASX:
     @overload
     def nextCode(
         asxCode: str,
-        mainCycle: bool,
+        mainCycle: bool = ...,
     ) -> str: ...
     @staticmethod
     @overload
     def nextCode(
         asxCode: str,
-        mainCycle: bool,
-        referenceDate: Date,
+        mainCycle: bool = ...,
+        referenceDate: Date = ...,
     ) -> str: ...
     @staticmethod
     @overload
     def nextCode(
-        d: Date,
-        mainCycle: bool,
+        d: Date = ...,
+        mainCycle: bool = ...,
     ) -> str: ...
     @staticmethod
     @overload
     def nextCode(asxCode: str) -> str: ...
     @staticmethod
     @overload
-    def nextCode(d: Date) -> str: ...
+    def nextCode(d: Date = ...) -> str: ...
 
 class Calendar:
     def __init__(self) -> None: ...
@@ -732,7 +732,7 @@ class Calendar:
     def adjust(
         self,
         d: Date,
-        convention: BusinessDayConvention,
+        convention: BusinessDayConvention = ...,
     ) -> Date: ...
     @overload
     def advance(
@@ -747,7 +747,7 @@ class Calendar:
         d: Date,
         n: int,
         unit: TimeUnit,
-        convention: BusinessDayConvention,
+        convention: BusinessDayConvention = ...,
     ) -> Date: ...
     @overload
     def advance(
@@ -755,8 +755,8 @@ class Calendar:
         d: Date,
         n: int,
         unit: TimeUnit,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
+        convention: BusinessDayConvention = ...,
+        endOfMonth: bool = ...,
     ) -> Date: ...
     @overload
     def advance(
@@ -769,15 +769,15 @@ class Calendar:
         self,
         d: Date,
         period: Period,
-        convention: BusinessDayConvention,
+        convention: BusinessDayConvention = ...,
     ) -> Date: ...
     @overload
     def advance(
         self,
         d: Date,
         period: Period,
-        convention: BusinessDayConvention,
-        endOfMonth: bool,
+        convention: BusinessDayConvention = ...,
+        endOfMonth: bool = ...,
     ) -> Date: ...
     @overload
     def businessDaysBetween(
@@ -790,15 +790,15 @@ class Calendar:
         self,
         from_: Date,
         to: Date,
-        includeFirst: bool,
+        includeFirst: bool = ...,
     ) -> int: ...
     @overload
     def businessDaysBetween(
         self,
         from_: Date,
         to: Date,
-        includeFirst: bool,
-        includeLast: bool,
+        includeFirst: bool = ...,
+        includeLast: bool = ...,
     ) -> int: ...
     @overload
     def holidayList(
@@ -811,7 +811,7 @@ class Calendar:
         self,
         from_: Date,
         to: Date,
-        includeWeekEnds: bool,
+        includeWeekEnds: bool = ...,
     ) -> list[Date]: ...
     def businessDayList(
         self,
@@ -842,7 +842,7 @@ class Argentina(Calendar):
     @overload
     def __init__(
         self,
-        m: Argentina.Market,
+        m: Argentina.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -857,7 +857,7 @@ class Australia(Calendar):
     @overload
     def __init__(
         self,
-        market: Australia.Market,
+        market: Australia.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -872,7 +872,7 @@ class Austria(Calendar):
     @overload
     def __init__(
         self,
-        m: Austria.Market,
+        m: Austria.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -890,7 +890,7 @@ class Brazil(Calendar):
     @overload
     def __init__(
         self,
-        m: Brazil.Market,
+        m: Brazil.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -905,7 +905,7 @@ class Canada(Calendar):
     @overload
     def __init__(
         self,
-        m: Canada.Market,
+        m: Canada.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -918,7 +918,7 @@ class Chile(Calendar):
     @overload
     def __init__(
         self,
-        m: Chile.Market,
+        m: Chile.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -933,7 +933,7 @@ class China(Calendar):
     @overload
     def __init__(
         self,
-        m: China.Market,
+        m: China.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -946,7 +946,7 @@ class CzechRepublic(Calendar):
     @overload
     def __init__(
         self,
-        m: CzechRepublic.Market,
+        m: CzechRepublic.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -967,7 +967,7 @@ class France(Calendar):
     @overload
     def __init__(
         self,
-        m: France.Market,
+        m: France.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -986,7 +986,7 @@ class Germany(Calendar):
     @overload
     def __init__(
         self,
-        m: Germany.Market,
+        m: Germany.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -999,7 +999,7 @@ class HongKong(Calendar):
     @overload
     def __init__(
         self,
-        m: HongKong.Market,
+        m: HongKong.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1015,7 +1015,7 @@ class Iceland(Calendar):
     @overload
     def __init__(
         self,
-        m: Iceland.Market,
+        m: Iceland.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1028,7 +1028,7 @@ class India(Calendar):
     @overload
     def __init__(
         self,
-        m: India.Market,
+        m: India.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1043,7 +1043,7 @@ class Indonesia(Calendar):
     @overload
     def __init__(
         self,
-        m: Indonesia.Market,
+        m: Indonesia.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1060,7 +1060,7 @@ class Israel(Calendar):
     @overload
     def __init__(
         self,
-        m: Israel.Market,
+        m: Israel.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1075,7 +1075,7 @@ class Italy(Calendar):
     @overload
     def __init__(
         self,
-        m: Italy.Market,
+        m: Italy.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1091,7 +1091,7 @@ class Mexico(Calendar):
     @overload
     def __init__(
         self,
-        m: Mexico.Market,
+        m: Mexico.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1106,7 +1106,7 @@ class NewZealand(Calendar):
     @overload
     def __init__(
         self,
-        m: NewZealand.Market,
+        m: NewZealand.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1124,7 +1124,7 @@ class Poland(Calendar):
     @overload
     def __init__(
         self,
-        m: Poland.Market,
+        m: Poland.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1139,7 +1139,7 @@ class Romania(Calendar):
     @overload
     def __init__(
         self,
-        m: Romania.Market,
+        m: Romania.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1154,7 +1154,7 @@ class Russia(Calendar):
     @overload
     def __init__(
         self,
-        m: Russia.Market,
+        m: Russia.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1167,7 +1167,7 @@ class SaudiArabia(Calendar):
     @overload
     def __init__(
         self,
-        m: SaudiArabia.Market,
+        m: SaudiArabia.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1180,7 +1180,7 @@ class Singapore(Calendar):
     @overload
     def __init__(
         self,
-        m: Singapore.Market,
+        m: Singapore.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1193,7 +1193,7 @@ class Slovakia(Calendar):
     @overload
     def __init__(
         self,
-        m: Slovakia.Market,
+        m: Slovakia.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1211,7 +1211,7 @@ class SouthKorea(Calendar):
     @overload
     def __init__(
         self,
-        m: SouthKorea.Market,
+        m: SouthKorea.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1230,7 +1230,7 @@ class Taiwan(Calendar):
     @overload
     def __init__(
         self,
-        m: Taiwan.Market,
+        m: Taiwan.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1252,7 +1252,7 @@ class Ukraine(Calendar):
     @overload
     def __init__(
         self,
-        m: Ukraine.Market,
+        m: Ukraine.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1269,7 +1269,7 @@ class UnitedKingdom(Calendar):
     @overload
     def __init__(
         self,
-        m: UnitedKingdom.Market,
+        m: UnitedKingdom.Market = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1331,7 +1331,7 @@ class JointCalendar(Calendar):
         arg1: Calendar,
         arg2: Calendar,
         arg3: Calendar,
-        rule: JointCalendarRule,
+        rule: JointCalendarRule = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -1339,14 +1339,14 @@ class JointCalendar(Calendar):
         arg0: Calendar,
         arg1: Calendar,
         arg2: Calendar,
-        rule: JointCalendarRule,
+        rule: JointCalendarRule = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: Calendar,
         arg1: Calendar,
-        rule: JointCalendarRule,
+        rule: JointCalendarRule = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -1357,7 +1357,7 @@ class JointCalendar(Calendar):
     def __init__(
         self,
         arg0: list[Calendar],
-        arg1: JointCalendarRule,
+        arg1: JointCalendarRule = ...,
     ) -> None: ...
 
 class BespokeCalendar(Calendar):
@@ -1388,15 +1388,15 @@ class DayCounter:
         self,
         d1: Date,
         d2: Date,
-        startRef: Date,
+        startRef: Date = ...,
     ) -> float: ...
     @overload
     def yearFraction(
         self,
         d1: Date,
         d2: Date,
-        startRef: Date,
-        endRef: Date,
+        startRef: Date = ...,
+        endRef: Date = ...,
     ) -> float: ...
     def name(self) -> str: ...
     def empty(self) -> bool: ...
@@ -1415,7 +1415,7 @@ class Actual360(DayCounter):
     @overload
     def __init__(
         self,
-        includeLastDay: bool,
+        includeLastDay: bool = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1424,7 +1424,7 @@ class Actual366(DayCounter):
     @overload
     def __init__(
         self,
-        includeLastDay: bool,
+        includeLastDay: bool = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1433,7 +1433,7 @@ class Actual36525(DayCounter):
     @overload
     def __init__(
         self,
-        includeLastDay: bool,
+        includeLastDay: bool = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1453,7 +1453,7 @@ class Actual365Fixed(DayCounter):
     @overload
     def __init__(
         self,
-        c: Actual365Fixed.Convention,
+        c: Actual365Fixed.Convention = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1488,7 +1488,7 @@ class Thirty360(DayCounter):
     def __init__(
         self,
         c: Thirty360.Convention,
-        terminationDate: Date,
+        terminationDate: Date = ...,
     ) -> None: ...
 
 class Thirty365(DayCounter):
@@ -1520,7 +1520,7 @@ class ActualActual(DayCounter):
     def __init__(
         self,
         c: ActualActual.Convention,
-        schedule: Schedule,
+        schedule: Schedule = ...,
     ) -> None: ...
 
 class OneDayCounter(DayCounter):
@@ -1533,7 +1533,7 @@ class Business252(DayCounter):
     @overload
     def __init__(
         self,
-        c: Calendar,
+        c: Calendar = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1570,7 +1570,7 @@ class Array:
     def __init__(
         self,
         n: int,
-        fill: float,
+        fill: float = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1689,7 +1689,7 @@ class Matrix:
         self,
         rows: int,
         columns: int,
-        fill: float,
+        fill: float = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1813,7 +1813,7 @@ class BiCGstab:
     def solve(
         self,
         b: Array,
-        x0: Array,
+        x0: Array = ...,
     ) -> Array: ...
 
 class GMRES:
@@ -1841,7 +1841,7 @@ class GMRES:
     def solve(
         self,
         b: Array,
-        x0: Array,
+        x0: Array = ...,
     ) -> Array: ...
     @overload
     def solveWithRestart(
@@ -1854,27 +1854,27 @@ class GMRES:
         self,
         restart: int,
         b: Array,
-        x0: Array,
+        x0: Array = ...,
     ) -> Array: ...
 
 class RungeKutta:
     @overload
     def __init__(
         self,
-        eps: float,
+        eps: float = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        eps: float,
-        h1: float,
+        eps: float = ...,
+        h1: float = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        eps: float,
-        h1: float,
-        hmin: float,
+        eps: float = ...,
+        h1: float = ...,
+        hmin: float = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -2166,7 +2166,7 @@ class GaussKronrodAdaptive:
     def __init__(
         self,
         tolerance: float,
-        maxFunctionEvaluations: int,
+        maxFunctionEvaluations: int = ...,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
     def __call__(
@@ -2203,15 +2203,15 @@ class GaussLobattoIntegral:
         self,
         maxIterations: int,
         absAccuracy: float,
-        relAccuracy: float,
+        relAccuracy: float = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         maxIterations: int,
         absAccuracy: float,
-        relAccuracy: float,
-        useConvergenceEstimate: bool,
+        relAccuracy: float = ...,
+        useConvergenceEstimate: bool = ...,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
     def __call__(
@@ -2241,7 +2241,7 @@ class GaussLaguerreIntegration(GaussianQuadrature):
     def __init__(
         self,
         n: int,
-        s: float,
+        s: float = ...,
     ) -> None: ...
 
 class GaussHermiteIntegration(GaussianQuadrature):
@@ -2254,7 +2254,7 @@ class GaussHermiteIntegration(GaussianQuadrature):
     def __init__(
         self,
         n: int,
-        mu: float,
+        mu: float = ...,
     ) -> None: ...
 
 class GaussJacobiIntegration(GaussianQuadrature):
@@ -2300,20 +2300,20 @@ class TanhSinhIntegral:
     @overload
     def __init__(
         self,
-        relTolerance: float,
+        relTolerance: float = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        relTolerance: float,
-        maxRefinements: int,
+        relTolerance: float = ...,
+        maxRefinements: int = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        relTolerance: float,
-        maxRefinements: int,
-        minComplement: float,
+        relTolerance: float = ...,
+        maxRefinements: int = ...,
+        minComplement: float = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -2329,13 +2329,13 @@ class ExpSinhIntegral:
     @overload
     def __init__(
         self,
-        relTolerance: float,
+        relTolerance: float = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
-        relTolerance: float,
-        maxRefinements: int,
+        relTolerance: float = ...,
+        maxRefinements: int = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -2377,15 +2377,15 @@ class InterestRate:
         self,
         d1: Date,
         d2: Date,
-        refStart: Date,
+        refStart: Date = ...,
     ) -> float: ...
     @overload
     def discountFactor(
         self,
         d1: Date,
         d2: Date,
-        refStart: Date,
-        refEnd: Date,
+        refStart: Date = ...,
+        refEnd: Date = ...,
     ) -> float: ...
     @overload
     def discountFactor(
@@ -2403,15 +2403,15 @@ class InterestRate:
         self,
         d1: Date,
         d2: Date,
-        refStart: Date,
+        refStart: Date = ...,
     ) -> float: ...
     @overload
     def compoundFactor(
         self,
         d1: Date,
         d2: Date,
-        refStart: Date,
-        refEnd: Date,
+        refStart: Date = ...,
+        refEnd: Date = ...,
     ) -> float: ...
     @overload
     def compoundFactor(
@@ -2437,7 +2437,7 @@ class InterestRate:
         freq: Frequency,
         d1: Date,
         d2: Date,
-        refStart: Date,
+        refStart: Date = ...,
     ) -> InterestRate: ...
     @staticmethod
     @overload
@@ -2448,8 +2448,8 @@ class InterestRate:
         freq: Frequency,
         d1: Date,
         d2: Date,
-        refStart: Date,
-        refEnd: Date,
+        refStart: Date = ...,
+        refEnd: Date = ...,
     ) -> InterestRate: ...
     @staticmethod
     @overload
@@ -2484,7 +2484,7 @@ class InterestRate:
         freq: Frequency,
         d1: Date,
         d2: Date,
-        refStart: Date,
+        refStart: Date = ...,
     ) -> InterestRate: ...
     @overload
     def equivalentRate(
@@ -2494,8 +2494,8 @@ class InterestRate:
         freq: Frequency,
         d1: Date,
         d2: Date,
-        refStart: Date,
-        refEnd: Date,
+        refStart: Date = ...,
+        refEnd: Date = ...,
     ) -> InterestRate: ...
     def __str__(self) -> str: ...
 
@@ -2549,64 +2549,64 @@ class Schedule:
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
+        calendar: Calendar = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: Optional[BusinessDayConvention],
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
+        terminationDateConvention: Optional[BusinessDayConvention] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: Optional[BusinessDayConvention],
-        tenor: Optional[Period],
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
+        terminationDateConvention: Optional[BusinessDayConvention] = ...,
+        tenor: Optional[Period] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: Optional[BusinessDayConvention],
-        tenor: Optional[Period],
-        rule: Optional[DateGeneration.Rule],
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
+        terminationDateConvention: Optional[BusinessDayConvention] = ...,
+        tenor: Optional[Period] = ...,
+        rule: Optional[DateGeneration.Rule] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: Optional[BusinessDayConvention],
-        tenor: Optional[Period],
-        rule: Optional[DateGeneration.Rule],
-        endOfMonth: Optional[bool],
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
+        terminationDateConvention: Optional[BusinessDayConvention] = ...,
+        tenor: Optional[Period] = ...,
+        rule: Optional[DateGeneration.Rule] = ...,
+        endOfMonth: Optional[bool] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: list[Date],
-        calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: Optional[BusinessDayConvention],
-        tenor: Optional[Period],
-        rule: Optional[DateGeneration.Rule],
-        endOfMonth: Optional[bool],
-        isRegular: list[bool],
+        calendar: Calendar = ...,
+        convention: BusinessDayConvention = ...,
+        terminationDateConvention: Optional[BusinessDayConvention] = ...,
+        tenor: Optional[Period] = ...,
+        rule: Optional[DateGeneration.Rule] = ...,
+        endOfMonth: Optional[bool] = ...,
+        isRegular: list[bool] = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -2631,7 +2631,7 @@ class Schedule:
         terminationDateConvention: BusinessDayConvention,
         rule: DateGeneration.Rule,
         endOfMonth: bool,
-        firstDate: Date,
+        firstDate: Date = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -2644,8 +2644,8 @@ class Schedule:
         terminationDateConvention: BusinessDayConvention,
         rule: DateGeneration.Rule,
         endOfMonth: bool,
-        firstDate: Date,
-        nextToLastDate: Date,
+        firstDate: Date = ...,
+        nextToLastDate: Date = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -2731,7 +2731,7 @@ class _MakeSchedule:
     @overload
     def endOfMonth(
         self,
-        flag: bool,
+        flag: bool = ...,
     ) -> MakeSchedule: ...
     @overload
     def endOfMonth(self) -> MakeSchedule: ...

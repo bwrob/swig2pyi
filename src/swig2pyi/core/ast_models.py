@@ -12,6 +12,7 @@ class Parm(BaseModel):
 
     name: str | None = None
     type: str | None = None
+    value: str | None = None
 
 
 class CDecl(BaseModel):

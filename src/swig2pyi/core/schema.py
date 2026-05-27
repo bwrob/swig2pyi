@@ -39,6 +39,7 @@ class Parm(SQLModel, table=True):
     node_id: int | None = Field(default=None, foreign_key="nodes.id")
     name: str | None = None
     type: str | None = None
+    value: str | None = None
     idx: int
 
     node: Optional["Node"] = Relationship(back_populates="parms")

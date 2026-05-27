@@ -24,7 +24,10 @@ class SignatureFormatter:
         for i, p in enumerate(parms):
             p_name = self.nm.sanitize(p.name or f"arg{i}")
             p_type = self.tm.to_python(p.type) if p.type else "Any"
-            parts.append(f"{p_name}: {p_type}")
+            if p.value is not None:
+                parts.append(f"{p_name}: {p_type} = ...")
+            else:
+                parts.append(f"{p_name}: {p_type}")
         return parts
 
     def get_signature(

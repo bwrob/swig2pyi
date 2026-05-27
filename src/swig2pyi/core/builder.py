@@ -59,7 +59,10 @@ class AstBuilder:
             parms = self._load_dict(
                 session,
                 DbParm,
-                lambda p: (p.node_id or 0, Parm(name=p.name, type=p.type)),
+                lambda p: (
+                    p.node_id or 0,
+                    Parm(name=p.name, type=p.type, value=p.value),
+                ),
             )
             enums = self._load_dict(
                 session,

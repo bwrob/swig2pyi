@@ -217,6 +217,7 @@ class XmlIngestor:
                             node_id=node_id,
                             name=attrs.get("name"),
                             type=attrs.get("type"),
+                            value=attrs.get("value"),
                             idx=idx_counter[0],
                         )
                     )
