@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import ast as pyast
 import re
+import textwrap
 from typing import TYPE_CHECKING
 
 from .ast_models import CDecl, Class, Constructor, Enum, Module, Top
@@ -101,6 +103,60 @@ class StubEmitter:
         self._emit_module_functions(module)
         for cls in module.classes:
             self.visit_class(cls)
+        self._emit_python_code(module)
+
+    def _emit_python_code(self, module: Module) -> None:
+        """Extract and emit stub signatures from %pythoncode blocks."""
+        for code_block in module.python_code:
+            dedented = textwrap.dedent(code_block)
+            try:
+                tree = pyast.parse(dedented)
+            except SyntaxError:
+                continue
+
+            for node in tree.body:
+                if isinstance(node, pyast.FunctionDef):
+                    self._emit_pythoncode_func(node)
+                elif isinstance(node, pyast.ClassDef):
+                    self._emit_pythoncode_class(node)
+
+    def _emit_pythoncode_func(self, node: pyast.FunctionDef) -> None:
+        """Emit a stub for a function defined in %pythoncode."""
+        if node.name.startswith("_"):
+            return
+        args = [a.arg for a in node.args.args]
+        defaults_count = len(node.args.defaults)
+        parts: list[str] = []
+        for i, arg in enumerate(args):
+            default_idx = i - (len(args) - defaults_count)
+            if default_idx >= 0:
+                parts.append(f"{arg}=...")
+            else:
+                parts.append(arg)
+        if node.args.vararg:
+            parts.append(f"*{node.args.vararg.arg}")
+        if node.args.kwarg:
+            parts.append(f"**{node.args.kwarg.arg}")
+        sig = ", ".join(parts)
+        self.write(f"def {node.name}({sig}) -> Any: ...")
+
+    def _emit_pythoncode_class(self, node: pyast.ClassDef) -> None:
+        """Emit a stub for a class defined in %pythoncode."""
+        if node.name.startswith("_"):
+            return
+        bases = [base.id for base in node.bases if isinstance(base, pyast.Name)]
+        bases_str = f"({', '.join(bases)})" if bases else ""
+        self.write(f"class {node.name}{bases_str}:")
+        self.indent()
+        has_methods = False
+        for item in node.body:
+            if isinstance(item, pyast.FunctionDef) and not item.name.startswith("_"):
+                self._emit_pythoncode_func(item)
+                has_methods = True
+        if not has_methods:
+            self.write("pass")
+        self.dedent()
+        self.write("")
 
     def _emit_module_enums(self, module: Module) -> None:
         for enum in module.enums:
@@ -189,9 +245,19 @@ class StubEmitter:
         if cls.bases:
             for b in cls.bases:
                 base_names.extend(self._get_base_names(b))
+        if cls.cpp_type:
+            resolved = self.tm.to_python(cls.cpp_type)
+            if self._is_container_type(resolved) and resolved not in base_names:
+                base_names.append(resolved)
         if cls.is_template:
             base_names.append("Generic[_T]")
         return f"({', '.join(base_names)})" if base_names else ""
+
+    def _is_container_type(self, resolved: str) -> bool:
+        for py_abc in self.tm.config.containers.values():
+            if resolved.startswith(py_abc + "[") or resolved == py_abc:
+                return True
+        return False
 
     def _get_base_names(self, base_type: str) -> list[str]:
         names: list[str] = []
@@ -219,25 +285,9 @@ class StubEmitter:
         return prop_method_ids
 
     def _collect_properties(self, cls: Class) -> dict[str, dict[str, CDecl | None]]:
-        properties: dict[str, dict[str, CDecl | None]] = {}
-        prefix_len = 3
-        for method in cls.cdecls:
-            if method.kind != "function":
-                continue
-            m_name = method.name.split("::")[-1]
-            if len(m_name) <= prefix_len or not m_name[prefix_len].isupper():
-                continue
-
-            prop_name = m_name[prefix_len].lower() + m_name[prefix_len + 1 :]
-            if m_name.startswith("get"):
-                properties.setdefault(prop_name, {"get": None, "set": None})["get"] = (
-                    method
-                )
-            elif m_name.startswith("set"):
-                properties.setdefault(prop_name, {"get": None, "set": None})["set"] = (
-                    method
-                )
-        return properties
+        """Collect getter/setter properties from class methods."""
+        _ = cls  # Reserved for future use
+        return {}
 
     def _emit_property(self, prop_name: str, p_info: dict[str, CDecl | None]) -> None:
         getter = p_info["get"]

@@ -45,8 +45,6 @@ class NameManager:
             "while",
             "with",
             "yield",
-            "str",
-            "open",
         }
 
     def sanitize(self, name: str) -> str:

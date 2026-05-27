@@ -21,6 +21,9 @@ from .schema import (
     Parm as DbParm,
 )
 from .schema import (
+    PythonCode as DbPythonCode,
+)
+from .schema import (
     TopInfo as DbTopInfo,
 )
 
@@ -130,6 +133,18 @@ class XmlIngestor:
             if stack:
                 stack[-1][0].remove(elem)
 
+    def _process_top(self, elem: ET.Element, session: Session) -> None:
+        session.add(
+            DbTopInfo(module_name=self._get_attrs(elem).get("module", "Unknown"))
+        )
+
+    def _process_insert(self, elem: ET.Element, session: Session) -> None:
+        attrs = self._get_attrs(elem)
+        if attrs.get("section") == "python" and "code" in attrs:
+            code = attrs["code"].strip()
+            if code:
+                session.add(DbPythonCode(code=code))
+
     def _process_node(
         self,
         elem: ET.Element,
@@ -139,9 +154,10 @@ class XmlIngestor:
         session: Session,
     ) -> None:
         if elem.tag == "top":
-            session.add(
-                DbTopInfo(module_name=self._get_attrs(elem).get("module", "Unknown"))
-            )
+            self._process_top(elem, session)
+
+        if elem.tag == "insert":
+            self._process_insert(elem, session)
 
         if elem.tag not in ("class", "cdecl", "enum", "constructor", "destructor"):
             return
@@ -158,7 +174,9 @@ class XmlIngestor:
             tag=elem.tag,
             name=name,
             kind=attrs.get("kind"),
-            type=attrs.get("type"),
+            type=attrs.get("classtype") or attrs.get("name")
+            if elem.tag == "class"
+            else attrs.get("type"),
             decl=attrs.get("decl"),
             feature_ignore=attrs.get("feature_ignore") == "1",
             is_template=parent_template_id is not None,

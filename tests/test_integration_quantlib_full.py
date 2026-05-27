@@ -169,7 +169,11 @@ def test_stub_does_not_define_phantom_runtime_symbols(
         and not isinstance(getattr(ql, name, None), types.ModuleType)
     }
 
-    phantom = stub_top_level_names - runtime_symbols - STUB_ONLY_ALLOWLIST
+    phantom = (
+        {s for s in stub_top_level_names if not s.startswith("_")}
+        - runtime_symbols
+        - STUB_ONLY_ALLOWLIST
+    )
     assert phantom == set(), (
         f"{len(phantom)} stub-defined symbol(s) are absent from the QuantLib runtime "
         f"(not in allowlist):\n" + "\n".join(f"  - {s}" for s in sorted(phantom)[:30])

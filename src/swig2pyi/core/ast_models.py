@@ -71,6 +71,7 @@ class Class(BaseModel):
     classes: list[Class] = []
     is_template: bool = False
     docstring: str | None = None
+    cpp_type: str | None = None
 
 
 class Module(BaseModel):
@@ -80,6 +81,7 @@ class Module(BaseModel):
     enums: list[Enum] = []
     classes: list[Class] = []
     cdecls: list[CDecl] = []
+    python_code: list[str] = []
 
 
 class Top(BaseModel):

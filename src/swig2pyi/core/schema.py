@@ -75,3 +75,12 @@ class TopInfo(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     module_name: str
+
+
+class PythonCode(SQLModel, table=True):
+    """Database model for %pythoncode inserts."""
+
+    __tablename__: Any = "python_code"
+
+    id: int | None = Field(default=None, primary_key=True)
+    code: str

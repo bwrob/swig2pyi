@@ -52,6 +52,9 @@ class TypeManager:
         if template := self._resolve_general_template(cpp_type):
             return template
 
+        if resolved_scope := self._resolve_scopes(cpp_type):
+            return resolved_scope
+
         py_type = cpp_type.replace("::", ".")
         prefix = self.config.module_name + "." if self.config.module_name else ""
         if prefix and py_type.startswith(prefix):
@@ -107,11 +110,44 @@ class TypeManager:
                 )
             ):
                 inner = cpp_type[len(prefix) : -1].strip()
+                inner = self._clean_template_inner(inner)
                 args = [
                     self.normalize_type(a) for a in self._split_template_args(inner)
                 ]
                 return f"{py_abc}[{', '.join(args)}]"
         return None
+
+    def _clean_template_inner(self, inner: str) -> str:
+        inner = inner.strip()
+        while inner.startswith("(") and inner.endswith(")"):
+            matching_idx = self._find_matching_paren_index(inner)
+            if matching_idx == len(inner) - 1:
+                inner = inner[1:-1].strip()
+            else:
+                break
+        return inner
+
+    def _resolve_scopes(self, cpp_type: str) -> str | None:
+        scopes = self._split_scopes(cpp_type)
+        if len(scopes) > 1:
+            if self.config.module_name and scopes[0] == self.config.module_name:
+                scopes = scopes[1:]
+            if len(scopes) > 1:
+                return ".".join(self.normalize_type(s) for s in scopes)
+            if len(scopes) == 1:
+                return self.normalize_type(scopes[0])
+        return None
+
+    def _find_matching_paren_index(self, text: str) -> int:
+        depth = 0
+        for i, char in enumerate(text):
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    return i
+        return -1
 
     def _get_matching_bracket_index(self, text: str, start_index: int) -> int:
         depth = 0
@@ -128,10 +164,9 @@ class TypeManager:
         if "<" in cpp_type and cpp_type.endswith(">"):
             idx = cpp_type.find("<")
             base = self.normalize_type(cpp_type[:idx].strip())
-            args = [
-                self.normalize_type(a)
-                for a in self._split_template_args(cpp_type[idx + 1 : -1].strip())
-            ]
+            inner = cpp_type[idx + 1 : -1].strip()
+            inner = self._clean_template_inner(inner)
+            args = [self.normalize_type(a) for a in self._split_template_args(inner)]
             return f"{base}[{', '.join(args)}]"
         return None
 
@@ -150,6 +185,41 @@ class TypeManager:
                 current = []
             else:
                 current.append(char)
+        if current:
+            parts.append("".join(current).strip())
+        return parts
+
+    def _split_scopes(self, cpp_type: str) -> list[str]:
+        """Split C++ namespaces and nested scopes.
+
+        Respects nested brackets and parens.
+        """
+        parts: list[str] = []
+        current: list[str] = []
+        depth = 0
+        p_depth = 0
+        i = 0
+        while i < len(cpp_type):
+            char = cpp_type[i]
+
+            # Check for ::
+            if (
+                char == ":"
+                and i + 1 < len(cpp_type)
+                and cpp_type[i + 1] == ":"
+                and depth == 0
+                and p_depth == 0
+            ):
+                parts.append("".join(current).strip())
+                current = []
+                i += 2
+                continue
+
+            depth += (char == "<") - (char == ">")
+            p_depth += (char == "(") - (char == ")")
+            current.append(char)
+            i += 1
+
         if current:
             parts.append("".join(current).strip())
         return parts

@@ -1,9 +1,22 @@
 {
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        ".venv",
+        ".temp",
+        "examples",
+        "tests/assets",
+        "tests/expected_output",
+        "tests/quantlib_tests",
+        "tests/data"
+    ],
     "ignore": [
         "examples",
         "tests/assets",
         "tests/expected_output",
-        "tests/quantlib_tests"
+        "tests/quantlib_tests",
+        "tests/data",
+        ".temp"
     ],
     "pythonVersion": "3.10",
     "stubPath": "./tests/expected_output",

@@ -20,6 +20,16 @@ versions = sorted(
     key=lambda x: [int(c) for c in x.replace("quantlib-", "").split(".")],
 )
 
+# Filter by environment variable if set
+test_version = os.environ.get("SWIG2PYI_TEST_VERSION")
+if test_version:
+    target = (
+        test_version
+        if test_version.startswith("quantlib-")
+        else f"quantlib-{test_version}"
+    )
+    versions = [v for v in versions if v == target]
+
 
 @pytest.mark.parametrize("version_folder", versions)
 def test_quantlib_full_interface_generation(version_folder: str) -> None:

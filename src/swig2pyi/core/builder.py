@@ -31,6 +31,9 @@ from .schema import (
     Parm as DbParm,
 )
 from .schema import (
+    PythonCode as DbPythonCode,
+)
+from .schema import (
     TopInfo as DbTopInfo,
 )
 
@@ -85,6 +88,11 @@ class AstBuilder:
                     )
 
             self._assemble_tree(module, nodes_by_id)
+
+            # Load %pythoncode blocks
+            for pc in session.exec(select(DbPythonCode)):
+                module.python_code.append(pc.code)
+
             return Top(module=module)
 
     def _load_dict(
@@ -149,6 +157,7 @@ class AstBuilder:
                 is_template=db_node.is_template,
                 bases=bases.get(node_id) or [],
                 docstring=db_node.docstring,
+                cpp_type=db_node.type,
             )
         return result
 

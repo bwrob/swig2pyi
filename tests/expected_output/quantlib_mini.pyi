@@ -1,4 +1,4 @@
-from typing import overload, Generic, TypeVar
+from typing import Any, Optional, overload, Generic, TypeVar
 from enum import IntEnum
 
 _T = TypeVar('_T')
@@ -204,24 +204,6 @@ def close_enough(
 class string:
     def __init__(self) -> None: ...
 
-class OptionalBool:
-    def __init__(
-        self,
-        t: bool,
-    ) -> None: ...
-
-class OptionalInteger:
-    def __init__(
-        self,
-        t: int,
-    ) -> None: ...
-
-class OptionalFrequency:
-    def __init__(
-        self,
-        t: Frequency,
-    ) -> None: ...
-
 class Period:
     @overload
     def __init__(
@@ -237,7 +219,7 @@ class Period:
     @overload
     def __init__(
         self,
-        str_: str,
+        str: str,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -247,8 +229,50 @@ class Period:
     def normalized(self) -> Period: ...
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
+    def __neg__(self) -> Period: ...
+    def __add__(
+        self,
+        p: Period,
+    ) -> Period: ...
+    def __sub__(
+        self,
+        p: Period,
+    ) -> Period: ...
+    def __mul__(
+        self,
+        n: int,
+    ) -> Period: ...
+    def __rmul__(
+        self,
+        n: int,
+    ) -> Period: ...
+    def __lt__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __gt__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __le__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __ge__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __eq__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __ne__(
+        self,
+        other: Period,
+    ) -> bool: ...
+    def __hash__(self) -> hash_t: ...
 
-class PeriodVector:
+class PeriodVector(list[Period]):
     def __init__(self) -> None: ...
 
 class Date:
@@ -300,7 +324,7 @@ class Date:
     @overload
     def __init__(
         self,
-        str_: str,
+        str: str,
         fmt: str,
     ) -> None: ...
     @overload
@@ -379,28 +403,57 @@ class Date:
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
     def ISO(self) -> str: ...
+    def __eq__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def __ne__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def __hash__(self) -> hash_t: ...
+    def __bool__(self) -> bool: ...
+    def __lt__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def __gt__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def __le__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def __ge__(
+        self,
+        other: Date,
+    ) -> bool: ...
+    def to_date(self) -> PyObject: ...
+    @staticmethod
+    def from_date(date: PyObject) -> Date: ...
 
 class DateParser:
     def __init__(self) -> None: ...
     @staticmethod
     def parseFormatted(
-        str_: str,
+        str: str,
         fmt: str,
     ) -> Date: ...
     @staticmethod
-    def parseISO(str_: str) -> Date: ...
+    def parseISO(str: str) -> Date: ...
     @staticmethod
     def parse(
-        str_: str,
+        str: str,
         fmt: str,
     ) -> Date: ...
 
 class PeriodParser:
     def __init__(self) -> None: ...
     @staticmethod
-    def parse(str_: str) -> Period: ...
+    def parse(str: str) -> Period: ...
 
-class DateVector:
+class DateVector(list[Date]):
     def __init__(self) -> None: ...
 
 class IMM:
@@ -744,8 +797,17 @@ class Calendar:
     def name(self) -> str: ...
     def empty(self) -> bool: ...
     def __str__(self) -> str: ...
+    def __eq__(
+        self,
+        other: Calendar,
+    ) -> bool: ...
+    def __ne__(
+        self,
+        other: Calendar,
+    ) -> bool: ...
+    def __hash__(self) -> hash_t: ...
 
-class CalendarVector:
+class CalendarVector(list[Calendar]):
     def __init__(self) -> None: ...
 
 class Argentina(Calendar):
@@ -1260,6 +1322,15 @@ class DayCounter:
     def name(self) -> str: ...
     def empty(self) -> bool: ...
     def __str__(self) -> str: ...
+    def __eq__(
+        self,
+        other: DayCounter,
+    ) -> bool: ...
+    def __ne__(
+        self,
+        other: DayCounter,
+    ) -> bool: ...
+    def __hash__(self) -> hash_t: ...
 
 class Actual360(DayCounter):
     @overload
@@ -1369,12 +1440,22 @@ class Business252(DayCounter):
     @overload
     def __init__(self) -> None: ...
 
-class __dummy_0__:
-    def __init__(self) -> None: ...
-    def __deref__(self) -> Observable: ...
-
 class Observable:
     def __init__(self) -> None: ...
+
+class Observer:
+    def __init__(
+        self,
+        callback: PyObject,
+    ) -> None: ...
+    def registerWith(
+        self,
+        arg0: ObservableOrHandle,
+    ) -> None: ...
+    def unregisterWith(
+        self,
+        arg0: ObservableOrHandle,
+    ) -> None: ...
 
 class Array:
     @overload
@@ -1395,8 +1476,103 @@ class Array:
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
-    def size(self) -> int: ...
+    def __len__(self) -> int: ...
     def __str__(self) -> str: ...
+    def __eq__(
+        self,
+        other: Array,
+    ) -> bool: ...
+    def __ne__(
+        self,
+        other: Array,
+    ) -> bool: ...
+    def __neg__(self) -> Array: ...
+    @overload
+    def __add__(
+        self,
+        a: Array,
+    ) -> Array: ...
+    @overload
+    def __add__(
+        self,
+        a: float,
+    ) -> Array: ...
+    @overload
+    def __sub__(
+        self,
+        a: Array,
+    ) -> Array: ...
+    @overload
+    def __sub__(
+        self,
+        a: float,
+    ) -> Array: ...
+    @overload
+    def __mul__(
+        self,
+        a: Array,
+    ) -> Array: ...
+    @overload
+    def __mul__(
+        self,
+        a: Matrix,
+    ) -> Array: ...
+    @overload
+    def __mul__(
+        self,
+        a: float,
+    ) -> Array: ...
+    @overload
+    def __truediv__(
+        self,
+        a: Array,
+    ) -> Array: ...
+    @overload
+    def __truediv__(
+        self,
+        a: float,
+    ) -> Array: ...
+    def __rmul__(
+        self,
+        a: float,
+    ) -> Array: ...
+    def __matmul__(
+        self,
+        a: Array,
+    ) -> float: ...
+    def __getslice__(
+        self,
+        i: int,
+        j: int,
+    ) -> Array: ...
+    def __setslice__(
+        self,
+        i: int,
+        j: int,
+        rhs: Array,
+    ) -> None: ...
+    def __bool__(self) -> bool: ...
+    def __getitem__(
+        self,
+        i: int,
+    ) -> float: ...
+    def __setitem__(
+        self,
+        i: int,
+        x: float,
+    ) -> None: ...
+
+class MatrixRow:
+    def __init__(self) -> None: ...
+    def __getitem__(
+        self,
+        i: int,
+    ) -> float: ...
+    def __setitem__(
+        self,
+        i: int,
+        x: float,
+    ) -> None: ...
 
 class Matrix:
     @overload
@@ -1422,6 +1598,52 @@ class Matrix:
     def rows(self) -> int: ...
     def columns(self) -> int: ...
     def __str__(self) -> str: ...
+    def __add__(
+        self,
+        m: Matrix,
+    ) -> Matrix: ...
+    def __sub__(
+        self,
+        m: Matrix,
+    ) -> Matrix: ...
+    @overload
+    def __mul__(
+        self,
+        x: Array,
+    ) -> Array: ...
+    @overload
+    def __mul__(
+        self,
+        x: Matrix,
+    ) -> Matrix: ...
+    @overload
+    def __mul__(
+        self,
+        x: float,
+    ) -> Matrix: ...
+    def __div__(
+        self,
+        x: float,
+    ) -> Matrix: ...
+    def __getitem__(
+        self,
+        i: int,
+    ) -> MatrixRow: ...
+    @overload
+    def __rmul__(
+        self,
+        x: Array,
+    ) -> Array: ...
+    @overload
+    def __rmul__(
+        self,
+        x: Matrix,
+    ) -> Matrix: ...
+    @overload
+    def __rmul__(
+        self,
+        x: float,
+    ) -> Matrix: ...
 
 class SalvagingAlgorithm:
     class Type(IntEnum):
@@ -1452,6 +1674,85 @@ class SymmetricSchurDecomposition:
     def eigenvalues(self) -> Array: ...
     def eigenvectors(self) -> Matrix: ...
 
+class MatrixMultiplicationProxy:
+    def __init__(
+        self,
+        matrixMult: PyObject,
+    ) -> None: ...
+    def __call__(
+        self,
+        x: Array,
+    ) -> Array: ...
+
+class BiCGstab:
+    @overload
+    def __init__(
+        self,
+        proxy: MatrixMultiplicationProxy,
+        maxIter: int,
+        relTol: float,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        proxy: MatrixMultiplicationProxy,
+        maxIter: int,
+        relTol: float,
+        preconditioner: MatrixMultiplicationProxy,
+    ) -> None: ...
+    @overload
+    def solve(
+        self,
+        b: Array,
+    ) -> Array: ...
+    @overload
+    def solve(
+        self,
+        b: Array,
+        x0: Array,
+    ) -> Array: ...
+
+class GMRES:
+    @overload
+    def __init__(
+        self,
+        proxy: MatrixMultiplicationProxy,
+        maxIter: int,
+        relTol: float,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        proxy: MatrixMultiplicationProxy,
+        maxIter: int,
+        relTol: float,
+        preconditioner: MatrixMultiplicationProxy,
+    ) -> None: ...
+    @overload
+    def solve(
+        self,
+        b: Array,
+    ) -> Array: ...
+    @overload
+    def solve(
+        self,
+        b: Array,
+        x0: Array,
+    ) -> Array: ...
+    @overload
+    def solveWithRestart(
+        self,
+        restart: int,
+        b: Array,
+    ) -> Array: ...
+    @overload
+    def solveWithRestart(
+        self,
+        restart: int,
+        b: Array,
+        x0: Array,
+    ) -> Array: ...
+
 class RungeKutta:
     @overload
     def __init__(
@@ -1473,10 +1774,22 @@ class RungeKutta:
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
-
-class __dummy_1__:
-    def __init__(self) -> None: ...
-    def __deref__(self) -> DefaultBoundaryCondition: ...
+    @overload
+    def __call__(
+        self,
+        fct: PyObject,
+        y1: float,
+        x1: float,
+        x2: float,
+    ) -> float: ...
+    @overload
+    def __call__(
+        self,
+        fct: PyObject,
+        y1: list[float],
+        x1: float,
+        x2: float,
+    ) -> list[float]: ...
 
 class DefaultBoundaryCondition:
     class Side(IntEnum):
@@ -1486,20 +1799,12 @@ class DefaultBoundaryCondition:
 
     def __init__(self) -> None: ...
 
-class __dummy_2__:
-    def __init__(self) -> None: ...
-    def __deref__(self) -> NeumannBC: ...
-
 class NeumannBC(DefaultBoundaryCondition):
     def __init__(
         self,
         value: float,
         side: DefaultBoundaryCondition.Side,
     ) -> None: ...
-
-class __dummy_3__:
-    def __init__(self) -> None: ...
-    def __deref__(self) -> DirichletBC: ...
 
 class DirichletBC(DefaultBoundaryCondition):
     def __init__(
@@ -1549,6 +1854,42 @@ class TridiagonalOperator:
     ) -> None: ...
     @staticmethod
     def identity(size: int) -> TridiagonalOperator: ...
+    def __add__(
+        self,
+        O: TridiagonalOperator,
+    ) -> TridiagonalOperator: ...
+    def __sub__(
+        self,
+        O: TridiagonalOperator,
+    ) -> TridiagonalOperator: ...
+    def __mul__(
+        self,
+        a: float,
+    ) -> TridiagonalOperator: ...
+    def __div__(
+        self,
+        a: float,
+    ) -> TridiagonalOperator: ...
+    def __iadd__(
+        self,
+        O: TridiagonalOperator,
+    ) -> TridiagonalOperator: ...
+    def __isub__(
+        self,
+        O: TridiagonalOperator,
+    ) -> TridiagonalOperator: ...
+    def __imul__(
+        self,
+        a: float,
+    ) -> TridiagonalOperator: ...
+    def __rmul__(
+        self,
+        a: float,
+    ) -> TridiagonalOperator: ...
+    def __idiv__(
+        self,
+        a: float,
+    ) -> TridiagonalOperator: ...
 
 class DPlus(TridiagonalOperator):
     def __init__(
@@ -1578,25 +1919,25 @@ class DPlusDMinus(TridiagonalOperator):
         h: float,
     ) -> None: ...
 
-class IntVector:
+class IntVector(list[int]):
     def __init__(self) -> None: ...
 
-class UnsignedIntVector:
+class UnsignedIntVector(list[int]):
     def __init__(self) -> None: ...
 
-class DoubleVector:
+class DoubleVector(list[float]):
     def __init__(self) -> None: ...
 
-class StrVector:
+class StrVector(list[str]):
     def __init__(self) -> None: ...
 
-class BoolVector:
+class BoolVector(list[bool]):
     def __init__(self) -> None: ...
 
-class DoubleVectorVector:
+class DoubleVectorVector(list[list[float]]):
     def __init__(self) -> None: ...
 
-class DoublePair:
+class DoublePair(tuple[float, float]):
     @overload
     def __init__(
         self,
@@ -1608,10 +1949,10 @@ class DoublePair:
     first: float
     second: float
 
-class DoublePairVector:
+class DoublePairVector(list[tuple[float, float]]):
     def __init__(self) -> None: ...
 
-class PairDoubleVector:
+class PairDoubleVector(tuple[list[float], list[float]]):
     @overload
     def __init__(
         self,
@@ -1623,7 +1964,7 @@ class PairDoubleVector:
     first: list[float]
     second: list[float]
 
-class UnsignedIntPair:
+class UnsignedIntPair(tuple[int, int]):
     @overload
     def __init__(
         self,
@@ -1635,10 +1976,10 @@ class UnsignedIntPair:
     first: int
     second: int
 
-class UnsignedIntPairVector:
+class UnsignedIntPairVector(list[tuple[int, int]]):
     def __init__(self) -> None: ...
 
-class NodePair:
+class NodePair(tuple[Date, float]):
     @overload
     def __init__(
         self,
@@ -1650,7 +1991,7 @@ class NodePair:
     first: Date
     second: float
 
-class NodeVector:
+class NodeVector(list[tuple[Date, float]]):
     def __init__(self) -> None: ...
 
 class SegmentIntegral:
@@ -1659,6 +2000,12 @@ class SegmentIntegral:
         intervals: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class TrapezoidIntegralDefault:
     def __init__(
@@ -1667,6 +2014,12 @@ class TrapezoidIntegralDefault:
         maxIterations: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class TrapezoidIntegralMidPoint:
     def __init__(
@@ -1675,6 +2028,12 @@ class TrapezoidIntegralMidPoint:
         maxIterations: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class SimpsonIntegral:
     def __init__(
@@ -1683,6 +2042,12 @@ class SimpsonIntegral:
         maxIterations: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class GaussKronrodAdaptive:
     @overload
@@ -1697,6 +2062,12 @@ class GaussKronrodAdaptive:
         maxFunctionEvaluations: int,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class GaussKronrodNonAdaptive:
     def __init__(
@@ -1706,6 +2077,12 @@ class GaussKronrodNonAdaptive:
         relativeAccuracy: float,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class GaussLobattoIntegral:
     @overload
@@ -1730,12 +2107,22 @@ class GaussLobattoIntegral:
         useConvergenceEstimate: bool,
     ) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class GaussianQuadrature:
     def __init__(self) -> None: ...
     def order(self) -> int: ...
     def weights(self) -> Array: ...
     def x(self) -> Array: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+    ) -> float: ...
 
 class GaussLaguerreIntegration(GaussianQuadrature):
     @overload
@@ -1824,6 +2211,12 @@ class TanhSinhIntegral:
     @overload
     def __init__(self) -> None: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class ExpSinhIntegral:
     @overload
@@ -1839,7 +2232,17 @@ class ExpSinhIntegral:
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
+    def integrate(
+        self,
+        pyFunction: PyObject,
+    ) -> float: ...
     def numberOfEvaluations(self) -> int: ...
+    def __call__(
+        self,
+        pyFunction: PyObject,
+        a: float,
+        b: float,
+    ) -> float: ...
 
 class InterestRate:
     @overload
@@ -1989,12 +2392,8 @@ class InterestRate:
     ) -> InterestRate: ...
     def __str__(self) -> str: ...
 
-class InterestRateVector:
+class InterestRateVector(list[InterestRate]):
     def __init__(self) -> None: ...
-
-class __dummy_4__:
-    def __init__(self) -> None: ...
-    def __deref__(self) -> LazyObject: ...
 
 class LazyObject(Observable):
     def __init__(self) -> None: ...
@@ -2045,6 +2444,56 @@ class Schedule:
     @overload
     def __init__(
         self,
+        arg0: list[Date],
+        calendar: Calendar,
+        convention: BusinessDayConvention,
+        terminationDateConvention: Optional[BusinessDayConvention],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        arg0: list[Date],
+        calendar: Calendar,
+        convention: BusinessDayConvention,
+        terminationDateConvention: Optional[BusinessDayConvention],
+        tenor: Optional[Period],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        arg0: list[Date],
+        calendar: Calendar,
+        convention: BusinessDayConvention,
+        terminationDateConvention: Optional[BusinessDayConvention],
+        tenor: Optional[Period],
+        rule: Optional[DateGeneration.Rule],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        arg0: list[Date],
+        calendar: Calendar,
+        convention: BusinessDayConvention,
+        terminationDateConvention: Optional[BusinessDayConvention],
+        tenor: Optional[Period],
+        rule: Optional[DateGeneration.Rule],
+        endOfMonth: Optional[bool],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        arg0: list[Date],
+        calendar: Calendar,
+        convention: BusinessDayConvention,
+        terminationDateConvention: Optional[BusinessDayConvention],
+        tenor: Optional[Period],
+        rule: Optional[DateGeneration.Rule],
+        endOfMonth: Optional[bool],
+        isRegular: list[bool],
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
         effectiveDate: Date,
         terminationDate: Date,
         tenor: Period,
@@ -2083,11 +2532,7 @@ class Schedule:
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
-    def size(self) -> int: ...
-    def date(
-        self,
-        i: int,
-    ) -> Date: ...
+    def __len__(self) -> int: ...
     def previousDate(
         self,
         refDate: Date,
@@ -2125,10 +2570,14 @@ class Schedule:
         self,
         truncationDate: Date,
     ) -> Schedule: ...
+    def __getitem__(
+        self,
+        i: int,
+    ) -> Date: ...
 
-class MakeSchedule:
+class _MakeSchedule:
     def __init__(self) -> None: ...
-    def from_(
+    def fromDate(
         self,
         effectiveDate: Date,
     ) -> MakeSchedule: ...
@@ -2192,8 +2641,17 @@ class RealTimeSeries:
     def values(self) -> list[float]: ...
     def firstDate(self) -> Date: ...
     def lastDate(self) -> Date: ...
-    def size(self) -> int: ...
-    def empty(self) -> bool: ...
+    def __len__(self) -> int: ...
+    def __bool__(self) -> bool: ...
+    def __getitem__(
+        self,
+        d: Date,
+    ) -> float: ...
+    def __setitem__(
+        self,
+        d: Date,
+        value: float,
+    ) -> None: ...
 
 class IntervalPriceTimeSeries:
     @overload
@@ -2208,10 +2666,19 @@ class IntervalPriceTimeSeries:
     def values(self) -> list[IntervalPrice]: ...
     def firstDate(self) -> Date: ...
     def lastDate(self) -> Date: ...
-    def size(self) -> int: ...
-    def empty(self) -> bool: ...
+    def __len__(self) -> int: ...
+    def __bool__(self) -> bool: ...
+    def __getitem__(
+        self,
+        d: Date,
+    ) -> IntervalPrice: ...
+    def __setitem__(
+        self,
+        d: Date,
+        value: IntervalPrice,
+    ) -> None: ...
 
-class IntervalPriceVector:
+class IntervalPriceVector(list[IntervalPrice]):
     def __init__(self) -> None: ...
 
 class IntervalPrice:
@@ -2244,14 +2711,14 @@ class IntervalPrice:
         self,
         t: IntervalPrice.Type,
     ) -> float: ...
-    def open_(self) -> float: ...
+    def open(self) -> float: ...
     def close(self) -> float: ...
     def high(self) -> float: ...
     def low(self) -> float: ...
     @staticmethod
     def makeSeries(
         d: list[Date],
-        open_: list[float],
+        open: list[float],
         close: list[float],
         high: list[float],
         low: list[float],
@@ -2266,3 +2733,5 @@ class IntervalPrice:
         arg0: TimeSeries[IntervalPrice],
         t: IntervalPrice.Type,
     ) -> TimeSeries[float]: ...
+
+def MakeSchedule(effectiveDate=..., terminationDate=..., tenor=..., frequency=..., calendar=..., convention=..., terminalDateConvention=..., rule=..., forwards=..., backwards=..., endOfMonth=..., firstDate=..., nextToLastDate=...) -> Any: ...
