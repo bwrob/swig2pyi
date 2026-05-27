@@ -38857,4 +38857,3 @@ class MonotonicParabolicCubicZeroCurve(YieldTermStructure):
 
 # Register MonotonicParabolicCubicZeroCurve in _QuantLib:
 _QuantLib.MonotonicParabolicCubicZeroCurve_swigregister(MonotonicParabolicCubicZeroCurve)
-
