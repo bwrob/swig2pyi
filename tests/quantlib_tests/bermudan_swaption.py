@@ -51,7 +51,7 @@ def calibrate(
         error = implied - vol
         totalError += abs(error)
         data.append((maturity, length, vol, implied, error))
-    totalError / len(helpers)
+    print("Average error: %.4f" % (totalError / len(helpers)))
 
 
 # ### Market data
@@ -215,7 +215,7 @@ calibrate(BKmodel, helpers, 0.05, "Black-Karasinski (numerical calibration)")
 
 # ### Price Bermudan swaptions on defined swaps
 
-bermudanDates = list(fixedSchedule)[:-1]
+bermudanDates = [fixedSchedule[i] for i in range(len(fixedSchedule) - 1)]
 exercise = ql.BermudanExercise(bermudanDates)
 
 atmSwaption = ql.Swaption(atmSwap, exercise)
