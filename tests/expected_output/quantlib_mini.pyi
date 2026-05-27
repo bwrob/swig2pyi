@@ -471,6 +471,18 @@ class IMM:
         X = 11
         Z = 12
 
+    F: Month
+    G: Month
+    H: Month
+    J: Month
+    K: Month
+    M: Month
+    N: Month
+    Q: Month
+    U: Month
+    V: Month
+    X: Month
+    Z: Month
     def __init__(self) -> None: ...
     @staticmethod
     @overload
@@ -573,6 +585,18 @@ class ASX:
         X = 11
         Z = 12
 
+    F: Month
+    G: Month
+    H: Month
+    J: Month
+    K: Month
+    M: Month
+    N: Month
+    Q: Month
+    U: Month
+    V: Month
+    X: Month
+    Z: Month
     def __init__(self) -> None: ...
     @staticmethod
     @overload
@@ -814,6 +838,7 @@ class Argentina(Calendar):
     class Market(IntEnum):
         Merval = ...
 
+    Merval: Market
     @overload
     def __init__(
         self,
@@ -827,6 +852,8 @@ class Australia(Calendar):
         Settlement = ...
         ASX = ...
 
+    Settlement: Market
+    ASX: Market
     @overload
     def __init__(
         self,
@@ -840,6 +867,8 @@ class Austria(Calendar):
         Settlement = ...
         Exchange = ...
 
+    Settlement: Market
+    Exchange: Market
     @overload
     def __init__(
         self,
@@ -856,6 +885,8 @@ class Brazil(Calendar):
         Settlement = ...
         Exchange = ...
 
+    Settlement: Market
+    Exchange: Market
     @overload
     def __init__(
         self,
@@ -869,6 +900,8 @@ class Canada(Calendar):
         Settlement = ...
         TSX = ...
 
+    Settlement: Market
+    TSX: Market
     @overload
     def __init__(
         self,
@@ -881,6 +914,7 @@ class Chile(Calendar):
     class Market(IntEnum):
         SSE = ...
 
+    SSE: Market
     @overload
     def __init__(
         self,
@@ -894,6 +928,8 @@ class China(Calendar):
         SSE = ...
         IB = ...
 
+    SSE: Market
+    IB: Market
     @overload
     def __init__(
         self,
@@ -906,6 +942,7 @@ class CzechRepublic(Calendar):
     class Market(IntEnum):
         PSE = ...
 
+    PSE: Market
     @overload
     def __init__(
         self,
@@ -925,6 +962,8 @@ class France(Calendar):
         Settlement = ...
         Exchange = ...
 
+    Settlement: Market
+    Exchange: Market
     @overload
     def __init__(
         self,
@@ -940,6 +979,10 @@ class Germany(Calendar):
         Xetra = ...
         Eurex = ...
 
+    Settlement: Market
+    FrankfurtStockExchange: Market
+    Xetra: Market
+    Eurex: Market
     @overload
     def __init__(
         self,
@@ -952,6 +995,7 @@ class HongKong(Calendar):
     class Market(IntEnum):
         HKEx = ...
 
+    HKEx: Market
     @overload
     def __init__(
         self,
@@ -967,6 +1011,7 @@ class Iceland(Calendar):
     class Market(IntEnum):
         ICEX = ...
 
+    ICEX: Market
     @overload
     def __init__(
         self,
@@ -979,6 +1024,7 @@ class India(Calendar):
     class Market(IntEnum):
         NSE = ...
 
+    NSE: Market
     @overload
     def __init__(
         self,
@@ -992,6 +1038,8 @@ class Indonesia(Calendar):
         BEJ = ...
         JSX = ...
 
+    BEJ: Market
+    JSX: Market
     @overload
     def __init__(
         self,
@@ -1006,6 +1054,9 @@ class Israel(Calendar):
         TASE = ...
         SHIR = ...
 
+    Settlement: Market
+    TASE: Market
+    SHIR: Market
     @overload
     def __init__(
         self,
@@ -1019,6 +1070,8 @@ class Italy(Calendar):
         Settlement = ...
         Exchange = ...
 
+    Settlement: Market
+    Exchange: Market
     @overload
     def __init__(
         self,
@@ -1034,6 +1087,7 @@ class Mexico(Calendar):
     class Market(IntEnum):
         BMV = ...
 
+    BMV: Market
     @overload
     def __init__(
         self,
@@ -1047,6 +1101,8 @@ class NewZealand(Calendar):
         Wellington = ...
         Auckland = ...
 
+    Wellington: Market
+    Auckland: Market
     @overload
     def __init__(
         self,
@@ -1063,6 +1119,8 @@ class Poland(Calendar):
         Settlement = ...
         WSE = ...
 
+    Settlement: Market
+    WSE: Market
     @overload
     def __init__(
         self,
@@ -1076,6 +1134,8 @@ class Romania(Calendar):
         Public = ...
         BVB = ...
 
+    Public: Market
+    BVB: Market
     @overload
     def __init__(
         self,
@@ -1089,6 +1149,8 @@ class Russia(Calendar):
         Settlement = ...
         MOEX = ...
 
+    Settlement: Market
+    MOEX: Market
     @overload
     def __init__(
         self,
@@ -1101,6 +1163,7 @@ class SaudiArabia(Calendar):
     class Market(IntEnum):
         Tadawul = ...
 
+    Tadawul: Market
     @overload
     def __init__(
         self,
@@ -1113,6 +1176,7 @@ class Singapore(Calendar):
     class Market(IntEnum):
         SGX = ...
 
+    SGX: Market
     @overload
     def __init__(
         self,
@@ -1125,6 +1189,7 @@ class Slovakia(Calendar):
     class Market(IntEnum):
         BSSE = ...
 
+    BSSE: Market
     @overload
     def __init__(
         self,
@@ -1141,6 +1206,8 @@ class SouthKorea(Calendar):
         Settlement = ...
         KRX = ...
 
+    Settlement: Market
+    KRX: Market
     @overload
     def __init__(
         self,
@@ -1159,6 +1226,7 @@ class Taiwan(Calendar):
     class Market(IntEnum):
         TSEC = ...
 
+    TSEC: Market
     @overload
     def __init__(
         self,
@@ -1180,6 +1248,7 @@ class Ukraine(Calendar):
     class Market(IntEnum):
         USE = ...
 
+    USE: Market
     @overload
     def __init__(
         self,
@@ -1194,6 +1263,9 @@ class UnitedKingdom(Calendar):
         Exchange = ...
         Metals = ...
 
+    Settlement: Market
+    Exchange: Market
+    Metals: Market
     @overload
     def __init__(
         self,
@@ -1212,6 +1284,13 @@ class UnitedStates(Calendar):
         FederalReserve = ...
         SOFR = ...
 
+    Settlement: Market
+    NYSE: Market
+    GovernmentBond: Market
+    NERC: Market
+    LiborImpact: Market
+    FederalReserve: Market
+    SOFR: Market
     def __init__(
         self,
         m: UnitedStates.Market,
@@ -1368,6 +1447,9 @@ class Actual365Fixed(DayCounter):
         Canadian = ...
         NoLeap = ...
 
+    Standard: Convention
+    Canadian: Convention
+    NoLeap: Convention
     @overload
     def __init__(
         self,
@@ -1388,6 +1470,15 @@ class Thirty360(DayCounter):
         ISDA = ...
         NASD = ...
 
+    USA: Convention
+    BondBasis: Convention
+    European: Convention
+    EurobondBasis: Convention
+    Italian: Convention
+    German: Convention
+    ISMA: Convention
+    ISDA: Convention
+    NASD: Convention
     @overload
     def __init__(
         self,
@@ -1413,6 +1504,13 @@ class ActualActual(DayCounter):
         AFB = ...
         Euro = ...
 
+    ISMA: Convention
+    Bond: Convention
+    ISDA: Convention
+    Historical: Convention
+    Actual365: Convention
+    AFB: Convention
+    Euro: Convention
     @overload
     def __init__(
         self,
@@ -1647,13 +1745,19 @@ class Matrix:
 
 class SalvagingAlgorithm:
     class Type(IntEnum):
-        None_ = ...
+        NoAlgorithm = ...
         Spectral = ...
         Hypersphere = ...
         LowerDiagonal = ...
         Higham = ...
         Principal = ...
 
+    NoAlgorithm: Type
+    Spectral: Type
+    Hypersphere: Type
+    LowerDiagonal: Type
+    Higham: Type
+    Principal: Type
     def __init__(self) -> None: ...
 
 class SVD:
@@ -1793,10 +1897,13 @@ class RungeKutta:
 
 class DefaultBoundaryCondition:
     class Side(IntEnum):
-        None_ = ...
+        NoSide = ...
         Upper = ...
         Lower = ...
 
+    NoSide: Side
+    Upper: Side
+    Lower: Side
     def __init__(self) -> None: ...
 
 class NeumannBC(DefaultBoundaryCondition):
@@ -2420,6 +2527,16 @@ class DateGeneration:
         CDS = ...
         CDS2015 = ...
 
+    Backward: Rule
+    Forward: Rule
+    Zero: Rule
+    ThirdWednesday: Rule
+    ThirdWednesdayInclusive: Rule
+    Twentieth: Rule
+    TwentiethIMM: Rule
+    OldCDS: Rule
+    CDS: Rule
+    CDS2015: Rule
     def __init__(self) -> None: ...
 
 class Schedule:
@@ -2688,6 +2805,10 @@ class IntervalPrice:
         High = ...
         Low = ...
 
+    Open: Type
+    Close: Type
+    High: Type
+    Low: Type
     def __init__(
         self,
         arg0: float,
