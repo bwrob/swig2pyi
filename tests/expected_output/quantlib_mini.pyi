@@ -2628,7 +2628,7 @@ class _MakeSchedule:
     ) -> MakeSchedule: ...
     def schedule(self) -> Schedule: ...
 
-class RealTimeSeries:
+class RealTimeSeries(TimeSeries[float]):
     @overload
     def __init__(
         self,
@@ -2653,7 +2653,7 @@ class RealTimeSeries:
         value: float,
     ) -> None: ...
 
-class IntervalPriceTimeSeries:
+class IntervalPriceTimeSeries(TimeSeries[IntervalPrice]):
     @overload
     def __init__(
         self,

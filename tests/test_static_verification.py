@@ -93,7 +93,6 @@ def _is_swig_container(node: ast.ClassDef) -> bool:
         node.name.endswith("Vector")
         or node.name.endswith("Map")
         or node.name.endswith("Pair")
-        or node.name.endswith("Handle")
     )
 
 

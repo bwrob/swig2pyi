@@ -97,13 +97,81 @@ class StubEmitter:
         if top.module:
             self.visit_module(top.module)
 
+    def clean_cpp_type(self, cpp_type: str) -> str:
+        """Normalize C++ type string for lookup key."""
+        cpp_type = cpp_type.replace("QuantLib::", "").replace("ext::", "")
+        cpp_type = cpp_type.replace("const ", "").replace("volatile ", "")
+        cpp_type = cpp_type.replace("(", "").replace(")", "")
+        return "".join(cpp_type.split())
+
     def visit_module(self, module: Module) -> None:
         """Visit a module and emit its contents."""
+        self._cpp_to_py_class_names: dict[str, str] = {}
+        for cls in module.classes:
+            if cls.cpp_type:
+                key = self.clean_cpp_type(cls.cpp_type)
+                self._cpp_to_py_class_names[key] = cls.name
+
+        self._delegate_handle_methods(module)
+
         self._emit_module_enums(module)
         self._emit_module_functions(module)
         for cls in module.classes:
             self.visit_class(cls)
         self._emit_python_code(module)
+
+    def _collect_class_methods(
+        self, cls_name: str, name_to_class: dict[str, Class], visited: set[str]
+    ) -> list[CDecl]:
+        """Recursively collect cdecls from a class and its base classes."""
+        if cls_name in visited:
+            return []
+        visited.add(cls_name)
+        target_cls = name_to_class.get(cls_name)
+        if not target_cls:
+            return []
+        methods = list(target_cls.cdecls)
+        for base in target_cls.bases:
+            cleaned_base = self.clean_cpp_type(base)
+            py_base_name = self._cpp_to_py_class_names.get(cleaned_base)
+            if py_base_name:
+                methods.extend(
+                    self._collect_class_methods(py_base_name, name_to_class, visited)
+                )
+        return methods
+
+    def _delegate_single_handle(
+        self, cls: Class, name_to_class: dict[str, Class]
+    ) -> None:
+        """Delegate methods for a single Handle class."""
+        if not cls.cpp_type:
+            return
+        match = re.match(
+            r"^(?:QuantLib::)?Handle<\s*(.*?)\s*>$",
+            cls.cpp_type,
+        )
+        if not match:
+            return
+
+        target_type = match.group(1).strip("() ")
+        cleaned_target = self.clean_cpp_type(target_type)
+        py_target_name = self._cpp_to_py_class_names.get(cleaned_target)
+        if not py_target_name:
+            return
+
+        collected = self._collect_class_methods(py_target_name, name_to_class, set())
+        existing_names = {self.nm.get_python_name(m.name) for m in cls.cdecls}
+        for method in collected:
+            py_name = self.nm.get_python_name(method.name)
+            if py_name and py_name not in existing_names:
+                cls.cdecls.append(method.model_copy(deep=True))
+                existing_names.add(py_name)
+
+    def _delegate_handle_methods(self, module: Module) -> None:
+        """Delegate methods from target classes to Handle wrappers."""
+        name_to_class = {cls.name: cls for cls in module.classes}
+        for cls in module.classes:
+            self._delegate_single_handle(cls, name_to_class)
 
     def _emit_python_code(self, module: Module) -> None:
         """Extract and emit stub signatures from %pythoncode blocks."""
@@ -242,16 +310,21 @@ class StubEmitter:
 
     def _get_bases_str(self, cls: Class) -> str:
         base_names: list[str] = []
-        if cls.bases:
-            for b in cls.bases:
-                base_names.extend(self._get_base_names(b))
+        for b in cls.bases or []:
+            base_names.extend(self._get_base_names(b))
         if cls.cpp_type:
-            resolved = self.tm.to_python(cls.cpp_type)
-            if self._is_container_type(resolved) and resolved not in base_names:
-                base_names.append(resolved)
+            self._add_cpp_type_base(cls.cpp_type, base_names)
         if cls.is_template:
             base_names.append("Generic[_T]")
         return f"({', '.join(base_names)})" if base_names else ""
+
+    def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
+        resolved = self.tm.to_python(cpp_type)
+        is_generic = self._is_container_type(resolved)
+        if resolved.startswith(("Handle[", "RelinkableHandle[", "TimeSeries[")):
+            is_generic = True
+        if is_generic and resolved not in base_names:
+            base_names.append(resolved)
 
     def _is_container_type(self, resolved: str) -> bool:
         for py_abc in self.tm.config.containers.values():
@@ -261,7 +334,11 @@ class StubEmitter:
 
     def _get_base_names(self, base_type: str) -> list[str]:
         names: list[str] = []
-        normalized_base = self.tm.to_python(base_type)
+        cleaned = self.clean_cpp_type(base_type)
+        if cleaned in self._cpp_to_py_class_names:
+            normalized_base = self._cpp_to_py_class_names[cleaned]
+        else:
+            normalized_base = self.tm.to_python(base_type)
         names.append(normalized_base)
         match = re.search(
             r"(?:^|\.)(?:Handle|RelinkableHandle)\[(.+)\]$", normalized_base
