@@ -1,0 +1,20 @@
+{
+    "containers": {},
+    "delegate_templates": [
+        "Handle"
+    ],
+    "generic_templates": [
+        "Handle"
+    ],
+    "includes": [],
+    "module_name": "handle_overloads",
+    "namespaces_to_remove": [
+        "Synthetic::"
+    ],
+    "rename_operators": true,
+    "smart_pointers": [],
+    "type_map": {
+        "std::string": "str",
+        "int": "int"
+    }
+}
