@@ -24,9 +24,10 @@ class TypeManager:
         "bool": "bool",
     }
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, enums: set[str] | None = None) -> None:
         """Initialize with configuration."""
         self.config = config
+        self.enums = enums or set()
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
         self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
         self._type_map: dict[str, str] = {

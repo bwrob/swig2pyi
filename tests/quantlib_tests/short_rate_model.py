@@ -9,9 +9,9 @@ def create_swaption_helpers(
     data: List[CalibrationData],
     index: ql.IborIndex,
     term_structure: ql.YieldTermStructureHandle,
-    engine: ql.PricingEngine
-) -> List[ql.CalibrationHelper]:
-    swaptions: List[ql.CalibrationHelper] = []
+    engine: ql.PricingEngine,
+) -> List[ql.BlackCalibrationHelper]:
+    swaptions: List[ql.BlackCalibrationHelper] = []
     fixed_leg_tenor = ql.Period(1, ql.Years)
     fixed_leg_daycounter = ql.Actual360()
     floating_leg_daycounter = ql.Actual360()
@@ -33,7 +33,7 @@ def create_swaption_helpers(
     return swaptions
 
 def print_calibration_report(
-    swaptions: List[ql.CalibrationHelper],
+    swaptions: List[ql.BlackCalibrationHelper],
     data: List[CalibrationData]
 ) -> None:
     print("-" * 80)
