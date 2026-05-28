@@ -40,7 +40,7 @@ This document contains a strict architectural audit of the `swig2pyi` core packa
 ### Judo Move 1: Demolish SQLite/SQLModel Database Layer
 * **Action:** Delete `schema.py`, `ingestion.py`, and `builder.py`.
 * **Replacement:** Traverse the XML tree (`xml.etree.ElementTree`) directly in memory in a single recursive pass to construct Pydantic `Top`, `Module`, and `Class` models.
-* **Result:** 
+* **Result:**
   * Eliminates three modules (~700 lines of code).
   * Removes `sqlmodel` and `sqlalchemy` dependencies.
   * Significantly increases parsing speed.
