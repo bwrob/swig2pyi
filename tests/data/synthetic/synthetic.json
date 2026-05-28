@@ -3,6 +3,9 @@
     "delegate_templates": [
         "SmartPtr"
     ],
+    "generic_templates": [
+        "SmartPtr"
+    ],
     "includes": [],
     "module_name": "synthetic",
     "namespaces_to_remove": [

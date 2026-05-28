@@ -17,6 +17,7 @@ class Config(BaseModel):
     extra_code: list[str] = []
     namespaces_to_remove: list[str] = []
     delegate_templates: list[str] = []
+    generic_templates: list[str] = []
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":

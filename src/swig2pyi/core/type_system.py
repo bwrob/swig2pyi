@@ -29,6 +29,12 @@ class TypeManager:
         self.config = config
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
         self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
+        self._type_map: dict[str, str] = {
+            self._clean_cpp_type(k): v for k, v in self.config.type_map.items()
+        }
+        self._containers: dict[str, str] = {
+            self._clean_cpp_type(k): v for k, v in self.config.containers.items()
+        }
 
     def _build_smart_ptr_regex(self) -> re.Pattern[str]:
         patterns = [re.escape(ptr) for ptr in self.config.smart_pointers]
@@ -38,10 +44,13 @@ class TypeManager:
 
     def normalize_type(self, cpp_type: str) -> str:
         """Normalize a C++ type string to a valid Python type hint."""
-        cpp_type = self._clean_cpp_type(cpp_type.strip())
+        cpp_type = cpp_type.strip()
 
-        if match := self._smart_ptr_regex.match(cpp_type):
+        basic_cleaned = self._clean_basic(cpp_type)
+        if match := self._smart_ptr_regex.match(basic_cleaned):
             return self.normalize_type(match.group(1))
+
+        cpp_type = self._clean_cpp_type(cpp_type)
 
         if mapped := self._resolve_typedefs(cpp_type):
             return mapped
@@ -65,10 +74,7 @@ class TypeManager:
         """Public interface to convert a C++ type string to a Python type hint."""
         return self.normalize_type(cpp_type_str)
 
-    def _clean_cpp_type(self, cpp_type: str) -> str:
-        for ns in self.config.namespaces_to_remove:
-            cpp_type = cpp_type.replace(ns, "")
-
+    def _clean_basic(self, cpp_type: str) -> str:
         while True:
             new_type = self._swig_prefix_regex.sub("", cpp_type)
             if new_type == cpp_type:
@@ -90,19 +96,26 @@ class TypeManager:
             .replace(", ", ",")
         )
 
+    def _clean_cpp_type(self, cpp_type: str) -> str:
+        cpp_type = self._clean_basic(cpp_type)
+        for ns in self.config.namespaces_to_remove:
+            cpp_type = cpp_type.replace(ns, "")
+        return cpp_type
+
     def _resolve_typedefs(self, cpp_type: str) -> str | None:
-        if cpp_type in self.config.type_map:
-            return self.config.type_map[cpp_type]
+        if cpp_type in self._type_map:
+            return self._type_map[cpp_type]
 
         if self.config.module_name:
             namespaced = f"{self.config.module_name}::{cpp_type}"
-            if namespaced in self.config.type_map:
-                return self.config.type_map[namespaced]
+            cleaned_namespaced = self._clean_cpp_type(namespaced)
+            if cleaned_namespaced in self._type_map:
+                return self._type_map[cleaned_namespaced]
 
         return self.BASIC_TYPES.get(cpp_type)
 
     def _resolve_containers(self, cpp_type: str) -> str | None:
-        for cpp_container, py_abc in self.config.containers.items():
+        for cpp_container, py_abc in self._containers.items():
             prefix = cpp_container + "<"
             if (
                 cpp_type.startswith(prefix)

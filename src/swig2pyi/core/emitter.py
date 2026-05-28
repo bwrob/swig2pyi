@@ -338,8 +338,8 @@ class StubEmitter:
 
     def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
         resolved = self.tm.to_python(cpp_type)
-        is_generic = self._is_container_type(resolved) or (
-            "[" in resolved and resolved.endswith("]")
+        is_generic = self._is_container_type(resolved) or any(
+            resolved.startswith(f"{t}[") for t in self.tm.config.generic_templates
         )
         if is_generic and resolved not in base_names:
             base_names.append(resolved)
