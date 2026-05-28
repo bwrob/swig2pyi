@@ -30,8 +30,8 @@ Integration test checking that stubs contain correct Python dunder signatures (`
 
 ---
 
-### Component B: Vector and Typedef Parameter Relaxation Tests
-We will verify standard list methods and constructors are added to vector types, and parameter types allow Sequence conversions.
+### Component B: Vector and Typedef Parameter Relaxation Tests [COMPLETED]
+We have verified standard list methods and constructors are added to vector types, and parameter types allow Sequence conversions.
 
 #### [NEW] [vector_typedefs.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/vector_typedefs.i)
 A SWIG interface exposing:

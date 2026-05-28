@@ -30,7 +30,7 @@ public:
     double sum(const std::vector<double>& v);
     double sum_relaxed(const RealVector& v);
     double sum_matrix(const Matrix& m);
-    
+
     RealVector get_vector() const;
 };
 
