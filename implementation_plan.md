@@ -49,8 +49,8 @@ Integration test verifying:
 
 ---
 
-### Component C: Handle Method Overloads Delegation Tests
-We will verify that handle proxy classes delegate all overloaded methods from the underlying class.
+### Component C: Handle Method Overloads Delegation Tests [COMPLETED]
+We have verified that handle proxy classes delegate all overloaded methods from the underlying class.
 
 #### [NEW] [handle_overloads.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/handle_overloads.i)
 A SWIG interface exposing:

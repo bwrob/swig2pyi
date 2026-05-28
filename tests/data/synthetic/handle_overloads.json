@@ -14,7 +14,7 @@
     "rename_operators": true,
     "smart_pointers": [],
     "type_map": {
-        "std::string": "str",
-        "int": "int"
+        "int": "int",
+        "std::string": "str"
     }
 }
