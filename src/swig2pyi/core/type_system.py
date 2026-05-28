@@ -66,6 +66,9 @@ class TypeManager:
         return self.normalize_type(cpp_type_str)
 
     def _clean_cpp_type(self, cpp_type: str) -> str:
+        for ns in self.config.namespaces_to_remove:
+            cpp_type = cpp_type.replace(ns, "")
+
         while True:
             new_type = self._swig_prefix_regex.sub("", cpp_type)
             if new_type == cpp_type:

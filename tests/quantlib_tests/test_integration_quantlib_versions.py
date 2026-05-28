@@ -10,7 +10,7 @@ from swig2pyi.core.parser import SwigXmlParser
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
-TESTS_DIR = Path(__file__).parent
+TESTS_DIR = Path(__file__).parent.parent
 DATA_DIR = TESTS_DIR / "data"
 CONFIG_FILE = TESTS_DIR.parent / "src" / "swig2pyi" / "rules" / "quantlib.json"
 

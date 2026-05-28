@@ -6,6 +6,10 @@
         "std::set": "set",
         "std::vector": "list"
     },
+    "delegate_templates": [
+        "Handle",
+        "RelinkableHandle"
+    ],
     "extra_code": [
         "class Handle(Generic[_T]):",
         "    @overload",
@@ -24,6 +28,10 @@
         "tests/data/quantlib-1.40"
     ],
     "module_name": "QuantLib",
+    "namespaces_to_remove": [
+        "QuantLib::",
+        "ext::"
+    ],
     "rename_operators": true,
     "smart_pointers": [
         "boost::shared_ptr",

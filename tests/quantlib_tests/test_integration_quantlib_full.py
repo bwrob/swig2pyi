@@ -18,7 +18,7 @@ from swig2pyi.core.qa import CoverageReport, StubCoverageChecker
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
-TESTS_DIR = Path(__file__).parent
+TESTS_DIR = Path(__file__).parent.parent
 ROOT_DIR = TESTS_DIR.parent
 INTERFACE_FILE = TESTS_DIR / "data" / "quantlib-1.40" / "quantlib_full.i"
 CONFIG_FILE = ROOT_DIR / "src" / "swig2pyi" / "rules" / "quantlib.json"

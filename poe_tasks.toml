@@ -10,7 +10,8 @@
     lint             = { cmd = "uv run ruff check", help = "Check code rules using ruff." }
     precommit        = { cmd = "pre-commit run --all-files", help = "Run all code quality checks." }
     publish-docs     = { cmd = "mkdocs gh-deploy --force", help = "Publish the docs to GitHub Pages." }
-    test             = { cmd = "pytest", help = "Run tests using pytest." }
+    test             = { cmd = "pytest", help = "Run lightweight unit and synthetic tests." }
+    test-heavy       = { cmd = "pytest -o addopts=\"\" tests/quantlib_tests", help = "Run heavy integration tests including QuantLib." }
     type-check       = { cmd = "basedpyright --project pyrightconfig.json src tests", help = "Check static typing using basedpyright." }
 
 [tool.poe.tasks.code-quality]

@@ -12,6 +12,7 @@ def test_handle_inheritance() -> None:
         smart_pointers=[],
         containers={},
         rename_operators=False,
+        delegate_templates=["Handle", "RelinkableHandle"],
     )
     tm = TypeManager(cfg)
     emitter = StubEmitter(tm)

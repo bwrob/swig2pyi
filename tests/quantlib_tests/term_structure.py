@@ -78,7 +78,7 @@ def run_term_structure() -> None:
 
     # Combine helpers using casting or manual list of base type
     rate_helpers: List[ql.RateHelper] = cast(List[ql.RateHelper], depo_helpers) + cast(List[ql.RateHelper], bond_helpers)
-    
+
     yieldcurve = ql.PiecewiseLogCubicDiscount(
         calc_date,
         rate_helpers,

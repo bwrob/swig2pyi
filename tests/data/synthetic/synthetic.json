@@ -1,0 +1,17 @@
+{
+    "containers": {},
+    "delegate_templates": [
+        "SmartPtr"
+    ],
+    "includes": [],
+    "module_name": "synthetic",
+    "namespaces_to_remove": [
+        "Synthetic::"
+    ],
+    "rename_operators": true,
+    "smart_pointers": [],
+    "type_map": {
+        "double": "float",
+        "int": "int"
+    }
+}

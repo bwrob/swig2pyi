@@ -10,7 +10,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 def test_quantlib_mini_generation() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     interface_file = base_dir / "data" / "quantlib-1.40" / "quantlib_mini.i"
     config_file = base_dir.parent / "src" / "swig2pyi" / "rules" / "quantlib.json"
     expected_output_file = base_dir / "expected_output" / "quantlib_mini.pyi"

@@ -15,6 +15,8 @@ class Config(BaseModel):
     containers: dict[str, str]
     rename_operators: bool = False
     extra_code: list[str] = []
+    namespaces_to_remove: list[str] = []
+    delegate_templates: list[str] = []
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":

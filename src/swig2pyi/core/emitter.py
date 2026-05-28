@@ -99,7 +99,8 @@ class StubEmitter:
 
     def clean_cpp_type(self, cpp_type: str) -> str:
         """Normalize C++ type string for lookup key."""
-        cpp_type = cpp_type.replace("QuantLib::", "").replace("ext::", "")
+        for ns in self.tm.config.namespaces_to_remove:
+            cpp_type = cpp_type.replace(ns, "")
         cpp_type = cpp_type.replace("const ", "").replace("volatile ", "")
         cpp_type = cpp_type.replace("(", "").replace(")", "")
         return "".join(cpp_type.split())
@@ -144,12 +145,21 @@ class StubEmitter:
         self, cls: Class, name_to_class: dict[str, Class]
     ) -> None:
         """Delegate methods for a single Handle class."""
-        if not cls.cpp_type:
+        if not cls.cpp_type or not self.tm.config.delegate_templates:
             return
-        match = re.match(
-            r"^(?:QuantLib::)?Handle<\s*(.*?)\s*>$",
-            cls.cpp_type,
+
+        escaped_templates = "|".join(
+            re.escape(t) for t in self.tm.config.delegate_templates
         )
+        ns_prefixes = "|".join(
+            re.escape(ns)
+            for ns in self.tm.config.namespaces_to_remove
+            if ns.endswith("::")
+        )
+        ns_pattern = f"(?:{ns_prefixes})?" if ns_prefixes else ""
+
+        pattern = rf"^{ns_pattern}(?:{escaped_templates})<\s*(.*?)\s*>$"
+        match = re.match(pattern, cls.cpp_type)
         if not match:
             return
 
@@ -328,11 +338,25 @@ class StubEmitter:
 
     def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
         resolved = self.tm.to_python(cpp_type)
-        is_generic = self._is_container_type(resolved)
-        if resolved.startswith(("Handle[", "RelinkableHandle[", "TimeSeries[")):
-            is_generic = True
+        is_generic = self._is_container_type(resolved) or (
+            "[" in resolved and resolved.endswith("]")
+        )
         if is_generic and resolved not in base_names:
             base_names.append(resolved)
+            self._add_delegate_base(resolved, base_names)
+
+    def _add_delegate_base(self, resolved: str, base_names: list[str]) -> None:
+        if not self.tm.config.delegate_templates:
+            return
+        escaped_templates = "|".join(
+            re.escape(t) for t in self.tm.config.delegate_templates
+        )
+        pattern = rf"(?:^|\.)(?:{escaped_templates})\[(.+)\]$"
+        match = re.search(pattern, resolved)
+        if match:
+            wrapped_type = match.group(1)
+            if wrapped_type not in base_names:
+                base_names.append(wrapped_type)
 
     def _is_container_type(self, resolved: str) -> bool:
         for py_abc in self.tm.config.containers.values():
@@ -348,13 +372,16 @@ class StubEmitter:
         else:
             normalized_base = self.tm.to_python(base_type)
         names.append(normalized_base)
-        match = re.search(
-            r"(?:^|\.)(?:Handle|RelinkableHandle)\[(.+)\]$", normalized_base
-        )
-        if match:
-            wrapped_type = match.group(1)
-            if wrapped_type not in names:
-                names.append(wrapped_type)
+        if self.tm.config.delegate_templates:
+            escaped_templates = "|".join(
+                re.escape(t) for t in self.tm.config.delegate_templates
+            )
+            pattern = rf"(?:^|\.)(?:{escaped_templates})\[(.+)\]$"
+            match = re.search(pattern, normalized_base)
+            if match:
+                wrapped_type = match.group(1)
+                if wrapped_type not in names:
+                    names.append(wrapped_type)
         return names
 
     def _emit_properties(self, cls: Class) -> set[int]:

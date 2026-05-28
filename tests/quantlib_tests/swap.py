@@ -16,7 +16,7 @@ def run_swap_pricing() -> None:
     libor_curve = ql.YieldTermStructureHandle(
         ql.FlatForward(calculation_date, libor_rate, day_count)
     )
-    
+
     libor3M_index = ql.USDLibor(ql.Period(3, ql.Months), libor_curve)
 
     calendar = ql.UnitedStates(ql.UnitedStates.GovernmentBond)

@@ -50,9 +50,13 @@ jobs:
         if: always()
         run: uv run poe type-check
 
-      - name: 🐍 Run pytest
+      - name: 🐍 Run pytest (Lightweight)
         if: always()
         run: uv run poe test
+
+      - name: 🐍 Run pytest (Heavy Integration)
+        if: always()
+        run: uv run poe test-heavy
 
   check:
     name: 🛠️ Check if all jobs succeeded

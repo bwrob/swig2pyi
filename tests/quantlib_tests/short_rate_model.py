@@ -77,7 +77,7 @@ def run_calibration() -> None:
 
     optimization_method = ql.LevenbergMarquardt(1.0e-8, 1.0e-8, 1.0e-8)
     end_criteria = ql.EndCriteria(10000, 100, 1e-6, 1e-8, 1e-8)
-    
+
     # Run calibration
     hw_model.calibrate(hw_swaptions, optimization_method, end_criteria)
     hw_params = hw_model.params()
