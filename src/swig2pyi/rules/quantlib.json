@@ -67,6 +67,7 @@
         "Year": "int",
         "bool": "bool",
         "doubleOrNull": "Optional[float]",
-        "std::string": "str"
+        "std::string": "str",
+        "string": "str"
     }
 }

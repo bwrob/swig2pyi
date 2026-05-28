@@ -29,6 +29,7 @@ class TypeManager:
         self.config = config
         self.enums = enums or set()
         self.cpp_to_py_class_names: dict[str, str] = {}
+        self.py_class_to_cpp_types: dict[str, str] = {}
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
         self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
         self._type_map: dict[str, str] = {
@@ -54,14 +55,17 @@ class TypeManager:
 
         cpp_type = self._clean_cpp_type(cpp_type)
 
+        typedef_res = self._resolve_typedefs(cpp_type)
+        if typedef_res is not None:
+            return typedef_res
+
         if not bypass_mapping and cpp_type in self.cpp_to_py_class_names:
             return self.cpp_to_py_class_names[cpp_type]
 
         result = (
-            self._resolve_typedefs(cpp_type)
-            or self._resolve_containers(cpp_type)
-            or self._resolve_general_template(cpp_type)
-            or self._resolve_scopes(cpp_type)
+            self._resolve_containers(cpp_type, bypass_mapping=bypass_mapping)
+            or self._resolve_general_template(cpp_type, bypass_mapping=bypass_mapping)
+            or self._resolve_scopes(cpp_type, bypass_mapping=bypass_mapping)
         )
         if result is not None:
             return result
@@ -72,9 +76,45 @@ class TypeManager:
             py_type = py_type[len(prefix) :]
         return py_type
 
-    def to_python(self, cpp_type_str: str, *, bypass_mapping: bool = False) -> str:
+    def to_python(
+        self,
+        cpp_type_str: str,
+        *,
+        bypass_mapping: bool = False,
+        is_parameter: bool = False,
+    ) -> str:
         """Public interface to convert a C++ type string to a Python type hint."""
-        return self.normalize_type(cpp_type_str, bypass_mapping=bypass_mapping)
+        resolved = self.normalize_type(cpp_type_str, bypass_mapping=bypass_mapping)
+        if is_parameter:
+            if resolved == "Matrix":
+                return "Union[Matrix, Sequence[Sequence[float]]]"
+            if resolved == "Array":
+                return "Union[Array, Sequence[float]]"
+            underlying = self.py_class_to_cpp_types.get(resolved, cpp_type_str)
+            generic = self.normalize_type(underlying, bypass_mapping=True)
+            param_type = self._make_parameter_type(generic)
+            if param_type != resolved:
+                if resolved.startswith(("Sequence[", "Union[", "Optional[")):
+                    return param_type
+                return f"Union[{resolved}, {param_type}]"
+        return resolved
+
+    def _make_parameter_type(self, type_str: str) -> str:
+        if type_str.startswith("list[") and type_str.endswith("]"):
+            inner = type_str[5:-1]
+            return f"Sequence[{self._make_parameter_type(inner)}]"
+        if type_str.startswith("tuple[") and type_str.endswith("]"):
+            inner = type_str[6:-1]
+            args = self._split_template_args(inner)
+            return f"tuple[{', '.join(self._make_parameter_type(a) for a in args)}]"
+        if type_str.startswith("Union[") and type_str.endswith("]"):
+            inner = type_str[6:-1]
+            args = self._split_template_args(inner)
+            return f"Union[{', '.join(self._make_parameter_type(a) for a in args)}]"
+        if type_str.startswith("Optional[") and type_str.endswith("]"):
+            inner = type_str[9:-1]
+            return f"Optional[{self._make_parameter_type(inner)}]"
+        return type_str
 
     def _clean_basic(self, cpp_type: str) -> str:
         while True:
@@ -115,7 +155,9 @@ class TypeManager:
 
         return self.BASIC_TYPES.get(cpp_type)
 
-    def _resolve_containers(self, cpp_type: str) -> str | None:
+    def _resolve_containers(
+        self, cpp_type: str, *, bypass_mapping: bool = False
+    ) -> str | None:
         for cpp_container, py_abc in self._containers.items():
             prefix = cpp_container + "<"
             if (
@@ -129,7 +171,8 @@ class TypeManager:
                 inner = cpp_type[len(prefix) : -1].strip()
                 inner = self._clean_template_inner(inner)
                 args = [
-                    self.normalize_type(a) for a in self._split_template_args(inner)
+                    self.normalize_type(a, bypass_mapping=bypass_mapping)
+                    for a in self._split_template_args(inner)
                 ]
                 return f"{py_abc}[{', '.join(args)}]"
         return None
@@ -144,15 +187,20 @@ class TypeManager:
                 break
         return inner
 
-    def _resolve_scopes(self, cpp_type: str) -> str | None:
+    def _resolve_scopes(
+        self, cpp_type: str, *, bypass_mapping: bool = False
+    ) -> str | None:
         scopes = self._split_scopes(cpp_type)
         if len(scopes) > 1:
             if self.config.module_name and scopes[0] == self.config.module_name:
                 scopes = scopes[1:]
             if len(scopes) > 1:
-                return ".".join(self.normalize_type(s) for s in scopes)
+                return ".".join(
+                    self.normalize_type(s, bypass_mapping=bypass_mapping)
+                    for s in scopes
+                )
             if len(scopes) == 1:
-                return self.normalize_type(scopes[0])
+                return self.normalize_type(scopes[0], bypass_mapping=bypass_mapping)
         return None
 
     def _find_matching_paren_index(self, text: str) -> int:
@@ -177,13 +225,20 @@ class TypeManager:
                     return i
         return -1
 
-    def _resolve_general_template(self, cpp_type: str) -> str | None:
+    def _resolve_general_template(
+        self, cpp_type: str, *, bypass_mapping: bool = False
+    ) -> str | None:
         if "<" in cpp_type and cpp_type.endswith(">"):
             idx = cpp_type.find("<")
-            base = self.normalize_type(cpp_type[:idx].strip())
+            base = self.normalize_type(
+                cpp_type[:idx].strip(), bypass_mapping=bypass_mapping
+            )
             inner = cpp_type[idx + 1 : -1].strip()
             inner = self._clean_template_inner(inner)
-            args = [self.normalize_type(a) for a in self._split_template_args(inner)]
+            args = [
+                self.normalize_type(a, bypass_mapping=bypass_mapping)
+                for a in self._split_template_args(inner)
+            ]
             return f"{base}[{', '.join(args)}]"
         return None
 

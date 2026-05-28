@@ -69,6 +69,9 @@ class StubEmitter:
                 "TypeVar",
                 "Union",
                 "Callable",
+                "Sequence",
+                "Iterable",
+                "Iterator",
             )
             if re.search(rf"\b{sym}\b", body)
         ]
@@ -113,11 +116,15 @@ class StubEmitter:
                 key = self.clean_cpp_type(cls.cpp_type)
                 self._cpp_to_py_class_names[key] = cls.name
         self.tm.cpp_to_py_class_names = self._cpp_to_py_class_names
+        self.tm.py_class_to_cpp_types = {
+            cls.name: cls.cpp_type for cls in module.classes if cls.cpp_type
+        }
 
         self._delegate_handle_methods(module)
 
         self._emit_module_enums(module)
         self._emit_module_functions(module)
+        self._emit_module_variables(module)
         for cls in module.classes:
             self.visit_class(cls)
         self._emit_python_code(module)
@@ -283,6 +290,20 @@ class StubEmitter:
         for name, group in func_groups.items():
             self.visit_function_group(name, group, is_method=False)
 
+    def _emit_module_variables(self, module: Module) -> None:
+        """Emit module-level variables (e.g. __version__)."""
+        for var in module.cdecls:
+            if var.kind != "variable":
+                continue
+            name = self.nm.get_python_name(var.name)
+            if not name:
+                continue
+            ret_type = self.tm.to_python(var.type) if var.type else "Any"
+            if ret_type == "void":
+                ret_type = "None"
+            self.write(f"{name}: {ret_type}")
+            self._write_docstring(var.docstring)
+
     def visit_enum(self, enum: Enum) -> None:
         """Emit a Python IntEnum from a C++ enum."""
         name = enum.name.split("::")[-1]
@@ -314,6 +335,21 @@ class StubEmitter:
                 self.write(f"{item_name}: {enum_name}")
         return True
 
+    def _get_container_elem_type(self, cls: Class) -> str | None:
+        if not cls.cpp_type:
+            return None
+        resolved = self.tm.to_python(cls.cpp_type, bypass_mapping=True)
+        if resolved.startswith("list[") and resolved.endswith("]"):
+            return resolved[5:-1]
+        return None
+
+    def _emit_container_methods(self, container_elem_type: str) -> None:
+        self.write(f"def push_back(self, x: {container_elem_type}) -> None: ...")
+        self.write("def resize(self, n: int) -> None: ...")
+        self.write("def size(self) -> int: ...")
+        self.write("def empty(self) -> bool: ...")
+        self.write("def clear(self) -> None: ...")
+
     def visit_class(self, cls: Class) -> None:
         """Emit a Python class from a C++ class/struct."""
         name = cls.name
@@ -328,8 +364,17 @@ class StubEmitter:
 
         has_members = self._emit_class_enums(cls)
 
+        container_elem_type = self._get_container_elem_type(cls)
+
         if cls.constructors:
-            self.visit_constructor_group(cls.constructors)
+            self.visit_constructor_group(cls.constructors, container_elem_type)
+            has_members = True
+        elif container_elem_type:
+            self.visit_constructor_group([], container_elem_type)
+            has_members = True
+
+        if container_elem_type:
+            self._emit_container_methods(container_elem_type)
             has_members = True
 
         prop_method_ids = self._emit_properties(cls)
@@ -443,6 +488,14 @@ class StubEmitter:
         method_groups = self._group_methods(cls, skip_ids)
         for name, group in method_groups.items():
             self.visit_function_group(name, group, is_method=True)
+        if "__getitem__" in method_groups:
+            getitem_funcs = method_groups["__getitem__"]
+            ret_type = "Any"
+            if getitem_funcs and getitem_funcs[0].type:
+                ret_type = self.tm.to_python(getitem_funcs[0].type)
+                if ret_type == "None":
+                    ret_type = "Any"
+            self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
         return len(method_groups) > 0
 
     def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict[str, list[CDecl]]:
@@ -462,9 +515,24 @@ class StubEmitter:
                 method_groups[m_name].append(method)
         return method_groups
 
-    def visit_constructor_group(self, group: list[Constructor]) -> None:
+    def _add_container_ctor_overloads(
+        self, unique_sigs: dict[tuple[str, str], Constructor | None], elem_type: str
+    ) -> None:
+        iterable_sig = (f"self, iterable: Iterable[{elem_type}] = ...", "None")
+        if iterable_sig not in unique_sigs:
+            unique_sigs[iterable_sig] = None
+        size_sig = ("self, size: int", "None")
+        if size_sig not in unique_sigs:
+            unique_sigs[size_sig] = None
+        size_val_sig = (f"self, size: int, value: {elem_type}", "None")
+        if size_val_sig not in unique_sigs:
+            unique_sigs[size_val_sig] = None
+
+    def visit_constructor_group(
+        self, group: list[Constructor], container_elem_type: str | None = None
+    ) -> None:
         """Emit a group of constructors as @overload __init__ methods."""
-        unique_sigs: dict[tuple[str, str], Constructor] = {}
+        unique_sigs: dict[tuple[str, str], Constructor | None] = {}
         for ctor in group:
             dummy_func = CDecl(
                 name="__init__",
@@ -477,6 +545,9 @@ class StubEmitter:
                 dummy_func, is_method=True, indent_level=self.indent_level
             )
             unique_sigs[sig_tuple] = ctor
+
+        if container_elem_type:
+            self._add_container_ctor_overloads(unique_sigs, container_elem_type)
 
         sorted_sigs = sorted(unique_sigs.keys())
         use_overload = len(sorted_sigs) > 1

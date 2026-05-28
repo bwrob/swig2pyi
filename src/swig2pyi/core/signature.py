@@ -23,7 +23,7 @@ class SignatureFormatter:
         parts: list[str] = []
         for i, p in enumerate(parms):
             p_name = self.nm.sanitize(p.name or f"arg{i}")
-            p_type = self.tm.to_python(p.type) if p.type else "Any"
+            p_type = self.tm.to_python(p.type, is_parameter=True) if p.type else "Any"
             if p_type in self.tm.enums:
                 p_type = f"Union[{p_type}, int]"
             if p.value is not None:

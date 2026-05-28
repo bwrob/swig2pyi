@@ -93,3 +93,28 @@ def test_parens_in_template(type_manager: TypeManager) -> None:
     assert (
         type_manager.to_python("std::vector<(QuantLib::Volatility)>") == "list[float]"
     )
+
+
+def test_parameter_mapping(type_manager: TypeManager) -> None:
+    type_manager.cpp_to_py_class_names = {
+        "std::vector<boost::shared_ptr<Dividend>>": "DividendSchedule",
+    }
+    type_manager.py_class_to_cpp_types = {
+        "DividendSchedule": "std::vector<boost::shared_ptr<Dividend>>",
+    }
+    # Non-parameter resolves normally
+    assert (
+        type_manager.to_python("std::vector<boost::shared_ptr<Dividend>>")
+        == "DividendSchedule"
+    )
+    # Parameter allows Sequence
+    assert (
+        type_manager.to_python(
+            "std::vector<boost::shared_ptr<Dividend>>", is_parameter=True
+        )
+        == "Union[DividendSchedule, Sequence[Dividend]]"
+    )
+    assert (
+        type_manager.to_python("DividendSchedule", is_parameter=True)
+        == "Union[DividendSchedule, Sequence[Dividend]]"
+    )
