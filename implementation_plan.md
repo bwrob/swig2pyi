@@ -10,8 +10,8 @@ This plan introduces focused synthetic test cases targeting operator mapping, ve
 
 ## Proposed Changes
 
-### Component A: Operator Remapping Tests
-We will verify that C++ operators map to Python dunder methods.
+### Component A: Operator Remapping Tests [COMPLETED]
+We have verified that C++ operators map to Python dunder methods.
 
 #### [NEW] [operators.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/operators.i)
 A SWIG interface exposing a class `OpClass` with operators:
