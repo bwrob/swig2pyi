@@ -2477,4 +2477,3 @@ def SetPROJAuxDbPaths(*args):
 def GetPROJAuxDbPaths(*args):
     r"""GetPROJAuxDbPaths() -> char **"""
     return _osr.GetPROJAuxDbPaths(*args)
-

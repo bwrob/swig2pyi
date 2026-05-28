@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlmodel import Session, col, select
 
@@ -38,13 +39,7 @@ from .schema import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from sqlalchemy import Engine
-
-    from .schema import SQLModel
-
-T = TypeVar("T", bound="SQLModel")
 
 
 class AstBuilder:
@@ -53,114 +48,204 @@ class AstBuilder:
     def build(self, engine: Engine) -> Top:
         """Build AST from database."""
         with Session(engine) as session:
-            top_info = session.exec(select(DbTopInfo)).first()
-            module = Module(name=top_info.module_name if top_info else "Unknown")
+            top_info = session.exec(select(DbTopInfo.module_name)).first()
+            module = Module(name=top_info or "Unknown")
 
-            parms = self._load_dict(
-                session,
-                DbParm,
-                lambda p: (
-                    p.node_id or 0,
-                    Parm(name=p.name, type=p.type, value=p.value),
-                ),
-            )
-            enums = self._load_dict(
-                session,
-                DbEnumItem,
-                lambda e: (e.node_id or 0, EnumItem(name=e.name, value=e.value)),
-            )
-            bases = self._load_dict(
-                session,
-                DbBaseClass,
-                lambda b: (b.node_id or 0, b.name),
-            )
+            parms = self._load_parms(session)
+            enums = self._load_enums(session)
+            bases = self._load_bases(session)
 
-            nodes_by_id: dict[int, tuple[int | None, str, AstModel]] = {}
-            for db_node in session.exec(
-                select(DbNode).where(
-                    DbNode.feature_ignore == False,  # noqa: E712
-                    col(DbNode.parent_template_id).is_(None),
-                )
-            ):
-                model = self._create_model(db_node, parms, enums, bases)
-                if model and db_node.id is not None:
-                    nodes_by_id[db_node.id] = (
-                        db_node.parent_class_id,
-                        db_node.tag,
-                        model,
-                    )
-
+            nodes_by_id = self._load_nodes(session, parms, enums, bases)
             self._assemble_tree(module, nodes_by_id)
-
-            # Load %pythoncode blocks
-            for pc in session.exec(select(DbPythonCode)):
-                module.python_code.append(pc.code)
+            self._load_python_code(session, module)
 
             return Top(module=module)
 
-    def _load_dict(
+    def _load_parms(self, session: Session) -> dict[int, list[Parm]]:
+        parms: dict[int, list[Parm]] = {}
+        select_stmt = cast(
+            Any,  # noqa: TC006
+            select(DbParm.node_id, DbParm.name, DbParm.type, DbParm.value),
+        )
+        rows = cast(
+            Iterable[tuple[int | None, str | None, str | None, str | None]],  # noqa: TC006
+            session.exec(select_stmt.order_by(DbParm.node_id, DbParm.idx)),
+        )
+        for node_id, p_name, p_type, p_value in rows:
+            n_id = node_id or 0
+            if n_id not in parms:
+                parms[n_id] = []
+            parms[n_id].append(Parm(name=p_name, type=p_type, value=p_value))
+        return parms
+
+    def _load_enums(self, session: Session) -> dict[int, list[EnumItem]]:
+        enums: dict[int, list[EnumItem]] = {}
+        select_stmt = cast(
+            Any,  # noqa: TC006
+            select(DbEnumItem.node_id, DbEnumItem.name, DbEnumItem.value),
+        )
+        rows = cast(
+            Iterable[tuple[int | None, str, str | None]],  # noqa: TC006
+            session.exec(select_stmt.order_by(DbEnumItem.id)),
+        )
+        for node_id, e_name, e_value in rows:
+            n_id = node_id or 0
+            if n_id not in enums:
+                enums[n_id] = []
+            enums[n_id].append(EnumItem(name=e_name, value=e_value))
+        return enums
+
+    def _load_bases(self, session: Session) -> dict[int, list[str]]:
+        bases: dict[int, list[str]] = {}
+        select_stmt = cast(Any, select(DbBaseClass.node_id, DbBaseClass.name))  # noqa: TC006
+        rows = cast(
+            Iterable[tuple[int | None, str]],  # noqa: TC006
+            session.exec(select_stmt.order_by(DbBaseClass.id)),
+        )
+        for node_id, b_name in rows:
+            n_id = node_id or 0
+            if n_id not in bases:
+                bases[n_id] = []
+            bases[n_id].append(b_name)
+        return bases
+
+    def _load_nodes(
         self,
         session: Session,
-        model_type: type[T],
-        mapper: Callable[[T], tuple[int, Any]],
-    ) -> dict[int, list[Any]]:
-        res: dict[int, list[Any]] = {}
-        for item in session.exec(select(model_type)):
-            key, val = mapper(item)
-            if key not in res:
-                res[key] = []
-            res[key].append(val)
-        return res
+        parms: dict[int, list[Parm]],
+        enums: dict[int, list[EnumItem]],
+        bases: dict[int, list[str]],
+    ) -> dict[int, tuple[int | None, str, AstModel]]:
+        nodes_by_id: dict[int, tuple[int | None, str, AstModel]] = {}
+        select_stmt = cast(Any, select)(  # noqa: TC006
+            DbNode.id,
+            DbNode.parent_class_id,
+            DbNode.tag,
+            DbNode.name,
+            DbNode.kind,
+            DbNode.type,
+            DbNode.decl,
+            DbNode.is_template,
+            DbNode.is_static,
+            DbNode.docstring,
+        )
+        rows = cast(
+            Iterable[  # noqa: TC006
+                tuple[
+                    int | None,
+                    int | None,
+                    str,
+                    str,
+                    str | None,
+                    str | None,
+                    str | None,
+                    bool,
+                    bool,
+                    str | None,
+                ]
+            ],
+            session.exec(
+                select_stmt.where(
+                    col(DbNode.feature_ignore) == False,  # noqa: E712
+                    col(DbNode.parent_template_id).is_(None),
+                )
+            ),
+        )
 
-    def _create_model(
+        for (
+            db_id,
+            p_class_id,
+            tag,
+            name,
+            kind,
+            type_,
+            decl,
+            is_template,
+            is_static,
+            docstring,
+        ) in rows:
+            if db_id is None:
+                continue
+            model = self._create_model(
+                db_id,
+                tag,
+                name,
+                kind,
+                type_,
+                decl,
+                is_template,
+                is_static,
+                docstring,
+                parms,
+                enums,
+                bases,
+            )
+            if model:
+                nodes_by_id[db_id] = (
+                    p_class_id,
+                    tag,
+                    model,
+                )
+        return nodes_by_id
+
+    def _load_python_code(self, session: Session, module: Module) -> None:
+        for code in session.exec(select(DbPythonCode.code)):
+            module.python_code.append(code)
+
+    def _create_model(  # noqa: PLR0913
         self,
-        db_node: DbNode,
+        node_id: int,
+        tag: str,
+        name: str,
+        kind: str | None,
+        type_: str | None,
+        decl: str | None,
+        is_template: bool,  # noqa: FBT001
+        is_static: bool,  # noqa: FBT001
+        docstring: str | None,
         parms: dict[int, list[Parm]],
         enums: dict[int, list[EnumItem]],
         bases: dict[int, list[str]],
     ) -> AstModel | None:
-        if db_node.id is None:
-            return None
-        node_id = db_node.id
         result = None
-        if db_node.tag == "cdecl":
-            if db_node.kind in ("function", "variable"):
+        if tag == "cdecl":
+            if kind in ("function", "variable"):
                 result = CDecl(
-                    name=db_node.name,
-                    type=db_node.type,
-                    kind=db_node.kind,
-                    decl=db_node.decl,
+                    name=name,
+                    type=type_,
+                    kind=kind,
+                    decl=decl,
                     parms=parms.get(node_id) or [],
-                    is_static=db_node.is_static,
-                    docstring=db_node.docstring,
+                    is_static=is_static,
+                    docstring=docstring,
                 )
-        elif db_node.tag == "constructor":
+        elif tag == "constructor":
             result = Constructor(
-                name=db_node.name,
+                name=name,
                 parms=parms.get(node_id) or [],
-                is_static=db_node.is_static,
-                docstring=db_node.docstring,
+                is_static=is_static,
+                docstring=docstring,
             )
-        elif db_node.tag == "destructor":
+        elif tag == "destructor":
             result = Destructor(
-                name=db_node.name,
-                is_static=db_node.is_static,
-                docstring=db_node.docstring,
+                name=name,
+                is_static=is_static,
+                docstring=docstring,
             )
-        elif db_node.tag == "enum":
+        elif tag == "enum":
             result = Enum(
-                name=db_node.name,
+                name=name,
                 items=enums.get(node_id) or [],
-                docstring=db_node.docstring,
+                docstring=docstring,
             )
-        elif db_node.tag == "class":
+        elif tag == "class":
             result = Class(
-                name=db_node.name,
-                kind=db_node.kind,
-                is_template=db_node.is_template,
+                name=name,
+                kind=kind,
+                is_template=is_template,
                 bases=bases.get(node_id) or [],
-                docstring=db_node.docstring,
-                cpp_type=db_node.type,
+                docstring=docstring,
+                cpp_type=type_,
             )
         return result
 
