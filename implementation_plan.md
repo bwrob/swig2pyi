@@ -1,215 +1,106 @@
-# Implementation Plan: Parameterization, Test Restructuring, and GDAL OSR Verification
+# Implementation Plan: Focused Synthetic Tests & PyPI Packaging Readiness
 
-This document outlines the detailed plan to remove hardcoded library-specific assumptions from `swig2pyi`, restructure the test suite to separate lightweight and heavy integration tests, and verify the generator against a second mature SWIG-wrapped project: GDAL's Spatial Reference System (OSR) module.
+This plan introduces focused synthetic test cases targeting operator mapping, vector/typedef sequence parameter relaxation, and handle method delegation overloads, alongside packaging preparation for PyPI publishing.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> Based on prioritization, test restructuring and synthetic tests are placed first in the implementation sequence to establish a fast, lightweight feedback loop (<1s execution) before modifying core parser/emitter logic.
-
-## Open Questions
-
-> [!NOTE]
-> None at this time. All requirements are clear.
+> The test cases will use lightweight, isolated `.i` files in `tests/data/synthetic/` to ensure fast execution (<1s total for all new tests) and clean isolation of edge cases.
+> Packaging changes include configuring setuptools build backend and specifying rules JSON files as package-data.
 
 ## Proposed Changes
 
----
+### Component A: Operator Remapping Tests
+We will verify that C++ operators map to Python dunder methods.
 
-### Component A: Test Suite Reorganization & CI Integration (Priority 1)
+#### [NEW] [operators.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/operators.i)
+A SWIG interface exposing a class `OpClass` with operators:
+* `operator==`, `operator!=`
+* `operator<`, `operator<=`, `operator>`, `operator>=`
+* `operator()`
+* `operator[]` (read and write)
+* `operator+`, `operator-`, `operator*`, `operator/`
+* `operator+=`
 
-1.  **Move QuantLib Integration Tests**:
-    Move these slow files to the existing `tests/quantlib_tests/` directory:
-    *   `tests/test_integration_quantlib_full.py` $\rightarrow$ `tests/quantlib_tests/test_integration_quantlib_full.py`
-    *   `tests/test_integration_quantlib_mini.py` $\rightarrow$ `tests/quantlib_tests/test_integration_quantlib_mini.py`
-    *   `tests/test_integration_quantlib_versions.py` $\rightarrow$ `tests/quantlib_tests/test_integration_quantlib_versions.py`
-    *   `tests/test_static_verification.py` $\rightarrow$ `tests/quantlib_tests/test_static_verification.py`
-2.  **Ignore Heavy Tests by Default**:
-    Configure `pytest` in [pyproject.toml](file:///home/bwrob/dev/swig2pyi/pyproject.toml) to ignore the `tests/quantlib_tests/` directory during default runs:
-    ```toml
-    [tool.pytest.ini_options]
-    addopts = "--ignore=tests/quantlib_tests"
-    ```
-3.  **Define Dedicated Tasks**:
-    Update [poe_tasks.toml](file:///home/bwrob/dev/swig2pyi/poe_tasks.toml) to configure `test` and `test-heavy`.
-    *Note*: We override `addopts` with `-o addopts=""` to make sure `--ignore` is disabled when running the heavy test suite.
-    ```toml
-    [tool.poe.tasks]
-    test = { cmd = "pytest", help = "Run lightweight unit and synthetic tests." }
-    test-heavy = { cmd = "pytest -o addopts=\"\" tests/quantlib_tests", help = "Run heavy integration tests including QuantLib." }
-    ```
-4.  **Update CI Workflows**:
-    Update the GitHub Action configuration in [.github/workflows/python_tests.yaml](file:///home/bwrob/dev/swig2pyi/.github/workflows/python_tests.yaml) to run both the lightweight and the heavy test suites:
-    ```yaml
-          - name: 🐍 Run pytest (Lightweight)
-            if: always()
-            run: uv run poe test
+#### [NEW] [operators.json](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/operators.json)
+JSON config for operators test.
 
-          - name: 🐍 Run pytest (Heavy Integration)
-            if: always()
-            run: uv run poe test-heavy
-    ```
+#### [NEW] [test_integration_operators.py](file:///home/bwrob/dev/swig2pyi/tests/test_integration_operators.py)
+Integration test checking that stubs contain correct Python dunder signatures (`__eq__`, `__ne__`, `__lt__`, `__le__`, `__gt__`, `__ge__`, `__call__`, `__getitem__`, `__setitem__`, `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__iadd__`).
 
 ---
 
-### Component B: Synthetic Test Suite (Priority 2)
+### Component B: Vector and Typedef Parameter Relaxation Tests
+We will verify standard list methods and constructors are added to vector types, and parameter types allow Sequence conversions.
 
-Create a self-contained test case that verifies all parser and emitter features using a mock SWIG interface file.
-
-#### [NEW] [synthetic.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/synthetic.i)
+#### [NEW] [vector_typedefs.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/vector_typedefs.i)
 A SWIG interface exposing:
-*   A C++ namespace prefix (e.g. `Synthetic::`).
-*   A base class and a derived class.
-*   An enum inside a class.
-*   Methods with default parameters.
-*   An overloaded operator (e.g. `operator+`).
-*   A template class (e.g. `SmartPtr<T>`).
+* `std::vector<double>` and a typedef `RealVector`
+* A class `Maths` with a method taking `RealVector` and `std::vector<std::vector<double>>` (matrix)
+* A method returning `RealVector`
 
-#### [NEW] [test_integration_synthetic.py](file:///home/bwrob/dev/swig2pyi/tests/test_integration_synthetic.py)
-Integration test that compiles `synthetic.i`, generates stubs, and verifies output structure.
+#### [NEW] [vector_typedefs.json](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/vector_typedefs.json)
+JSON config for vector/typedef test.
 
----
-
-### Component C: Core Configuration & Schema (Priority 3)
-
-#### [MODIFY] [config.py](file:///home/bwrob/dev/swig2pyi/src/swig2pyi/core/config.py)
-Add the following fields to the Pydantic `Config` class to allow customizing namespace cleaning and proxy handling:
-*   `namespaces_to_remove: list[str] = []`
-    *   *Purpose*: A list of namespaces that should be cleaned from C++ types during processing (e.g., `["QuantLib::", "ext::"]`).
-*   `delegate_templates: list[str] = []`
-    *   *Purpose*: A list of C++ template names that represent smart pointer or handle proxies (e.g., `["Handle", "RelinkableHandle"]`).
+#### [NEW] [test_integration_vectors.py](file:///home/bwrob/dev/swig2pyi/tests/test_integration_vectors.py)
+Integration test verifying:
+* `RealVector` constructor overloads (`Iterable`, `size`, `size, value`) and standard methods (`push_back`, `resize`, `size`, `empty`, `clear`).
+* Parameter types allow `Union[RealVector, Sequence[float]]`.
 
 ---
 
-### Component D: Core Parser & Emitter (Priority 4)
+### Component C: Handle Method Overloads Delegation Tests
+We will verify that handle proxy classes delegate all overloaded methods from the underlying class.
 
-#### [MODIFY] [emitter.py](file:///home/bwrob/dev/swig2pyi/src/swig2pyi/core/emitter.py)
-*   **Namespace Stripping**:
-    Update the `clean_cpp_type` method to dynamically iterate over and remove prefixes listed in `config.namespaces_to_remove`.
-    ```python
-    def clean_cpp_type(self, cpp_type: str) -> str:
-        for ns in self.tm.config.namespaces_to_remove:
-            cpp_type = cpp_type.replace(ns, "")
-        cpp_type = cpp_type.replace("const ", "").replace("volatile ", "")
-        cpp_type = cpp_type.replace("(", "").replace(")", "")
-        return "".join(cpp_type.split())
-    ```
-*   **Smart Pointer Delegation**:
-    Update `_delegate_single_handle` to build its template-matching regular expression dynamically based on `config.delegate_templates` and `config.namespaces_to_remove`.
-    ```python
-    def _delegate_single_handle(self, cls: Class, name_to_class: dict[str, Class]) -> None:
-        if not cls.cpp_type or not self.tm.config.delegate_templates:
-            return
+#### [NEW] [handle_overloads.i](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/handle_overloads.i)
+A SWIG interface exposing:
+* Class `Underlying` with overloaded methods `foo(int)` and `foo(std::string)`.
+* Template `Handle<T>` proxy class delegating to `Underlying`.
+* Instantiation `UnderlyingHandle` using `%template`.
 
-        escaped_templates = "|".join(re.escape(t) for t in self.tm.config.delegate_templates)
-        ns_prefixes = "|".join(re.escape(ns) for ns in self.tm.config.namespaces_to_remove if ns.endswith("::"))
-        ns_pattern = f"(?:{ns_prefixes})?" if ns_prefixes else ""
+#### [NEW] [handle_overloads.json](file:///home/bwrob/dev/swig2pyi/tests/data/synthetic/handle_overloads.json)
+JSON config for handle overloads test.
 
-        pattern = rf"^{ns_pattern}(?:{escaped_templates})<\s*(.*?)\s*>$"
-        match = re.match(pattern, cls.cpp_type)
-        if not match:
-            return
-
-        target_type = match.group(1).strip("() ")
-        cleaned_target = self.clean_cpp_type(target_type)
-        py_target_name = self._cpp_to_py_class_names.get(cleaned_target)
-        if not py_target_name:
-            return
-
-        collected = self._collect_class_methods(py_target_name, name_to_class, set())
-        existing_names = {self.nm.get_python_name(m.name) for m in cls.cdecls}
-        for method in collected:
-            py_name = self.nm.get_python_name(method.name)
-            if py_name and py_name not in existing_names:
-                cls.cdecls.append(method.model_copy(deep=True))
-                existing_names.add(py_name)
-    ```
-*   **Dynamic Template Base Names Extraction**:
-    Update `_add_cpp_type_base` and `_get_base_names` to dynamically handle templates from configuration instead of hardcoding `Handle`, `RelinkableHandle`, or `TimeSeries`.
-    ```python
-    def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
-        resolved = self.tm.to_python(cpp_type)
-        is_generic = self._is_container_type(resolved)
-        # Handle generic template types dynamically (e.g. Handle[X], TimeSeries[X])
-        if "[" in resolved and resolved.endswith("]"):
-            is_generic = True
-        if is_generic and resolved not in base_names:
-            base_names.append(resolved)
-
-    def _get_base_names(self, base_type: str) -> list[str]:
-        names: list[str] = []
-        cleaned = self.clean_cpp_type(base_type)
-        if cleaned in self._cpp_to_py_class_names:
-            normalized_base = self._cpp_to_py_class_names[cleaned]
-        else:
-            normalized_base = self.tm.to_python(base_type)
-        names.append(normalized_base)
-
-        # Extract wrapped type from delegate templates
-        if self.tm.config.delegate_templates:
-            escaped_templates = "|".join(re.escape(t) for t in self.tm.config.delegate_templates)
-            pattern = rf"(?:^|\.)(?:{escaped_templates})\[(.+)\]$"
-            match = re.search(pattern, normalized_base)
-            if match:
-                wrapped_type = match.group(1)
-                if wrapped_type not in names:
-                    names.append(wrapped_type)
-        return names
-    ```
-
-#### [MODIFY] [quantlib.json](file:///home/bwrob/dev/swig2pyi/src/swig2pyi/rules/quantlib.json)
-Update the JSON configuration file to externalize the QuantLib rules:
-```json
-{
-    "module_name": "QuantLib",
-    "includes": [
-        "tests/data/quantlib-1.40"
-    ],
-    "namespaces_to_remove": [
-        "QuantLib::",
-        "ext::"
-    ],
-    "delegate_templates": [
-        "Handle",
-        "RelinkableHandle"
-    ],
-    ...
-}
-```
+#### [NEW] [test_integration_handle_overloads.py](file:///home/bwrob/dev/swig2pyi/tests/test_integration_handle_overloads.py)
+Integration test verifying that `UnderlyingHandle` contains both overloaded signatures of `foo`.
 
 ---
 
-### Component E: GDAL OSR Integration & Multi-Project Test (Priority 5)
+### Component D: Clean up and Packaging Preparation (PyPI Readiness)
+Configure the package metadata and package data to include configuration JSON files in the build.
 
-#### [NEW] [gdal_osr.json](file:///home/bwrob/dev/swig2pyi/src/swig2pyi/rules/gdal_osr.json)
-Configure rules for GDAL OSR (e.g., mapping type name changes).
+#### [MODIFY] [pyproject.toml](file:///home/bwrob/dev/swig2pyi/pyproject.toml)
+* Define a standard setuptools build backend.
+* Explicitly configure package data to include `src/swig2pyi/rules/*.json` in the built distribution wheel.
 
-#### [NEW] [osr.xml](file:///home/bwrob/dev/swig2pyi/tests/data/osr/osr.xml)
-A pre-generated SWIG XML file for GDAL OSR to run tests without requiring the GDAL development library on the testing host.
+---
 
-#### [NEW] [test_integration_osr.py](file:///home/bwrob/dev/swig2pyi/tests/test_integration_osr.py)
-Run generation on `osr.xml` and assert structural correctness of `SpatialReference` and `CoordinateTransformation`.
+### Component E: Thermonuclear Code Quality Review
+We will install the thermonuclear code review skill and execute an architectural review on the core package logic.
 
-#### [MODIFY] [test_handle_inheritance.py](file:///home/bwrob/dev/swig2pyi/tests/test_handle_inheritance.py)
-Update config initialization in this test to define `delegate_templates=["Handle", "RelinkableHandle"]` explicitly.
+#### [NEW] [SKILL.md](file:///home/bwrob/dev/swig2pyi/.agents/skills/thermonuclear/SKILL.md)
+* Define the strict, adversarial code quality audit skill.
+
+#### [RUN] Architectural Review
+* Execute the thermonuclear code quality review skill on `src/swig2pyi/core/` to audit abstraction quality, look for simplification opportunities ("code judo"), and identify potential refactorings.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-*   Run lightweight test suite (<1s execution time):
-    ```bash
-    uv run pytest
-    ```
-*   Run heavy integration suite:
-    ```bash
-    uv run poe test-heavy
-    ```
-*   Run full code quality:
-    ```bash
-    uv run poe code-quality
-    ```
+* Run lightweight tests:
+  ```bash
+  uv run poe test
+  ```
+* Run test coverage:
+  ```bash
+  uv run poe coverage
+  ```
+* Run code quality checks:
+  ```bash
+  uv run poe code-quality
+  ```
 
 ### Manual Verification
-*   Verify that generated stubs from `osr.xml` parse cleanly with `ast.parse` and can be formatted by `ruff`.
+* Run `uv build` and inspect the generated wheel contents to ensure `swig2pyi/rules/quantlib.json` and `swig2pyi/rules/gdal_osr.json` are packaged.

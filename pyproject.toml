@@ -82,3 +82,10 @@ docstring-code-format = true
 
 [tool.pytest.ini_options]
 addopts = "--ignore=tests/quantlib_tests"
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+"swig2pyi.rules" = ["*.json"]
