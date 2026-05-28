@@ -28,6 +28,7 @@ class TypeManager:
         """Initialize with configuration."""
         self.config = config
         self.enums = enums or set()
+        self.cpp_to_py_class_names: dict[str, str] = {}
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
         self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
         self._type_map: dict[str, str] = {
@@ -43,27 +44,27 @@ class TypeManager:
             return re.compile(r"$.^")  # Match nothing
         return re.compile(rf"^(?:{'|'.join(patterns)})\s*<(.+)>$")
 
-    def normalize_type(self, cpp_type: str) -> str:
+    def normalize_type(self, cpp_type: str, *, bypass_mapping: bool = False) -> str:
         """Normalize a C++ type string to a valid Python type hint."""
         cpp_type = cpp_type.strip()
 
         basic_cleaned = self._clean_basic(cpp_type)
         if match := self._smart_ptr_regex.match(basic_cleaned):
-            return self.normalize_type(match.group(1))
+            return self.normalize_type(match.group(1), bypass_mapping=bypass_mapping)
 
         cpp_type = self._clean_cpp_type(cpp_type)
 
-        if mapped := self._resolve_typedefs(cpp_type):
-            return mapped
+        if not bypass_mapping and cpp_type in self.cpp_to_py_class_names:
+            return self.cpp_to_py_class_names[cpp_type]
 
-        if container := self._resolve_containers(cpp_type):
-            return container
-
-        if template := self._resolve_general_template(cpp_type):
-            return template
-
-        if resolved_scope := self._resolve_scopes(cpp_type):
-            return resolved_scope
+        result = (
+            self._resolve_typedefs(cpp_type)
+            or self._resolve_containers(cpp_type)
+            or self._resolve_general_template(cpp_type)
+            or self._resolve_scopes(cpp_type)
+        )
+        if result is not None:
+            return result
 
         py_type = cpp_type.replace("::", ".")
         prefix = self.config.module_name + "." if self.config.module_name else ""
@@ -71,9 +72,9 @@ class TypeManager:
             py_type = py_type[len(prefix) :]
         return py_type
 
-    def to_python(self, cpp_type_str: str) -> str:
+    def to_python(self, cpp_type_str: str, *, bypass_mapping: bool = False) -> str:
         """Public interface to convert a C++ type string to a Python type hint."""
-        return self.normalize_type(cpp_type_str)
+        return self.normalize_type(cpp_type_str, bypass_mapping=bypass_mapping)
 
     def _clean_basic(self, cpp_type: str) -> str:
         while True:
@@ -85,8 +86,7 @@ class TypeManager:
         cpp_type = cpp_type.replace("const ", "").replace("volatile ", "").strip()
         while cpp_type and (cpp_type.endswith(("&", "*"))):
             cpp_type = cpp_type[:-1].strip()
-        while cpp_type.startswith("(") and cpp_type.endswith(")"):
-            cpp_type = cpp_type[1:-1].strip()
+        cpp_type = cpp_type.replace("(", "").replace(")", "")
 
         return (
             cpp_type.replace(" <", "<")

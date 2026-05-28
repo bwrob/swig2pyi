@@ -112,6 +112,7 @@ class StubEmitter:
             if cls.cpp_type:
                 key = self.clean_cpp_type(cls.cpp_type)
                 self._cpp_to_py_class_names[key] = cls.name
+        self.tm.cpp_to_py_class_names = self._cpp_to_py_class_names
 
         self._delegate_handle_methods(module)
 
@@ -141,12 +142,10 @@ class StubEmitter:
                 )
         return methods
 
-    def _delegate_single_handle(
-        self, cls: Class, name_to_class: dict[str, Class]
-    ) -> None:
-        """Delegate methods for a single Handle class."""
-        if not cls.cpp_type or not self.tm.config.delegate_templates:
-            return
+    def _get_delegate_target(self, cpp_type: str) -> str | None:
+        """Parse delegate target name from C++ type string."""
+        if not cpp_type or not self.tm.config.delegate_templates:
+            return None
 
         escaped_templates = "|".join(
             re.escape(t) for t in self.tm.config.delegate_templates
@@ -159,23 +158,43 @@ class StubEmitter:
         ns_pattern = f"(?:{ns_prefixes})?" if ns_prefixes else ""
 
         pattern = rf"^{ns_pattern}(?:{escaped_templates})<\s*(.*?)\s*>$"
-        match = re.match(pattern, cls.cpp_type)
+        match = re.match(pattern, cpp_type)
         if not match:
-            return
+            return None
 
         target_type = match.group(1).strip("() ")
         cleaned_target = self.clean_cpp_type(target_type)
-        py_target_name = self._cpp_to_py_class_names.get(cleaned_target)
+        return self._cpp_to_py_class_names.get(cleaned_target)
+
+    def _delegate_single_handle(
+        self, cls: Class, name_to_class: dict[str, Class]
+    ) -> None:
+        """Delegate methods for a single Handle class."""
+        if not cls.cpp_type:
+            return
+        py_target_name = self._get_delegate_target(cls.cpp_type)
         if not py_target_name:
             return
 
         collected = self._collect_class_methods(py_target_name, name_to_class, set())
-        existing_names = {self.nm.get_python_name(m.name) for m in cls.cdecls}
+        originally_defined_names = {
+            self.nm.get_python_name(m.name)
+            for m in cls.cdecls
+            if self.nm.get_python_name(m.name)
+        }
+        existing_signatures = {
+            (self.nm.get_python_name(m.name), tuple(p.type for p in m.parms))
+            for m in cls.cdecls
+            if self.nm.get_python_name(m.name)
+        }
         for method in collected:
             py_name = self.nm.get_python_name(method.name)
-            if py_name and py_name not in existing_names:
+            if not py_name or py_name in originally_defined_names:
+                continue
+            sig_key = (py_name, tuple(p.type for p in method.parms))
+            if sig_key not in existing_signatures:
                 cls.cdecls.append(method.model_copy(deep=True))
-                existing_names.add(py_name)
+                existing_signatures.add(sig_key)
 
     def _delegate_handle_methods(self, module: Module) -> None:
         """Delegate methods from target classes to Handle wrappers."""
@@ -337,7 +356,7 @@ class StubEmitter:
         return f"({', '.join(base_names)})" if base_names else ""
 
     def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
-        resolved = self.tm.to_python(cpp_type)
+        resolved = self.tm.to_python(cpp_type, bypass_mapping=True)
         is_generic = self._is_container_type(resolved) or any(
             resolved.startswith(f"{t}[") for t in self.tm.config.generic_templates
         )

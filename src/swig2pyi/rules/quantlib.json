@@ -41,7 +41,8 @@
     "smart_pointers": [
         "boost::shared_ptr",
         "std::shared_ptr",
-        "ext::shared_ptr"
+        "ext::shared_ptr",
+        "shared_ptr"
     ],
     "type_map": {
         "Day": "int",
