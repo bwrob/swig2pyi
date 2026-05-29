@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias
-
 from pydantic import BaseModel
 
 
@@ -91,6 +89,6 @@ class Top(BaseModel):
     module: Module | None = None
 
 
-AstModel: TypeAlias = (
+type AstModel = (
     "CDecl | Constructor | Destructor | Enum | Class | Module | Top | EnumItem | Parm"
 )
