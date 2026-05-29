@@ -28,6 +28,7 @@ class TypeManager:
         """Initialize with configuration."""
         self.config = config
         self.enums = enums or set()
+        self.needed_imports: set[str] = set()
         self.cpp_to_py_class_names: dict[str, str] = {}
         self.py_class_to_cpp_types: dict[str, str] = {}
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
@@ -86,18 +87,47 @@ class TypeManager:
         """Public interface to convert a C++ type string to a Python type hint."""
         resolved = self.normalize_type(cpp_type_str, bypass_mapping=bypass_mapping)
         if is_parameter:
-            if resolved == "Matrix":
-                return "Union[Matrix, Sequence[Sequence[float]]]"
-            if resolved == "Array":
-                return "Union[Array, Sequence[float]]"
-            underlying = self.py_class_to_cpp_types.get(resolved, cpp_type_str)
-            generic = self.normalize_type(underlying, bypass_mapping=True)
-            param_type = self._make_parameter_type(generic)
-            if param_type != resolved:
-                if resolved.startswith(("Sequence[", "Union[", "Optional[")):
-                    return param_type
-                return f"Union[{resolved}, {param_type}]"
+            resolved = self._to_python_parameter(resolved, cpp_type_str)
+
+        self._record_imports(resolved)
         return resolved
+
+    def _to_python_parameter(self, resolved: str, cpp_type_str: str) -> str:
+        if resolved == "Matrix":
+            self.needed_imports.update({"Union", "Sequence"})
+            return "Union[Matrix, Sequence[Sequence[float]]]"
+        if resolved == "Array":
+            self.needed_imports.update({"Union", "Sequence"})
+            return "Union[Array, Sequence[float]]"
+
+        underlying = self.py_class_to_cpp_types.get(resolved, cpp_type_str)
+        generic = self.normalize_type(underlying, bypass_mapping=True)
+        param_type = self._make_parameter_type(generic)
+        if param_type == resolved:
+            return resolved
+
+        if resolved.startswith(("Sequence[", "Union[", "Optional[")):
+            return param_type
+
+        self.needed_imports.add("Union")
+        return f"Union[{resolved}, {param_type}]"
+
+    def _record_imports(self, resolved: str) -> None:
+        for sym in (
+            "Any",
+            "Optional",
+            "Union",
+            "Callable",
+            "Sequence",
+            "Iterable",
+            "Iterator",
+        ):
+            if sym in resolved:
+                self.needed_imports.add(sym)
+        if "collections.abc" in resolved:
+            self.needed_imports.add("collections.abc")
+        if "typing." in resolved:
+            self.needed_imports.add("typing")
 
     def _make_parameter_type(self, type_str: str) -> str:
         if type_str.startswith("list[") and type_str.endswith("]"):

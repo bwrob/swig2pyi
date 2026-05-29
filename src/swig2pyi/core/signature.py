@@ -23,8 +23,14 @@ class SignatureFormatter:
         parts: list[str] = []
         for i, p in enumerate(parms):
             p_name = self.nm.sanitize(p.name or f"arg{i}")
-            p_type = self.tm.to_python(p.type, is_parameter=True) if p.type else "Any"
+            if p.type:
+                p_type = self.tm.to_python(p.type, is_parameter=True)
+            else:
+                self.tm.needed_imports.add("Any")
+                p_type = "Any"
+
             if p_type in self.tm.enums:
+                self.tm.needed_imports.add("Union")
                 p_type = f"Union[{p_type}, int]"
             if p.value is not None:
                 parts.append(f"{p_name}: {p_type} = ...")
@@ -53,7 +59,12 @@ class SignatureFormatter:
         else:
             full_params = ""
 
-        ret_type = self.tm.to_python(func.type) if func.type else "Any"
+        if func.type:
+            ret_type = self.tm.to_python(func.type)
+        else:
+            self.tm.needed_imports.add("Any")
+            ret_type = "Any"
+
         if ret_type == "void":
             ret_type = "None"
         return (full_params, ret_type)
