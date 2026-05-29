@@ -1,23 +1,24 @@
 # swig2pyi
 
-A tool to generate high-quality Python type stubs (`.pyi`) from SWIG interface files (`.i`).
+A tool to generate high-quality Python type stubs (`.pyi`) from SWIG interface files (`.i`) or SWIG XML outputs (`.xml`).
 
 ## Overview
 
-`swig2pyi` parses the XML output from SWIG to understand the C++ class structure, template instantiations, and type hierarchy. It then generates modern Python 3 type hints, including support for generics, overloads, and standard library types.
+`swig2pyi` parses the XML output from SWIG to extract C++ class structures, template instantiations, and type hierarchies. It then generates modern Python type hints, including support for generics, method overloads, and standard library types.
 
-It is specifically designed to handle complex libraries like QuantLib, but the architecture is generic enough for other SWIG-wrapped projects.
+While designed to handle complex wrappers like QuantLib and GDAL (OSR), the architecture is generic and rule-driven, allowing it to adapt to any SWIG-wrapped project.
 
 ## Features
 
 *   **Universal Pipeline:** Uses SWIG's XML output (`swig -xml`) as the source of truth, avoiding fragile regex parsing of `.i` files.
-*   **Scalable Parsing:** Streams massive XML files into a temporary SQLite database using `sqlmodel`, minimizing RAM usage and allowing complex type resolution via SQL queries.
-*   **Robust Type Mapping:** Configuration-driven mapping (`json`) for C++ to Python types, including smart pointers (`std::shared_ptr`) and containers (`std::vector`).
+*   **Scalable Parsing:** Streams massive XML files in a single pass using `xml.etree.ElementTree.iterparse` directly into a strongly-typed Pydantic AST, minimizing memory overhead.
+*   **Robust Type Mapping:** Configuration-driven rules (`json`) for C++ to Python type mappings, smart pointer resolution (`std::shared_ptr`), and templates.
 *   **Advanced C++ Support:**
-    *   Correctly handles C++ inheritance, including template inheritance (e.g., `Handle<T>`).
-    *   Maps C++ enums to Python `IntEnum`.
-    *   Resolves overloaded functions and constructors.
-*   **QA Integration:** Built-in support for running `ruff` (formatting/linting) and `pyright` (type checking) on the generated stubs.
+    *   Inheritance hierarchies, including template bases.
+    *   Mapping C++ enums to Python `IntEnum`.
+    *   Overloaded function/constructor resolution.
+    *   Smart pointer delegation and template class wrappers.
+*   **QA Integration:** Automated formatting (`ruff`) and type verification (`pyright`/`basedpyright`) on the generated stubs to ensure 100% compliance.
 
 ## Installation
 
@@ -34,26 +35,28 @@ uv sync
 
 ## Usage
 
-`swig2pyi` can run in two modes:
-1.  **Interface Mode:** Runs SWIG to generate XML, then parses it.
-2.  **XML Mode:** Parses a pre-generated SWIG XML file.
+`swig2pyi` operates in two modes:
+1.  **Interface Mode:** Invokes SWIG under the hood to generate XML, then emits stubs.
+2.  **XML Mode:** Parses a pre-generated SWIG XML file directly.
 
 ### Command Line Interface
 
+You can run the generator using the `swig2pyi` executable wrapper:
+
 ```bash
-# 1. Generate from .i file (requires swig executable)
-uv run python -m swig2pyi.main --interface path/to/interface.i --config path/to/config.json --output path/to/output.pyi
+# 1. Generate from a SWIG interface .i file (requires swig executable)
+uv run swig2pyi --interface path/to/interface.i --config path/to/config.json --output path/to/output.pyi
 
-# 2. Generate from existing XML file
-uv run python -m swig2pyi.main --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi
+# 2. Generate from a pre-compiled XML file
+uv run swig2pyi --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi
 
-# 3. Enable QA Validation (runs ruff & pyright on output)
-uv run python -m swig2pyi.main --interface path/to/interface.i --config path/to/config.json --output path/to/output.pyi --validate
+# 3. Enable QA validation (runs formatters and type-checkers on the output)
+uv run swig2pyi --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi --validate
 ```
 
 ### Configuration
 
-The configuration file (`config.json`) defines how types are mapped. See `src/swig2pyi/rules/quantlib.json` for a comprehensive example.
+The configuration file defines the module rules. Pre-defined rules for QuantLib and GDAL are located under `src/swig2pyi/rules/`.
 
 ```json
 {
@@ -75,18 +78,24 @@ The configuration file (`config.json`) defines how types are mapped. See `src/sw
 
 ## Development
 
-### Running Tests
+The project uses `poethepoet` to manage development workflows.
 
 ```bash
-# Run all tests
-uv run pytest
+# Run all code quality tools (linting, formatting, type checking, and complexity)
+uv run poe code-quality
 
-# Run specific test
-uv run pytest tests/test_parser_enum.py
+# Run unit tests
+uv run poe test
+
+# Run heavy integration tests (requires QuantLib build/dependencies)
+uv run poe test-heavy
+
+# Measure test coverage
+uv run poe coverage
 ```
 
 ### Project Structure
 
-*   `src/swig2pyi/core`: Core logic (Parser, Emitter, TypeSystem, Runner, QA).
-*   `src/swig2pyi/rules`: Default configuration rules.
-*   `tests`: Unit and integration tests.
+*   `src/swig2pyi/core`: Core parser, type system, naming managers, emitters, and QA validators.
+*   `src/swig2pyi/rules`: Pre-configured rules and type mappings for target libraries.
+*   `tests`: Unit and integration test suite.
