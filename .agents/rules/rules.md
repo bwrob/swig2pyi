@@ -12,6 +12,9 @@
   - `goals.md` for high-level targets. Read to align on overall project aims. Do not edit unless directed.
   - `plan.md` for future roadmap. Update by removing completed tasks and adding new future tasks.
   - `achievements.md` for completed achievements. Update by appending finished milestones. Keep plan for future, achievements for past.
+- **Root Cleanliness:** Do not add standalone tools or configurations to root (e.g. `poe_tasks.toml`, `requirements.txt`). Put them in `pyproject.toml` or appropriate subdirectories.
+- **Rule Placement:** Workspace rules must be placed under `.agents/rules/` with YAML frontmatter triggers (e.g. `trigger: glob`).
+- **Tool Execution:** Prefix tooling commands with `uv run` to guarantee version alignment and environment consistency.
 
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
