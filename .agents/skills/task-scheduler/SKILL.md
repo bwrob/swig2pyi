@@ -28,6 +28,10 @@ Before scheduling any task, you MUST interview the user to clarify the following
 4. **Roadmap Categorization:**
    * *Question:* "Should this task be placed in Active Tasks (Working On), Future Tasks (Next Steps), or Package Release & Quality Tasks?"
 
+5. **Task Prioritization:**
+   * *Question:* "What is the priority level (High, Medium, Low) for this task?"
+   * *Purpose:* Focuses resources on high-impact milestones first.
+
 ---
 
 ## 2. Formatting Standards
@@ -35,11 +39,11 @@ Before scheduling any task, you MUST interview the user to clarify the following
 All tasks added to `.project/plan.md` must strictly follow this format:
 
 ```markdown
-- [ ] **[Component / Category]: [Task Title]:** [Task Details explaining the goal, scope, and expected outcome].
+- [ ] **[Component / Category]: [Task Title] [Priority: High|Medium|Low]:** [Task Details explaining the goal, scope, and expected outcome].
 ```
 
 ### Examples:
-* **Correct:** `- [ ] **Component G: Explicit Import Tracking:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.`
+* **Correct:** `- [ ] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.`
 * **Incorrect:** `- [ ] Fix imports in emitter`
 
 ---
