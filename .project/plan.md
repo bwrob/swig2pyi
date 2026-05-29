@@ -14,6 +14,8 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [ ] **Type System: Nested Template Resolution:** Enhance the `TypeManager` to handle complex nested templates (e.g. `std::vector<std::vector<std::shared_ptr<T>>>`) and custom template argument resolvers.
 - [ ] **CLI: Stub Coverage Command:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
 - [ ] **CI: Dynamic CI Integrations:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.
+- [ ] **QA: Verify Multi-Library Portability:** Execute `swig2pyi` on at least 2 additional, non-QuantLib SWIG interface examples (e.g., GDAL or standard SWIG examples) and verify zero `basedpyright` errors in generated stubs.
+
 
 ## 3. Package Release & Quality Tasks
 - [ ] **QA: Literal Code Coverage Target:** Run `uv run poe coverage` and ensure the code coverage for the `swig2pyi` codebase meets or exceeds 90%.
