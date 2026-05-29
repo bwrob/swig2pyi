@@ -15,6 +15,8 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [ ] **CLI: Stub Coverage Command:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
 - [ ] **CI: Dynamic CI Integrations:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.
 - [ ] **QA: Verify Multi-Library Portability:** Execute `swig2pyi` on at least 2 additional, non-QuantLib SWIG interface examples (e.g., GDAL or standard SWIG examples) and verify zero `basedpyright` errors in generated stubs.
+- [ ] **Research: Analyze SWIG Specifications:** Download SWIG documentation to `.temp/`, review C++ mapping specifications, identify gaps or divergence in current parser/emitter features, and plan/implement coverage for them.
+
 
 
 ## 3. Package Release & Quality Tasks
