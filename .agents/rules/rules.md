@@ -9,9 +9,9 @@
 
 - **Debugging:** Always create debug scripts, throwaway test files, and temporary outputs in the `.temp/` directory. Do not clutter the root directory or the `tests/` directory with transient diagnostic code.
 - **Project Resources:** Read and update files under `.project/` folder:
-  - `goals.md` for high-level targets.
-  - `plan.md` for remaining tasks/future roadmap.
-  - `achievements.md` for completed milestones.
+  - `goals.md` for high-level targets. Read to align on overall project aims. Do not edit unless directed.
+  - `plan.md` for future roadmap. Update by removing completed tasks and adding new future tasks.
+  - `achievements.md` for completed achievements. Update by appending finished milestones. Keep plan for future, achievements for past.
 
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
