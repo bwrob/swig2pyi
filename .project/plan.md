@@ -10,6 +10,9 @@ This plan tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [ ] **Type Mapping Refinement:** Improve the mapping of C++ templates like `std::vector<T>` to `list[T]` and `Handle<T>` to `Handle[T]`.
 - [ ] **Strict Type Validation:** Run `basedpyright` in strict mode against real QuantLib Python tests and iteratively resolve emitter gaps.
 - [ ] **Full QuantLib Verification:** Achieve zero type-checking errors on all 50+ QuantLib Python test files using the generated stubs.
+- [ ] **Nested Template Resolution:** Enhance the `TypeManager` to handle complex nested templates (e.g. `std::vector<std::vector<std::shared_ptr<T>>>`) and custom template argument resolvers.
+- [ ] **Stub Coverage Command:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
+- [ ] **Dynamic CI Integrations:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.
 
 ## 3. Package Release & Quality Goals
 - [ ] **Literal Code Coverage Target:** Run `uv run poe coverage` and ensure the code coverage for the `swig2pyi` codebase meets or exceeds 90%.

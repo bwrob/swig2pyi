@@ -14,8 +14,12 @@
 * **Static Methods:** Added support for `@staticmethod` detection and signature formatting.
 * **Global Enum Exports:** Enabled enum members to be exported to the module level to match SWIG's behavior.
 * **Member Variable Properties:** Automatically mapped public member variables to properties.
+* **Dunder Iteration:** Generated `__iter__` method dynamically for any classes exposing `__getitem__`, satisfying strict pyright checks.
+* **Prioritized Type Map Resolution:** Configured type map overrides (e.g. `std::string` and `string` to `str`) to take precedence over automatically discovered wrapper class mappings, resolving redundant `Union[string, str]` types to clean `str` types.
 
 ## 3. Package & Tooling Readiness
 * **Packaging Configuration:** Configured setuptools build backend in `pyproject.toml` and specified rules JSON files as package-data for PyPI.
 * **Code Quality Overhaul:** Fixed all Ruff lints and resolved basedpyright strict-mode errors across the core package.
 * **Architectural Review:** Conducted a thermonuclear review of `src/swig2pyi/core/` and documented improvements in `docs/architectural_review.md`.
+* **GDAL OSR Verification:** Integrated static AST verification tests for GDAL's Spatial Reference System (OSR) module to ensure portability.
+* **QuantLib Test Suite Verification:** Achieved zero pyright errors across 30 strict Python test files of the QuantLib test suite (verified by 21/21 integration tests in `uv run poe test-heavy`).
