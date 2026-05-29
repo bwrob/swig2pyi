@@ -47,6 +47,12 @@
             "skillPath": "engineering/karpathy-coder/skills/karpathy-coder/SKILL.md",
             "source": "alirezarezvani/claude-skills",
             "sourceType": "github"
+        },
+        "python-type-safety": {
+            "computedHash": "16314aa8a4a465773be809c517f62f8ef704f5ab1bb237e8c9b8a759689fcb21",
+            "skillPath": "plugins/python-development/skills/python-type-safety/SKILL.md",
+            "source": "wshobson/agents",
+            "sourceType": "github"
         }
     },
     "version": 1
