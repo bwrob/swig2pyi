@@ -118,3 +118,18 @@ def test_parameter_mapping(type_manager: TypeManager) -> None:
         type_manager.to_python("DividendSchedule", is_parameter=True)
         == "Union[DividendSchedule, Sequence[Dividend]]"
     )
+
+
+def test_clean_cpp_type(type_manager: TypeManager) -> None:
+    # Test namespace stripping
+    assert (
+        type_manager.clean_cpp_type("QuantLib::BlackScholesProcess")
+        == "BlackScholesProcess"
+    )
+    # Test const and reference/pointer stripping
+    assert type_manager.clean_cpp_type("const QuantLib::Real &") == "Real"
+    assert (
+        type_manager.clean_cpp_type("volatile std::vector<int> *") == "std::vector<int>"
+    )
+    # Test parentheses stripping
+    assert type_manager.clean_cpp_type("(const QuantLib::Real)") == "Real"

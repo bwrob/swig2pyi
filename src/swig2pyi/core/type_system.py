@@ -34,10 +34,10 @@ class TypeManager:
         self._smart_ptr_regex: re.Pattern[str] = self._build_smart_ptr_regex()
         self._swig_prefix_regex: re.Pattern[str] = re.compile(r"([pqra](\([^)]*\))?\.)")
         self._type_map: dict[str, str] = {
-            self._clean_cpp_type(k): v for k, v in self.config.type_map.items()
+            self.clean_cpp_type(k): v for k, v in self.config.type_map.items()
         }
         self._containers: dict[str, str] = {
-            self._clean_cpp_type(k): v for k, v in self.config.containers.items()
+            self.clean_cpp_type(k): v for k, v in self.config.containers.items()
         }
 
     def _build_smart_ptr_regex(self) -> re.Pattern[str]:
@@ -54,7 +54,7 @@ class TypeManager:
         if match := self._smart_ptr_regex.match(basic_cleaned):
             return self.normalize_type(match.group(1), bypass_mapping=bypass_mapping)
 
-        cpp_type = self._clean_cpp_type(cpp_type)
+        cpp_type = self.clean_cpp_type(cpp_type)
 
         typedef_res = self._resolve_typedefs(cpp_type)
         if typedef_res is not None:
@@ -167,7 +167,8 @@ class TypeManager:
             .replace(", ", ",")
         )
 
-    def _clean_cpp_type(self, cpp_type: str) -> str:
+    def clean_cpp_type(self, cpp_type: str) -> str:
+        """Clean and normalize C++ type string consistently."""
         cpp_type = self._clean_basic(cpp_type)
         for ns in self.config.namespaces_to_remove:
             cpp_type = cpp_type.replace(ns, "")
@@ -179,7 +180,7 @@ class TypeManager:
 
         if self.config.module_name:
             namespaced = f"{self.config.module_name}::{cpp_type}"
-            cleaned_namespaced = self._clean_cpp_type(namespaced)
+            cleaned_namespaced = self.clean_cpp_type(namespaced)
             if cleaned_namespaced in self._type_map:
                 return self._type_map[cleaned_namespaced]
 

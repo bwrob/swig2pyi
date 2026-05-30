@@ -4,7 +4,7 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 
 ## 1. Active Tasks (Working On)
 - [x] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.
-- [ ] **Component H: Type Cleaning Unification [Priority: High]:** Unify C++ type sanitization and cleaning logic, centralizing it inside `TypeManager`.
+- [x] **Component H: Type Cleaning Unification [Priority: High]:** Unify C++ type sanitization and cleaning logic, centralizing it inside `TypeManager`.
 
 ## 2. Future Tasks (Next Steps)
 - [ ] **Architecture: Generalize Assumptions [Priority: Medium]:** Re-review the codebase to identify any hardcoded library-specific assumptions (e.g. QuantLib's `Handle` proxy templates or GDAL's OSR patterns) and extract them into configurable rules.

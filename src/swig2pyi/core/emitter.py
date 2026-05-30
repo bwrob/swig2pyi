@@ -99,20 +99,12 @@ class StubEmitter:
         if top.module:
             self.visit_module(top.module)
 
-    def clean_cpp_type(self, cpp_type: str) -> str:
-        """Normalize C++ type string for lookup key."""
-        for ns in self.tm.config.namespaces_to_remove:
-            cpp_type = cpp_type.replace(ns, "")
-        cpp_type = cpp_type.replace("const ", "").replace("volatile ", "")
-        cpp_type = cpp_type.replace("(", "").replace(")", "")
-        return "".join(cpp_type.split())
-
     def visit_module(self, module: Module) -> None:
         """Visit a module and emit its contents."""
         self._cpp_to_py_class_names: dict[str, str] = {}
         for cls in module.classes:
             if cls.cpp_type:
-                key = self.clean_cpp_type(cls.cpp_type)
+                key = self.tm.clean_cpp_type(cls.cpp_type)
                 self._cpp_to_py_class_names[key] = cls.name
         self.tm.cpp_to_py_class_names = self._cpp_to_py_class_names
         self.tm.py_class_to_cpp_types = {
@@ -140,7 +132,7 @@ class StubEmitter:
             return []
         methods = list(target_cls.cdecls)
         for base in target_cls.bases:
-            cleaned_base = self.clean_cpp_type(base)
+            cleaned_base = self.tm.clean_cpp_type(base)
             py_base_name = self._cpp_to_py_class_names.get(cleaned_base)
             if py_base_name:
                 methods.extend(
@@ -169,7 +161,7 @@ class StubEmitter:
             return None
 
         target_type = match.group(1).strip("() ")
-        cleaned_target = self.clean_cpp_type(target_type)
+        cleaned_target = self.tm.clean_cpp_type(target_type)
         return self._cpp_to_py_class_names.get(cleaned_target)
 
     def _delegate_single_handle(
@@ -431,7 +423,7 @@ class StubEmitter:
 
     def _get_base_names(self, base_type: str) -> list[str]:
         names: list[str] = []
-        cleaned = self.clean_cpp_type(base_type)
+        cleaned = self.tm.clean_cpp_type(base_type)
         if cleaned in self._cpp_to_py_class_names:
             normalized_base = self._cpp_to_py_class_names[cleaned]
         else:
