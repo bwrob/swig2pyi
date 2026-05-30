@@ -166,7 +166,7 @@ def outerProduct(
 ) -> Matrix: ...
 def pseudoSqrt(
     m: Union[Matrix, Sequence[Sequence[float]]],
-    a: SalvagingAlgorithm.Type,
+    a: Union[SalvagingAlgorithm.Type, int],
 ) -> Matrix: ...
 @overload
 def CholeskyDecomposition(
@@ -208,13 +208,13 @@ class Period:
     @overload
     def __init__(
         self,
-        arg0: Frequency,
+        arg0: Union[Frequency, int],
     ) -> None: ...
     @overload
     def __init__(
         self,
         n: int,
-        units: TimeUnit,
+        units: Union[TimeUnit, int],
     ) -> None: ...
     @overload
     def __init__(
@@ -264,11 +264,11 @@ class Period:
     ) -> bool: ...
     def __eq__(
         self,
-        other: Period,
+        other: object,
     ) -> bool: ...
     def __ne__(
         self,
-        other: Period,
+        other: object,
     ) -> bool: ...
     def __hash__(self) -> hash_t: ...
 
@@ -292,14 +292,14 @@ class Date:
     def __init__(
         self,
         d: int,
-        m: Month,
+        m: Union[Month, int],
         y: int,
     ) -> None: ...
     @overload
     def __init__(
         self,
         d: int,
-        m: Month,
+        m: Union[Month, int],
         y: int,
         hours: int,
         minutes: int,
@@ -309,7 +309,7 @@ class Date:
     def __init__(
         self,
         d: int,
-        m: Month,
+        m: Union[Month, int],
         y: int,
         hours: int,
         minutes: int,
@@ -320,7 +320,7 @@ class Date:
     def __init__(
         self,
         d: int,
-        m: Month,
+        m: Union[Month, int],
         y: int,
         hours: int,
         minutes: int,
@@ -377,13 +377,13 @@ class Date:
     @staticmethod
     def nextWeekday(
         arg0: Date,
-        arg1: Weekday,
+        arg1: Union[Weekday, int],
     ) -> Date: ...
     @staticmethod
     def nthWeekday(
         n: int,
-        arg1: Weekday,
-        m: Month,
+        arg1: Union[Weekday, int],
+        m: Union[Month, int],
         y: int,
     ) -> Date: ...
     @overload
@@ -417,11 +417,11 @@ class Date:
     def ISO(self) -> str: ...
     def __eq__(
         self,
-        other: Date,
+        other: object,
     ) -> bool: ...
     def __ne__(
         self,
-        other: Date,
+        other: object,
     ) -> bool: ...
     def __hash__(self) -> hash_t: ...
     def __bool__(self) -> bool: ...
@@ -712,7 +712,7 @@ class Calendar:
     def __init__(self) -> None: ...
     def isWeekend(
         self,
-        w: Weekday,
+        w: Union[Weekday, int],
     ) -> bool: ...
     def startOfMonth(
         self,
@@ -756,30 +756,30 @@ class Calendar:
     def adjust(
         self,
         d: Date,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
     ) -> Date: ...
     @overload
     def advance(
         self,
         d: Date,
         n: int,
-        unit: TimeUnit,
+        unit: Union[TimeUnit, int],
     ) -> Date: ...
     @overload
     def advance(
         self,
         d: Date,
         n: int,
-        unit: TimeUnit,
-        convention: BusinessDayConvention = ...,
+        unit: Union[TimeUnit, int],
+        convention: Union[BusinessDayConvention, int] = ...,
     ) -> Date: ...
     @overload
     def advance(
         self,
         d: Date,
         n: int,
-        unit: TimeUnit,
-        convention: BusinessDayConvention = ...,
+        unit: Union[TimeUnit, int],
+        convention: Union[BusinessDayConvention, int] = ...,
         endOfMonth: bool = ...,
     ) -> Date: ...
     @overload
@@ -793,14 +793,14 @@ class Calendar:
         self,
         d: Date,
         period: Period,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
     ) -> Date: ...
     @overload
     def advance(
         self,
         d: Date,
         period: Period,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         endOfMonth: bool = ...,
     ) -> Date: ...
     @overload
@@ -847,11 +847,11 @@ class Calendar:
     def __str__(self) -> str: ...
     def __eq__(
         self,
-        other: Calendar,
+        other: object,
     ) -> bool: ...
     def __ne__(
         self,
-        other: Calendar,
+        other: object,
     ) -> bool: ...
     def __hash__(self) -> hash_t: ...
 
@@ -878,7 +878,7 @@ class Argentina(Calendar):
     @overload
     def __init__(
         self,
-        m: Argentina.Market = ...,
+        m: Union[Argentina.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -893,7 +893,7 @@ class Australia(Calendar):
     @overload
     def __init__(
         self,
-        market: Australia.Market = ...,
+        market: Union[Australia.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -908,7 +908,7 @@ class Austria(Calendar):
     @overload
     def __init__(
         self,
-        m: Austria.Market = ...,
+        m: Union[Austria.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -926,7 +926,7 @@ class Brazil(Calendar):
     @overload
     def __init__(
         self,
-        m: Brazil.Market = ...,
+        m: Union[Brazil.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -941,7 +941,7 @@ class Canada(Calendar):
     @overload
     def __init__(
         self,
-        m: Canada.Market = ...,
+        m: Union[Canada.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -954,7 +954,7 @@ class Chile(Calendar):
     @overload
     def __init__(
         self,
-        m: Chile.Market = ...,
+        m: Union[Chile.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -969,7 +969,7 @@ class China(Calendar):
     @overload
     def __init__(
         self,
-        m: China.Market = ...,
+        m: Union[China.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -982,7 +982,7 @@ class CzechRepublic(Calendar):
     @overload
     def __init__(
         self,
-        m: CzechRepublic.Market = ...,
+        m: Union[CzechRepublic.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1003,7 +1003,7 @@ class France(Calendar):
     @overload
     def __init__(
         self,
-        m: France.Market = ...,
+        m: Union[France.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1022,7 +1022,7 @@ class Germany(Calendar):
     @overload
     def __init__(
         self,
-        m: Germany.Market = ...,
+        m: Union[Germany.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1035,7 +1035,7 @@ class HongKong(Calendar):
     @overload
     def __init__(
         self,
-        m: HongKong.Market = ...,
+        m: Union[HongKong.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1051,7 +1051,7 @@ class Iceland(Calendar):
     @overload
     def __init__(
         self,
-        m: Iceland.Market = ...,
+        m: Union[Iceland.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1064,7 +1064,7 @@ class India(Calendar):
     @overload
     def __init__(
         self,
-        m: India.Market = ...,
+        m: Union[India.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1079,7 +1079,7 @@ class Indonesia(Calendar):
     @overload
     def __init__(
         self,
-        m: Indonesia.Market = ...,
+        m: Union[Indonesia.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1096,7 +1096,7 @@ class Israel(Calendar):
     @overload
     def __init__(
         self,
-        m: Israel.Market = ...,
+        m: Union[Israel.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1111,7 +1111,7 @@ class Italy(Calendar):
     @overload
     def __init__(
         self,
-        m: Italy.Market = ...,
+        m: Union[Italy.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1127,7 +1127,7 @@ class Mexico(Calendar):
     @overload
     def __init__(
         self,
-        m: Mexico.Market = ...,
+        m: Union[Mexico.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1142,7 +1142,7 @@ class NewZealand(Calendar):
     @overload
     def __init__(
         self,
-        m: NewZealand.Market = ...,
+        m: Union[NewZealand.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1160,7 +1160,7 @@ class Poland(Calendar):
     @overload
     def __init__(
         self,
-        m: Poland.Market = ...,
+        m: Union[Poland.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1175,7 +1175,7 @@ class Romania(Calendar):
     @overload
     def __init__(
         self,
-        m: Romania.Market = ...,
+        m: Union[Romania.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1190,7 +1190,7 @@ class Russia(Calendar):
     @overload
     def __init__(
         self,
-        m: Russia.Market = ...,
+        m: Union[Russia.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1203,7 +1203,7 @@ class SaudiArabia(Calendar):
     @overload
     def __init__(
         self,
-        m: SaudiArabia.Market = ...,
+        m: Union[SaudiArabia.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1216,7 +1216,7 @@ class Singapore(Calendar):
     @overload
     def __init__(
         self,
-        m: Singapore.Market = ...,
+        m: Union[Singapore.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1229,7 +1229,7 @@ class Slovakia(Calendar):
     @overload
     def __init__(
         self,
-        m: Slovakia.Market = ...,
+        m: Union[Slovakia.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1247,7 +1247,7 @@ class SouthKorea(Calendar):
     @overload
     def __init__(
         self,
-        m: SouthKorea.Market = ...,
+        m: Union[SouthKorea.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1266,7 +1266,7 @@ class Taiwan(Calendar):
     @overload
     def __init__(
         self,
-        m: Taiwan.Market = ...,
+        m: Union[Taiwan.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1288,7 +1288,7 @@ class Ukraine(Calendar):
     @overload
     def __init__(
         self,
-        m: Ukraine.Market = ...,
+        m: Union[Ukraine.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1305,7 +1305,7 @@ class UnitedKingdom(Calendar):
     @overload
     def __init__(
         self,
-        m: UnitedKingdom.Market = ...,
+        m: Union[UnitedKingdom.Market, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1329,7 +1329,7 @@ class UnitedStates(Calendar):
     SOFR: Market
     def __init__(
         self,
-        m: UnitedStates.Market,
+        m: Union[UnitedStates.Market, int],
     ) -> None: ...
 
 class NullCalendar(Calendar):
@@ -1367,7 +1367,7 @@ class JointCalendar(Calendar):
         arg1: Calendar,
         arg2: Calendar,
         arg3: Calendar,
-        rule: JointCalendarRule = ...,
+        rule: Union[JointCalendarRule, int] = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -1375,14 +1375,14 @@ class JointCalendar(Calendar):
         arg0: Calendar,
         arg1: Calendar,
         arg2: Calendar,
-        rule: JointCalendarRule = ...,
+        rule: Union[JointCalendarRule, int] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: Calendar,
         arg1: Calendar,
-        rule: JointCalendarRule = ...,
+        rule: Union[JointCalendarRule, int] = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -1393,7 +1393,7 @@ class JointCalendar(Calendar):
     def __init__(
         self,
         arg0: Union[CalendarVector, Sequence[Calendar]],
-        arg1: JointCalendarRule = ...,
+        arg1: Union[JointCalendarRule, int] = ...,
     ) -> None: ...
 
 class BespokeCalendar(Calendar):
@@ -1403,7 +1403,7 @@ class BespokeCalendar(Calendar):
     ) -> None: ...
     def addWeekend(
         self,
-        arg0: Weekday,
+        arg0: Union[Weekday, int],
     ) -> None: ...
 
 class DayCounter:
@@ -1439,11 +1439,11 @@ class DayCounter:
     def __str__(self) -> str: ...
     def __eq__(
         self,
-        other: DayCounter,
+        other: object,
     ) -> bool: ...
     def __ne__(
         self,
-        other: DayCounter,
+        other: object,
     ) -> bool: ...
     def __hash__(self) -> hash_t: ...
 
@@ -1489,7 +1489,7 @@ class Actual365Fixed(DayCounter):
     @overload
     def __init__(
         self,
-        c: Actual365Fixed.Convention = ...,
+        c: Union[Actual365Fixed.Convention, int] = ...,
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -1518,12 +1518,12 @@ class Thirty360(DayCounter):
     @overload
     def __init__(
         self,
-        c: Thirty360.Convention,
+        c: Union[Thirty360.Convention, int],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        c: Thirty360.Convention,
+        c: Union[Thirty360.Convention, int],
         terminationDate: Date = ...,
     ) -> None: ...
 
@@ -1550,12 +1550,12 @@ class ActualActual(DayCounter):
     @overload
     def __init__(
         self,
-        c: ActualActual.Convention,
+        c: Union[ActualActual.Convention, int],
     ) -> None: ...
     @overload
     def __init__(
         self,
-        c: ActualActual.Convention,
+        c: Union[ActualActual.Convention, int],
         schedule: Schedule = ...,
     ) -> None: ...
 
@@ -1614,11 +1614,11 @@ class Array:
     def __str__(self) -> str: ...
     def __eq__(
         self,
-        other: Union[Array, Sequence[float]],
+        other: object,
     ) -> bool: ...
     def __ne__(
         self,
-        other: Union[Array, Sequence[float]],
+        other: object,
     ) -> bool: ...
     def __neg__(self) -> Array: ...
     @overload
@@ -1949,14 +1949,14 @@ class NeumannBC(DefaultBoundaryCondition):
     def __init__(
         self,
         value: float,
-        side: DefaultBoundaryCondition.Side,
+        side: Union[DefaultBoundaryCondition.Side, int],
     ) -> None: ...
 
 class DirichletBC(DefaultBoundaryCondition):
     def __init__(
         self,
         value: float,
-        side: DefaultBoundaryCondition.Side,
+        side: Union[DefaultBoundaryCondition.Side, int],
     ) -> None: ...
 
 class TridiagonalOperator:
@@ -2504,8 +2504,8 @@ class InterestRate:
         self,
         r: float,
         dc: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
     ) -> None: ...
     @overload
     def __init__(self) -> None: ...
@@ -2570,8 +2570,8 @@ class InterestRate:
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
     ) -> InterestRate: ...
@@ -2580,8 +2580,8 @@ class InterestRate:
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
         refStart: Date = ...,
@@ -2591,8 +2591,8 @@ class InterestRate:
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
         refStart: Date = ...,
@@ -2603,23 +2603,23 @@ class InterestRate:
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         t: float,
     ) -> InterestRate: ...
     @overload
     def equivalentRate(
         self,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         t: float,
     ) -> InterestRate: ...
     @overload
     def equivalentRate(
         self,
         resultDayCounter: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
     ) -> InterestRate: ...
@@ -2627,8 +2627,8 @@ class InterestRate:
     def equivalentRate(
         self,
         resultDayCounter: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
         refStart: Date = ...,
@@ -2637,8 +2637,8 @@ class InterestRate:
     def equivalentRate(
         self,
         resultDayCounter: DayCounter,
-        comp: Compounding,
-        freq: Frequency,
+        comp: Union[Compounding, int],
+        freq: Union[Frequency, int],
         d1: Date,
         d2: Date,
         refStart: Date = ...,
@@ -2715,14 +2715,14 @@ class Schedule:
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
     ) -> None: ...
     @overload
     def __init__(
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         terminationDateConvention: Optional[BusinessDayConvention] = ...,
     ) -> None: ...
     @overload
@@ -2730,7 +2730,7 @@ class Schedule:
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         terminationDateConvention: Optional[BusinessDayConvention] = ...,
         tenor: Optional[Period] = ...,
     ) -> None: ...
@@ -2739,7 +2739,7 @@ class Schedule:
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         terminationDateConvention: Optional[BusinessDayConvention] = ...,
         tenor: Optional[Period] = ...,
         rule: Optional[DateGeneration.Rule] = ...,
@@ -2749,7 +2749,7 @@ class Schedule:
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         terminationDateConvention: Optional[BusinessDayConvention] = ...,
         tenor: Optional[Period] = ...,
         rule: Optional[DateGeneration.Rule] = ...,
@@ -2760,7 +2760,7 @@ class Schedule:
         self,
         arg0: Union[DateVector, Sequence[Date]],
         calendar: Calendar = ...,
-        convention: BusinessDayConvention = ...,
+        convention: Union[BusinessDayConvention, int] = ...,
         terminationDateConvention: Optional[BusinessDayConvention] = ...,
         tenor: Optional[Period] = ...,
         rule: Optional[DateGeneration.Rule] = ...,
@@ -2774,9 +2774,9 @@ class Schedule:
         terminationDate: Date,
         tenor: Period,
         calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: BusinessDayConvention,
-        rule: DateGeneration.Rule,
+        convention: Union[BusinessDayConvention, int],
+        terminationDateConvention: Union[BusinessDayConvention, int],
+        rule: Union[DateGeneration.Rule, int],
         endOfMonth: bool,
     ) -> None: ...
     @overload
@@ -2786,9 +2786,9 @@ class Schedule:
         terminationDate: Date,
         tenor: Period,
         calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: BusinessDayConvention,
-        rule: DateGeneration.Rule,
+        convention: Union[BusinessDayConvention, int],
+        terminationDateConvention: Union[BusinessDayConvention, int],
+        rule: Union[DateGeneration.Rule, int],
         endOfMonth: bool,
         firstDate: Date = ...,
     ) -> None: ...
@@ -2799,9 +2799,9 @@ class Schedule:
         terminationDate: Date,
         tenor: Period,
         calendar: Calendar,
-        convention: BusinessDayConvention,
-        terminationDateConvention: BusinessDayConvention,
-        rule: DateGeneration.Rule,
+        convention: Union[BusinessDayConvention, int],
+        terminationDateConvention: Union[BusinessDayConvention, int],
+        rule: Union[DateGeneration.Rule, int],
         endOfMonth: bool,
         firstDate: Date = ...,
         nextToLastDate: Date = ...,
@@ -2868,7 +2868,7 @@ class _MakeSchedule:
     ) -> _MakeSchedule: ...
     def withFrequency(
         self,
-        arg0: Frequency,
+        arg0: Union[Frequency, int],
     ) -> _MakeSchedule: ...
     def withCalendar(
         self,
@@ -2876,15 +2876,15 @@ class _MakeSchedule:
     ) -> _MakeSchedule: ...
     def withConvention(
         self,
-        arg0: BusinessDayConvention,
+        arg0: Union[BusinessDayConvention, int],
     ) -> _MakeSchedule: ...
     def withTerminationDateConvention(
         self,
-        arg0: BusinessDayConvention,
+        arg0: Union[BusinessDayConvention, int],
     ) -> _MakeSchedule: ...
     def withRule(
         self,
-        arg0: DateGeneration.Rule,
+        arg0: Union[DateGeneration.Rule, int],
     ) -> _MakeSchedule: ...
     def forwards(self) -> _MakeSchedule: ...
     def backwards(self) -> _MakeSchedule: ...
@@ -2993,7 +2993,7 @@ class IntervalPrice:
     def setValue(
         self,
         arg0: float,
-        arg1: IntervalPrice.Type,
+        arg1: Union[IntervalPrice.Type, int],
     ) -> None: ...
     def setValues(
         self,
@@ -3004,7 +3004,7 @@ class IntervalPrice:
     ) -> None: ...
     def value(
         self,
-        t: IntervalPrice.Type,
+        t: Union[IntervalPrice.Type, int],
     ) -> float: ...
     def open(self) -> float: ...
     def close(self) -> float: ...
@@ -3021,12 +3021,12 @@ class IntervalPrice:
     @staticmethod
     def extractValues(
         arg0: Union[IntervalPriceTimeSeries, TimeSeries[IntervalPrice]],
-        t: IntervalPrice.Type,
+        t: Union[IntervalPrice.Type, int],
     ) -> list[float]: ...
     @staticmethod
     def extractComponent(
         arg0: Union[IntervalPriceTimeSeries, TimeSeries[IntervalPrice]],
-        t: IntervalPrice.Type,
+        t: Union[IntervalPrice.Type, int],
     ) -> RealTimeSeries: ...
 
 def MakeSchedule(effectiveDate=..., terminationDate=..., tenor=..., frequency=..., calendar=..., convention=..., terminalDateConvention=..., rule=..., forwards=..., backwards=..., endOfMonth=..., firstDate=..., nextToLastDate=...) -> Any: ...

@@ -22,6 +22,8 @@ class TypeManager:
         "char": "str",
         "void": "None",
         "bool": "bool",
+        "size_t": "int",
+        "std::size_t": "int",
     }
 
     def __init__(self, config: Config, enums: set[str] | None = None) -> None:
@@ -176,6 +178,9 @@ class TypeManager:
         return cpp_type
 
     def _resolve_typedefs(self, cpp_type: str) -> str | None:
+        if cpp_type.endswith(("::size_type", ".size_type")):
+            return "int"
+
         if cpp_type in self._type_map:
             return self._type_map[cpp_type]
 

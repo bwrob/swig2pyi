@@ -38,33 +38,59 @@ class SignatureFormatter:
                 parts.append(f"{p_name}: {p_type}")
         return parts
 
+    def _get_param_parts(
+        self, func: CDecl, *, is_method: bool, mapped_name: str | None
+    ) -> list[str]:
+        is_cmp = is_method and mapped_name in ("__eq__", "__ne__")
+        if is_cmp:
+            return ["other: object"]
+        return self.format_params(func.parms)
+
+    def _format_params_string(
+        self,
+        param_parts: list[str],
+        *,
+        is_method: bool,
+        is_static: bool,
+        num_parms: int,
+        indent_level: int,
+    ) -> str:
+        if is_method and not is_static:
+            param_parts.insert(0, "self")
+
+        if len(param_parts) > 1 or (is_method and not is_static and num_parms > 0):
+            params_str = ",\n".join(
+                (indent_level + 1) * "    " + p for p in param_parts
+            )
+            return f"\n{params_str},\n" + indent_level * "    "
+        if len(param_parts) == 1:
+            return param_parts[0]
+        return ""
+
+    def _get_return_type(self, func_type: str | None) -> str:
+        if not func_type:
+            self.tm.needed_imports.add("Any")
+            return "Any"
+        ret_type = self.tm.to_python(func_type)
+        if ret_type == "void":
+            return "None"
+        return ret_type
+
     def get_signature(
         self, func: CDecl, *, is_method: bool, indent_level: int = 0
     ) -> tuple[str, str]:
         """Get the parameters string and return type for a function/method."""
-        param_parts = self.format_params(func.parms)
+        mapped_name = self.nm.get_python_name(func.name) if is_method else func.name
+        param_parts = self._get_param_parts(
+            func, is_method=is_method, mapped_name=mapped_name
+        )
         is_static = getattr(func, "is_static", False)
-        if is_method and not is_static:
-            param_parts.insert(0, "self")
-
-        if len(param_parts) > 1 or (
-            is_method and not is_static and len(func.parms) > 0
-        ):
-            params_str = ",\n".join(
-                (indent_level + 1) * "    " + p for p in param_parts
-            )
-            full_params = f"\n{params_str},\n" + indent_level * "    "
-        elif len(param_parts) == 1:
-            full_params = param_parts[0]
-        else:
-            full_params = ""
-
-        if func.type:
-            ret_type = self.tm.to_python(func.type)
-        else:
-            self.tm.needed_imports.add("Any")
-            ret_type = "Any"
-
-        if ret_type == "void":
-            ret_type = "None"
+        full_params = self._format_params_string(
+            param_parts,
+            is_method=is_method,
+            is_static=is_static,
+            num_parms=len(func.parms),
+            indent_level=indent_level,
+        )
+        ret_type = self._get_return_type(func.type)
         return (full_params, ret_type)

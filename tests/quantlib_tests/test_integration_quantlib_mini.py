@@ -35,7 +35,9 @@ def test_quantlib_mini_generation() -> None:
         top = parser.parse_file(xml_path_obj)
 
         # Emit
-        tm = TypeManager(config)
+        from swig2pyi.api import collect_enums
+        enums = collect_enums(top)
+        tm = TypeManager(config, enums=enums)
         emitter = StubEmitter(tm)
         emitter.emit(top)
 

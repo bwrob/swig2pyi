@@ -1,9 +1,12 @@
 import ast
+import os
+import tempfile
 from pathlib import Path
 
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.qa import QAValidator
 from swig2pyi.core.type_system import TypeManager
 
 
@@ -43,3 +46,16 @@ def test_osr_integration() -> None:
     # retStringAndCPLFree is mapped to str
     assert "def ExportToWkt(" in generated_output
     assert ") -> str: ..." in generated_output
+
+    # Run type checks on generated stubs using QAValidator
+    qa = QAValidator()
+    fd, path = tempfile.mkstemp(suffix=".pyi")
+    os.close(fd)
+    path_obj = Path(path)
+    try:
+        path_obj.write_text(generated_output, encoding="utf-8")
+        success, message = qa.run_type_check(path_obj)
+        assert success, f"GDAL OSR stub type checking failed: {message}"
+    finally:
+        if path_obj.exists():
+            path_obj.unlink()

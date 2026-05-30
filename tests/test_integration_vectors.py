@@ -5,6 +5,7 @@ from pathlib import Path
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
+from swig2pyi.core.qa import QAValidator
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
@@ -71,10 +72,23 @@ def test_vector_and_typedef_relaxation() -> None:
 
         # 4. Verify Matrix parameter relaxation to Sequence[Sequence[float]]
         assert (
-            "def sum_matrix(\n        self,\n        m: Union[Matrix, Sequence[Sequence[float]]],\n    ) -> float: ..."
+            "def sum_matrix(\n        self,\n        m: Union[DoubleVectorVector, Sequence[Sequence[float]]],\n    ) -> float: ..."
             in generated_output
         )
 
     finally:
         if os.path.exists(xml_path):
             os.unlink(xml_path)
+
+    # Run type checks on generated stubs using QAValidator
+    qa = QAValidator()
+    fd, path = tempfile.mkstemp(suffix=".pyi")
+    os.close(fd)
+    path_obj = Path(path)
+    try:
+        path_obj.write_text(generated_output, encoding="utf-8")
+        success, message = qa.run_type_check(path_obj)
+        assert success, f"Vectors stub type checking failed: {message}"
+    finally:
+        if path_obj.exists():
+            path_obj.unlink()

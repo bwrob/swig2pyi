@@ -3,6 +3,10 @@
     "delegate_templates": [
         "Handle"
     ],
+    "extra_code": [
+        "class Handle(Generic[_T]):",
+        "    def __init__(self, ptr: _T) -> None: ..."
+    ],
     "generic_templates": [
         "Handle"
     ],

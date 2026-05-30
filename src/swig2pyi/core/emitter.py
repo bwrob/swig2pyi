@@ -519,21 +519,32 @@ class StubEmitter:
                 self.tm.needed_imports.add("Any")
             self.write(f"def {prop_name}(self, value: {p_type}) -> None: ...")
 
+    def _emit_getitem_iter(self, getitem_funcs: list[CDecl]) -> None:
+        ret_type = "Any"
+        if getitem_funcs and getitem_funcs[0].type:
+            ret_type = self.tm.to_python(getitem_funcs[0].type)
+            if ret_type == "None":
+                ret_type = "Any"
+        if ret_type == "Any":
+            self.tm.needed_imports.add("Any")
+        self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
+        self.tm.needed_imports.add("Iterator")
+
     def _emit_methods(self, cls: Class, skip_ids: set[int]) -> bool:
         method_groups = self._group_methods(cls, skip_ids)
+        is_container = self._get_container_elem_type(cls) is not None
         for name, group in method_groups.items():
+            if is_container and name in (
+                "push_back",
+                "resize",
+                "size",
+                "empty",
+                "clear",
+            ):
+                continue
             self.visit_function_group(name, group, is_method=True)
         if "__getitem__" in method_groups:
-            getitem_funcs = method_groups["__getitem__"]
-            ret_type = "Any"
-            if getitem_funcs and getitem_funcs[0].type:
-                ret_type = self.tm.to_python(getitem_funcs[0].type)
-                if ret_type == "None":
-                    ret_type = "Any"
-            if ret_type == "Any":
-                self.tm.needed_imports.add("Any")
-            self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
-            self.tm.needed_imports.add("Iterator")
+            self._emit_getitem_iter(method_groups["__getitem__"])
         return len(method_groups) > 0
 
     def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict[str, list[CDecl]]:

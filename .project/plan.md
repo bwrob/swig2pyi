@@ -7,6 +7,7 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [x] **Component H: Type Cleaning Unification [Priority: High]:** Unify C++ type sanitization and cleaning logic, centralizing it inside `TypeManager`.
 - [x] **QA: Strict Type Validation [Priority: High]:** Run `basedpyright` in strict mode against real QuantLib Python tests and iteratively resolve emitter gaps.
 - [x] **QA: Full QuantLib Verification [Priority: High]:** Achieve zero type-checking errors on all 50+ QuantLib Python test files using the generated stubs.
+- [x] **QA: Verify Multi-Library Portability [Priority: High]:** Execute `swig2pyi` on at least 2 additional, non-QuantLib SWIG interface examples (e.g., GDAL or standard SWIG examples) and verify zero `basedpyright` errors in generated stubs.
 
 ## 2. Future Tasks (Next Steps)
 - [ ] **Architecture: Generalize Assumptions [Priority: Medium]:** Re-review the codebase to identify any hardcoded library-specific assumptions (e.g. QuantLib's `Handle` proxy templates or GDAL's OSR patterns) and extract them into configurable rules.
@@ -14,7 +15,6 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [ ] **Type System: Nested Template Resolution [Priority: Medium]:** Enhance the `TypeManager` to handle complex nested templates (e.g. `std::vector<std::vector<std::shared_ptr<T>>>`) and custom template argument resolvers.
 - [ ] **CLI: Stub Coverage Command [Priority: Low]:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
 - [ ] **CI: Dynamic CI Integrations [Priority: Low]:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.
-- [ ] **QA: Verify Multi-Library Portability [Priority: High]:** Execute `swig2pyi` on at least 2 additional, non-QuantLib SWIG interface examples (e.g., GDAL or standard SWIG examples) and verify zero `basedpyright` errors in generated stubs.
 - [ ] **Research: Analyze SWIG Specifications [Priority: Medium]:** Download SWIG documentation to `.temp/`, review C++ mapping specifications, identify gaps or divergence in current parser/emitter features, and plan/implement coverage for them.
 - [ ] **Type System: Const to Final Mapping [Priority: Low]:** Map C++ `const` variables and public member variables to Python `Final[T]` type annotations to preserve C++ immutability semantics.
 
