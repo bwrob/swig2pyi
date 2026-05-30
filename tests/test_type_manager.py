@@ -133,3 +133,9 @@ def test_clean_cpp_type(type_manager: TypeManager) -> None:
     )
     # Test parentheses stripping
     assert type_manager.clean_cpp_type("(const QuantLib::Real)") == "Real"
+
+
+def test_unmapped_vector_parameter_mapping(type_manager: TypeManager) -> None:
+    assert (
+        type_manager.to_python("std::vector<int>", is_parameter=True) == "Sequence[int]"
+    )

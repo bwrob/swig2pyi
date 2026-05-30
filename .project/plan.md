@@ -11,7 +11,7 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 
 ## 2. Future Tasks (Next Steps)
 - [x] **Architecture: Generalize Assumptions [Priority: Medium]:** Re-review the codebase to identify any hardcoded library-specific assumptions (e.g. QuantLib's `Handle` proxy templates or GDAL's OSR patterns) and extract them into configurable rules.
-- [ ] **Type System: Type Mapping Refinement [Priority: Medium]:** Improve the mapping of C++ templates like `std::vector<T>` to `list[T]` and `Handle<T>` to `Handle[T]`.
+- [x] **Type System: Type Mapping Refinement [Priority: Medium]:** Improve the mapping of C++ templates like `std::vector<T>` to `list[T]` and `Handle<T>` to `Handle[T]`.
 - [ ] **Type System: Nested Template Resolution [Priority: Medium]:** Enhance the `TypeManager` to handle complex nested templates (e.g. `std::vector<std::vector<std::shared_ptr<T>>>`) and custom template argument resolvers.
 - [ ] **CLI: Stub Coverage Command [Priority: Low]:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
 - [ ] **CI: Dynamic CI Integrations [Priority: Low]:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.

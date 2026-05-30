@@ -104,7 +104,7 @@ class TypeManager:
         if param_type == resolved:
             return resolved
 
-        if resolved.startswith(("Sequence[", "Union[", "Optional[")):
+        if resolved.startswith(("list[", "Sequence[", "Union[", "Optional[")):
             return param_type
 
         self.needed_imports.add("Union")

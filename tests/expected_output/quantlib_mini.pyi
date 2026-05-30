@@ -3013,10 +3013,10 @@ class IntervalPrice:
     @staticmethod
     def makeSeries(
         d: Union[DateVector, Sequence[Date]],
-        open: Union[list[float], Sequence[float]],
-        close: Union[list[float], Sequence[float]],
-        high: Union[list[float], Sequence[float]],
-        low: Union[list[float], Sequence[float]],
+        open: Sequence[float],
+        close: Sequence[float],
+        high: Sequence[float],
+        low: Sequence[float],
     ) -> IntervalPriceTimeSeries: ...
     @staticmethod
     def extractValues(
