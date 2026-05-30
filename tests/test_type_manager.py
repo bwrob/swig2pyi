@@ -139,3 +139,13 @@ def test_unmapped_vector_parameter_mapping(type_manager: TypeManager) -> None:
     assert (
         type_manager.to_python("std::vector<int>", is_parameter=True) == "Sequence[int]"
     )
+
+
+def test_template_argument_limiting(type_manager: TypeManager) -> None:
+    assert (
+        type_manager.to_python("std::vector<int, std::allocator<int>>") == "list[int]"
+    )
+    assert (
+        type_manager.to_python("std::map<std::string, int, std::less<std::string>>")
+        == "dict[str, int]"
+    )

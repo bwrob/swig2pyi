@@ -26,6 +26,20 @@ class TypeManager:
         "std::size_t": "int",
     }
 
+    DEFAULT_TEMPLATE_ARG_COUNTS: ClassVar[dict[str, int]] = {
+        "list": 1,
+        "set": 1,
+        "dict": 2,
+        "tuple": 2,
+        "Sequence": 1,
+        "Iterable": 1,
+        "Iterator": 1,
+        "Optional": 1,
+        "Generic": 1,
+        "Handle": 1,
+        "RelinkableHandle": 1,
+    }
+
     def __init__(self, config: Config, enums: set[str] | None = None) -> None:
         """Initialize with configuration."""
         self.config = config
@@ -188,6 +202,12 @@ class TypeManager:
 
         return self.BASIC_TYPES.get(cpp_type)
 
+    def _get_template_arg_limit(self, template_name: str) -> int | None:
+        base_name = template_name.rsplit(".", maxsplit=1)[-1]
+        if base_name in self.config.template_arg_counts:
+            return self.config.template_arg_counts[base_name]
+        return self.DEFAULT_TEMPLATE_ARG_COUNTS.get(base_name)
+
     def _resolve_containers(
         self, cpp_type: str, *, bypass_mapping: bool = False
     ) -> str | None:
@@ -207,6 +227,9 @@ class TypeManager:
                     self.normalize_type(a, bypass_mapping=bypass_mapping)
                     for a in self._split_template_args(inner)
                 ]
+                limit = self._get_template_arg_limit(py_abc)
+                if limit is not None:
+                    args = args[:limit]
                 return f"{py_abc}[{', '.join(args)}]"
         return None
 
@@ -272,6 +295,9 @@ class TypeManager:
                 self.normalize_type(a, bypass_mapping=bypass_mapping)
                 for a in self._split_template_args(inner)
             ]
+            limit = self._get_template_arg_limit(base)
+            if limit is not None:
+                args = args[:limit]
             return f"{base}[{', '.join(args)}]"
         return None
 
