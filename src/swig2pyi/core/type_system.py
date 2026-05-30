@@ -89,7 +89,7 @@ class TypeManager:
         if is_parameter:
             resolved = self._to_python_parameter(resolved, cpp_type_str)
 
-        self._record_imports(resolved)
+        self.record_imports(resolved)
         return resolved
 
     def _to_python_parameter(self, resolved: str, cpp_type_str: str) -> str:
@@ -112,7 +112,8 @@ class TypeManager:
         self.needed_imports.add("Union")
         return f"Union[{resolved}, {param_type}]"
 
-    def _record_imports(self, resolved: str) -> None:
+    def record_imports(self, resolved: str) -> None:
+        """Record necessary imports for the resolved Python type."""
         for sym in (
             "Any",
             "Optional",

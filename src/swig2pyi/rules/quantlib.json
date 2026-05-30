@@ -37,6 +37,12 @@
         "QuantLib::",
         "ext::"
     ],
+    "pythoncode_signatures": {
+        "BinomialVanillaEngine": "(process: GeneralizedBlackScholesProcess, type: str, steps: int) -> PricingEngine",
+        "MCAmericanBasketEngine": "(process: StochasticProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ..., nCalibrationSamples: int = ..., polynomOrder: int = ..., polynomType: int = ...) -> PricingEngine",
+        "MCEuropeanBasketEngine": "(process: StochasticProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ...) -> PricingEngine",
+        "MCEuropeanEngine": "(process: GeneralizedBlackScholesProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ...) -> PricingEngine"
+    },
     "rename_operators": true,
     "smart_pointers": [
         "boost::shared_ptr",

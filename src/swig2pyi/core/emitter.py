@@ -93,11 +93,38 @@ class StubEmitter:
         self.write("_T = TypeVar('_T')")
         self.tm.needed_imports.add("TypeVar")
         self.write("")
-        for line in self.tm.config.extra_code:
-            self.write(line)
+        self._scan_extra_code()
         self.write("")
         if top.module:
             self.visit_module(top.module)
+
+    def _scan_extra_code(self) -> None:
+        for line in self.tm.config.extra_code:
+            self.write(line)
+            self._scan_extra_code_line(line)
+
+    def _scan_extra_code_line(self, line: str) -> None:
+        # Scan extra_code line for typing and other imports
+        for sym in (
+            "Any",
+            "Optional",
+            "overload",
+            "Generic",
+            "TypeVar",
+            "Union",
+            "Callable",
+            "Sequence",
+            "Iterable",
+            "Iterator",
+        ):
+            if re.search(rf"\b{sym}\b", line):
+                self.tm.needed_imports.add(sym)
+        if re.search(r"\bIntEnum\b", line):
+            self.tm.needed_imports.add("IntEnum")
+        if re.search(r"\bcollections\.abc\b", line):
+            self.tm.needed_imports.add("collections.abc")
+        if re.search(r"\btyping\.", line):
+            self.tm.needed_imports.add("typing")
 
     def visit_module(self, module: Module) -> None:
         """Visit a module and emit its contents."""
@@ -219,6 +246,12 @@ class StubEmitter:
         """Emit a stub for a function defined in %pythoncode."""
         if node.name.startswith("_"):
             return
+        sig_override = self.tm.config.pythoncode_signatures.get(node.name)
+        if sig_override:
+            self.write(f"def {node.name}{sig_override}: ...")
+            self.tm.record_imports(sig_override)
+            return
+
         args = [a.arg for a in node.args.args]
         defaults_count = len(node.args.defaults)
         parts: list[str] = []
@@ -234,6 +267,7 @@ class StubEmitter:
             parts.append(f"**{node.args.kwarg.arg}")
         sig = ", ".join(parts)
         self.write(f"def {node.name}({sig}) -> Any: ...")
+        self.tm.needed_imports.add("Any")
 
     def _emit_pythoncode_class(self, node: pyast.ClassDef) -> None:
         """Emit a stub for a class defined in %pythoncode."""
@@ -289,7 +323,11 @@ class StubEmitter:
             name = self.nm.get_python_name(var.name)
             if not name:
                 continue
-            ret_type = self.tm.to_python(var.type) if var.type else "Any"
+            if var.type:
+                ret_type = self.tm.to_python(var.type)
+            else:
+                ret_type = "Any"
+                self.tm.needed_imports.add("Any")
             if ret_type == "void":
                 ret_type = "None"
             self.write(f"{name}: {ret_type}")
@@ -462,7 +500,11 @@ class StubEmitter:
         getter = p_info["get"]
         if not getter:
             return
-        ret_type = self.tm.to_python(getter.type) if getter.type else "Any"
+        if getter.type:
+            ret_type = self.tm.to_python(getter.type)
+        else:
+            ret_type = "Any"
+            self.tm.needed_imports.add("Any")
         if ret_type == "void":
             ret_type = "None"
         self.write("@property")
@@ -470,11 +512,11 @@ class StubEmitter:
         setter = p_info["set"]
         if setter:
             self.write(f"@{prop_name}.setter")
-            p_type = (
-                self.tm.to_python(setter.parms[0].type)
-                if setter.parms and setter.parms[0].type
-                else "Any"
-            )
+            if setter.parms and setter.parms[0].type:
+                p_type = self.tm.to_python(setter.parms[0].type)
+            else:
+                p_type = "Any"
+                self.tm.needed_imports.add("Any")
             self.write(f"def {prop_name}(self, value: {p_type}) -> None: ...")
 
     def _emit_methods(self, cls: Class, skip_ids: set[int]) -> bool:
@@ -488,6 +530,8 @@ class StubEmitter:
                 ret_type = self.tm.to_python(getitem_funcs[0].type)
                 if ret_type == "None":
                     ret_type = "Any"
+            if ret_type == "Any":
+                self.tm.needed_imports.add("Any")
             self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
             self.tm.needed_imports.add("Iterator")
         return len(method_groups) > 0
@@ -566,7 +610,11 @@ class StubEmitter:
 
     def _emit_variable_group(self, group_name: str, group: list[CDecl]) -> None:
         for var in group:
-            ret_type = self.tm.to_python(var.type) if var.type else "Any"
+            if var.type:
+                ret_type = self.tm.to_python(var.type)
+            else:
+                ret_type = "Any"
+                self.tm.needed_imports.add("Any")
             if ret_type == "void":
                 ret_type = "None"
             self.write(f"{group_name}: {ret_type}")

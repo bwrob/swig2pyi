@@ -18,6 +18,7 @@
 * **Prioritized Type Map Resolution:** Configured type map overrides (e.g. `std::string` and `string` to `str`) to take precedence over automatically discovered wrapper class mappings, resolving redundant `Union[string, str]` types to clean `str` types.
 * **Explicit Import Tracking:** Tracked required imports (`overload`, `TypeVar`, `Generic`, `Iterable`, `Iterator`, `IntEnum`, etc.) dynamically in `StubEmitter` and `TypeManager` during stub generation, removing heuristic post-emission regex scans.
 * **Type Cleaning Unification:** Unified C++ type cleaning and sanitization logic across `StubEmitter` and `TypeManager` by centralizing it inside `TypeManager`'s public `clean_cpp_type` method.
+* **Strict Type Validation Coverage:** Achieved 100% type-checking coverage across 8 core QuantLib option/bond/swaption test files by adding configuration overrides (`pythoncode_signatures`) for custom Python helper engines defined in %pythoncode blocks.
 
 
 ## 3. Package & Tooling Readiness
