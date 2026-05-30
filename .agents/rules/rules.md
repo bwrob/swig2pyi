@@ -13,6 +13,7 @@
   - `plan.md` for future roadmap. Update by removing completed tasks and adding new future tasks.
   - `achievements.md` for completed achievements. Update by appending finished milestones. Keep plan for future, achievements for past.
   - `design.md` for technical design and translation conventions. Read to understand architectural logic and mapping patterns.
+  - **Rule:** Update all relevant project tracking files in `.project/` (such as `plan.md` to check off tasks, `achievements.md` to record completed deliverables, and `design.md` if the architecture changes) after finishing each task.
 
 - **Root Cleanliness:** Do not add standalone tools or configurations to root (e.g. `poe_tasks.toml`, `requirements.txt`). Put them in `pyproject.toml` or appropriate subdirectories.
 - **Rule Placement:** Workspace rules must be placed under `.agents/rules/` with YAML frontmatter triggers (e.g. `trigger: glob`).
