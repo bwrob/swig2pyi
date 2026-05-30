@@ -3,7 +3,7 @@
 This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 
 ## 1. Active Tasks (Working On)
-- [ ] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.
+- [x] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.
 - [ ] **Component H: Type Cleaning Unification [Priority: High]:** Unify C++ type sanitization and cleaning logic, centralizing it inside `TypeManager`.
 
 ## 2. Future Tasks (Next Steps)
@@ -29,3 +29,4 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 ## 4. Engineering Standards
 * **TDD:** Every fix for a type-check error must be accompanied by a small unit test or a verified change in the generated QuantLib stub.
 * **Code Quality:** Ensure all changes pass `uv run poe code-quality` before committing.
+* **Project Documentation:** Update all relevant project tracking files in `.project/` (such as `plan.md` to check off tasks, `achievements.md` to record completed deliverables, and `design.md` if the architecture changes) after finishing each task.

@@ -58,31 +58,29 @@ class StubEmitter:
         body = "\n".join(self.lines)
         needed_imports: list[str] = []
 
-        # Scan body for utilized typing features using word boundaries
+        typing_symbols_list = (
+            "Any",
+            "Optional",
+            "overload",
+            "Generic",
+            "TypeVar",
+            "Union",
+            "Callable",
+            "Sequence",
+            "Iterable",
+            "Iterator",
+        )
         typing_symbols = [
-            sym
-            for sym in (
-                "Any",
-                "Optional",
-                "overload",
-                "Generic",
-                "TypeVar",
-                "Union",
-                "Callable",
-                "Sequence",
-                "Iterable",
-                "Iterator",
-            )
-            if re.search(rf"\b{sym}\b", body)
+            sym for sym in typing_symbols_list if sym in self.tm.needed_imports
         ]
         if typing_symbols:
             needed_imports.append(f"from typing import {', '.join(typing_symbols)}")
 
-        if re.search(r"\bIntEnum\b", body):
+        if "IntEnum" in self.tm.needed_imports:
             needed_imports.append("from enum import IntEnum")
-        if re.search(r"\bcollections\.abc\b", body):
+        if "collections.abc" in self.tm.needed_imports:
             needed_imports.append("import collections.abc")
-        if re.search(r"\btyping\.", body):
+        if "typing" in self.tm.needed_imports:
             needed_imports.append("import typing")
 
         header = "\n".join(needed_imports)
@@ -93,6 +91,7 @@ class StubEmitter:
     def emit(self, top: Top) -> None:
         """Generate the full stub output from the Top AST node."""
         self.write("_T = TypeVar('_T')")
+        self.tm.needed_imports.add("TypeVar")
         self.write("")
         for line in self.tm.config.extra_code:
             self.write(line)
@@ -308,6 +307,7 @@ class StubEmitter:
         """Emit a Python IntEnum from a C++ enum."""
         name = enum.name.split("::")[-1]
         self.write(f"class {name}(IntEnum):")
+        self.tm.needed_imports.add("IntEnum")
         self.indent()
         self._write_docstring(enum.docstring)
         has_items = False
@@ -398,6 +398,7 @@ class StubEmitter:
             self._add_cpp_type_base(cls.cpp_type, base_names)
         if cls.is_template:
             base_names.append("Generic[_T]")
+            self.tm.needed_imports.add("Generic")
         return f"({', '.join(base_names)})" if base_names else ""
 
     def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
@@ -496,6 +497,7 @@ class StubEmitter:
                 if ret_type == "None":
                     ret_type = "Any"
             self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
+            self.tm.needed_imports.add("Iterator")
         return len(method_groups) > 0
 
     def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict[str, list[CDecl]]:
@@ -527,6 +529,7 @@ class StubEmitter:
         size_val_sig = (f"self, size: int, value: {elem_type}", "None")
         if size_val_sig not in unique_sigs:
             unique_sigs[size_val_sig] = None
+        self.tm.needed_imports.add("Iterable")
 
     def visit_constructor_group(
         self, group: list[Constructor], container_elem_type: str | None = None
@@ -555,6 +558,7 @@ class StubEmitter:
             params_str, ret_type = sig_tuple
             if use_overload:
                 self.write("@overload")
+                self.tm.needed_imports.add("overload")
             self.write(f"def __init__({params_str}) -> {ret_type}: ...")
 
     def visit_function_group(
@@ -595,6 +599,7 @@ class StubEmitter:
                 self.write("@staticmethod")
             if use_overload:
                 self.write("@overload")
+                self.tm.needed_imports.add("overload")
             self.write(f"def {group_name}({params_str}) -> {ret_type}: ...")
             if not use_overload:
                 self._write_docstring(func.docstring)

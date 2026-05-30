@@ -122,7 +122,7 @@ class TypeManager:
             "Iterable",
             "Iterator",
         ):
-            if sym in resolved:
+            if re.search(rf"\b{sym}\b", resolved):
                 self.needed_imports.add(sym)
         if "collections.abc" in resolved:
             self.needed_imports.add("collections.abc")
