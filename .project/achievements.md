@@ -27,3 +27,4 @@
 * **Architectural Review:** Conducted a thermonuclear review of `src/swig2pyi/core/` and documented improvements in `docs/architectural_review.md`.
 * **GDAL OSR Verification:** Integrated static AST verification tests for GDAL's Spatial Reference System (OSR) module to ensure portability.
 * **QuantLib Test Suite Verification:** Achieved zero pyright errors across 30 strict Python test files of the QuantLib test suite (verified by 21/21 integration tests in `uv run poe test-heavy`).
+* **Full QuantLib Test Suite Type Verification:** Verified the entire QuantLib SWIG Python test suite (35+ test files, tag v1.40) using the generated stubs under strict typing constraints with zero type checking errors originating from the stub definitions.
