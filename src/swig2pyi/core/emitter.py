@@ -300,11 +300,9 @@ class StubEmitter:
         for func in module.cdecls:
             if func.kind != "function":
                 continue
-            if func.name.startswith("operator") or func.name in (
-                "linkTo",
-                "currentLink",
-                "empty",
-                "values",
+            if (
+                func.name.startswith("operator")
+                or func.name in self.tm.config.skip_functions
             ):
                 continue
             if self.should_skip_method(func):

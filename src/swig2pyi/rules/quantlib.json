@@ -37,6 +37,10 @@
         "QuantLib::",
         "ext::"
     ],
+    "parameter_relaxation": {
+        "Array": "Union[Array, Sequence[float]]",
+        "Matrix": "Union[Matrix, Sequence[Sequence[float]]]"
+    },
     "pythoncode_signatures": {
         "BinomialVanillaEngine": "(process: GeneralizedBlackScholesProcess, type: str, steps: int) -> PricingEngine",
         "MCAmericanBasketEngine": "(process: StochasticProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ..., nCalibrationSamples: int = ..., polynomOrder: int = ..., polynomType: int = ...) -> PricingEngine",
@@ -44,6 +48,12 @@
         "MCEuropeanEngine": "(process: GeneralizedBlackScholesProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ...) -> PricingEngine"
     },
     "rename_operators": true,
+    "skip_functions": [
+        "linkTo",
+        "currentLink",
+        "empty",
+        "values"
+    ],
     "smart_pointers": [
         "boost::shared_ptr",
         "std::shared_ptr",

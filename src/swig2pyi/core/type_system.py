@@ -95,12 +95,8 @@ class TypeManager:
         return resolved
 
     def _to_python_parameter(self, resolved: str, cpp_type_str: str) -> str:
-        if resolved == "Matrix":
-            self.needed_imports.update({"Union", "Sequence"})
-            return "Union[Matrix, Sequence[Sequence[float]]]"
-        if resolved == "Array":
-            self.needed_imports.update({"Union", "Sequence"})
-            return "Union[Array, Sequence[float]]"
+        if resolved in self.config.parameter_relaxation:
+            return self.config.parameter_relaxation[resolved]
 
         underlying = self.py_class_to_cpp_types.get(resolved, cpp_type_str)
         generic = self.normalize_type(underlying, bypass_mapping=True)

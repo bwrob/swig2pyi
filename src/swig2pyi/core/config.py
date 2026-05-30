@@ -19,6 +19,8 @@ class Config(BaseModel):
     delegate_templates: list[str] = []
     generic_templates: list[str] = []
     pythoncode_signatures: dict[str, str] = {}
+    parameter_relaxation: dict[str, str] = {}
+    skip_functions: list[str] = []
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":
