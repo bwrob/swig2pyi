@@ -11,7 +11,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 def test_osr_integration() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     xml_file = base_dir / "data" / "osr" / "osr.xml"
     config_file = base_dir.parent / "src" / "swig2pyi" / "rules" / "gdal_osr.json"
 

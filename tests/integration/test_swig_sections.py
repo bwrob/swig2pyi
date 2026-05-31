@@ -43,10 +43,15 @@ def type_manager(base_config: Config) -> TypeManager:
     return TypeManager(base_config)
 
 
-# --- 33.3.1 Modules ---
 def test_sec_33_3_1_modules(type_manager: TypeManager) -> None:
     # A SWIG module generates the overall stub file structure and typing imports
-    module = Module(name="my_swig_module", cdecls=[], classes=[], enums=[])
+    func = CDecl(
+        name="foo",
+        kind="function",
+        type="void",
+        parms=[Parm(name="x", type="std::vector<int>")],
+    )
+    module = Module(name="my_swig_module", cdecls=[func], classes=[], enums=[])
     top = Top(module=module)
     emitter = StubEmitter(type_manager)
     emitter.emit(top)

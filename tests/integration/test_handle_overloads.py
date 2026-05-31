@@ -11,7 +11,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 def test_handle_overloads_delegation() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     interface_file = base_dir / "data" / "synthetic" / "handle_overloads.i"
     config_file = base_dir / "data" / "synthetic" / "handle_overloads.json"
 

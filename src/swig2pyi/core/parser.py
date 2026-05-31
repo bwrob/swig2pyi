@@ -130,12 +130,53 @@ class SwigXmlParser:
         if is_discardable:
             self._discard_element(elem)
 
+    def _parse_typedef(self, name: str, attrs: dict[str, str]) -> None:
+        """Parse a SWIG XML typedef declaration and store it."""
+        if not name or not self.module:
+            return
+        full_name = self._resolve_typedef_name(name)
+        raw_type = attrs.get("type", "")
+        decl = attrs.get("decl")
+        full_type = self._resolve_typedef_type(raw_type, decl)
+        self.module.typedefs[full_name] = full_type
+
+    def _resolve_typedef_name(self, name: str) -> str:
+        """Resolve full C++ name, handling enclosing class scope."""
+        if not self.class_elem_stack:
+            return name
+        parent_elem = self.class_elem_stack[-1]
+        parent_attrs = self._get_attrs(parent_elem)
+        parent_name = parent_attrs.get("sym_name") or parent_attrs.get("name", "")
+        if parent_name:
+            return f"{parent_name}::{name}"
+        return name
+
+    def _resolve_typedef_type(self, raw_type: str, decl: str | None) -> str:
+        """Resolve C++ type representation including pointer/ref from SWIG decl."""
+        if not decl:
+            return raw_type
+        suffix = ""
+        for part in decl.split("."):
+            if part == "p":
+                suffix += "*"
+            elif part == "r":
+                suffix += "&"
+        if suffix:
+            return f"{raw_type} {suffix}".strip()
+        return raw_type
+
     def _parse_node(self, elem: ET.Element, tag: str) -> None:
         attrs = self._get_attrs(elem)
         name = attrs.get("sym_name") or attrs.get("name", "")
 
         if tag == "class":
             self.class_elem_stack.pop()
+
+        if tag == "cdecl" and (
+            attrs.get("kind") == "typedef" or attrs.get("storage") == "typedef"
+        ):
+            self._parse_typedef(name, attrs)
+            return
 
         ignore_cond = attrs.get("feature_ignore") == "1" or (
             not name and tag == "class"

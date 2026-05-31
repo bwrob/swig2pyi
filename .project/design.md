@@ -11,7 +11,7 @@ This document defines the high-level architecture, module design, and translatio
 ```mermaid
 graph TD
     A[SWIG Interface File .i] -->|SwigRunner| B[SWIG XML Schema]
-    B -->|SwigXmlParser| C[Pydantic AST Models]
+    B -->|SwigXmlParser| C[Dataclass AST Models]
     C -->|StubEmitter| D[Type stub .pyi]
 
     subgraph Type System
@@ -26,11 +26,11 @@ graph TD
 
 ### `SwigRunner` (in `runner.py`)
 * **Purpose:** Runs the local `swig` compiler with `-xml` flag.
-* **Caching:** Computes a SHA256 hash of SWIG versions, C++ source file modification times, and interface contents. Caches XML output in `.temp/swig_xml_cache/` to bypass compilation.
+* **Caching:** Computes a SHA256 cache key based on the SWIG version, the main interface file content, and the metadata (path, size, and modification time) of all dependencies tracked via `swig -MM`. Caches XML output in `.temp/swig_xml_cache/` to bypass compilation.
 
 ### `SwigXmlParser` (in `parser.py`)
 * **Purpose:** Performs a single-pass parse of SWIG XML trees using standard `xml.etree.ElementTree`.
-* **AST Mapping:** Constructs structured Pydantic models representing modules, classes, functions, enums, parameters, and variable definitions.
+* **AST Mapping:** Constructs structured standard Python `@dataclass(slots=True)` models representing modules, classes, functions, enums, parameters, and variable definitions.
 
 ### `TypeManager` (in `type_system.py`)
 * **Purpose:** Resolves C++ types to PEP 484 Python annotations.

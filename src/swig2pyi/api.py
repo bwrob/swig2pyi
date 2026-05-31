@@ -4,41 +4,21 @@ import os
 import tempfile
 from pathlib import Path
 
-from swig2pyi.core.ast_models import Class, Top
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
-from swig2pyi.core.qa import QAValidator
+from swig2pyi.core.qa import CoverageReport, QAValidator, StubCoverageChecker
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
-
-def collect_enums(top: Top) -> set[str]:
-    """Collect all enum names from the AST recursively."""
-    enums: set[str] = set()
-    if not top.module:
-        return enums
-
-    # Module-level enums
-    for enum in top.module.enums:
-        name = enum.name.split("::")[-1]
-        enums.add(name)
-
-    # Class-level enums
-    def visit_class(cls: Class, prefix: str = "") -> None:
-        cls_name = cls.name.split("::")[-1]
-        current_prefix = f"{prefix}{cls_name}." if prefix else f"{cls_name}."
-        for enum in cls.enums:
-            enum_name = enum.name.split("::")[-1]
-            enums.add(current_prefix + enum_name)
-            enums.add(enum_name)
-        for sub_cls in cls.classes:
-            visit_class(sub_cls, current_prefix)
-
-    for cls in top.module.classes:
-        visit_class(cls)
-
-    return enums
+__all__ = [
+    "Config",
+    "CoverageReport",
+    "QAValidator",
+    "StubCoverageChecker",
+    "generate_from_interface",
+    "generate_from_xml",
+]
 
 
 def generate_from_interface(
@@ -96,8 +76,7 @@ def generate_from_xml(
     parser = SwigXmlParser()
     top = parser.parse_file(xml_file)
 
-    enums = collect_enums(top)
-    tm = TypeManager(config, enums=enums)
+    tm = TypeManager(config, top=top)
     emitter = StubEmitter(tm)
     emitter.emit(top)
 
@@ -109,4 +88,6 @@ def generate_from_xml(
 
     if validate:
         qa = QAValidator()
-        qa.validate(output_file)
+        if not qa.validate(output_file):
+            msg = "QA validation failed for the generated stub."
+            raise RuntimeError(msg)

@@ -7,9 +7,8 @@ import re
 import textwrap
 from typing import TYPE_CHECKING
 
-from .ast_models import CDecl, Class, Constructor, Enum, Module, Top
+from .ast_models import CDecl, Class, Constructor, Enum, Module, Parm, Top
 from .naming import NameManager
-from .signature import SignatureFormatter
 
 if TYPE_CHECKING:
     from .type_system import TypeManager
@@ -22,9 +21,9 @@ class StubEmitter:
         """Initialize with type manager."""
         self.tm = type_manager
         self.nm = NameManager(rename_operators=type_manager.config.rename_operators)
-        self.sf = SignatureFormatter(type_manager, self.nm)
         self.lines: list[str] = []
         self.indent_level = 0
+        self.needs_typevar_t = False
 
     def indent(self) -> None:
         """Increment indentation level."""
@@ -56,6 +55,10 @@ class StubEmitter:
     def get_output(self) -> str:
         """Return the accumulated output as a string."""
         body = "\n".join(self.lines)
+        if self.needs_typevar_t or re.search(r"\b_T\b", body):
+            self.needs_typevar_t = True
+            self.tm.needed_imports.add("TypeVar")
+            body = "_T = TypeVar('_T')\n\n" + body
         needed_imports: list[str] = []
 
         typing_symbols_list = (
@@ -91,9 +94,6 @@ class StubEmitter:
 
     def emit(self, top: Top) -> None:
         """Generate the full stub output from the Top AST node."""
-        self.write("_T = TypeVar('_T')")
-        self.tm.needed_imports.add("TypeVar")
-        self.write("")
         self._scan_extra_code()
         self.write("")
         if top.module:
@@ -335,7 +335,8 @@ class StubEmitter:
         return ret_type
 
     def _emit_module_variables(self, module: Module) -> None:
-        """Emit module-level variables (e.g. __version__)."""
+        """Emit module-level variables and the SWIG cvar object."""
+        variables: list[tuple[str, str, str | None]] = []
         for var in module.cdecls:
             if var.kind != "variable":
                 continue
@@ -343,8 +344,25 @@ class StubEmitter:
             if not name:
                 continue
             ret_type = self._resolve_var_type(var.type)
+            variables.append((name, ret_type, var.docstring))
+
+        if not variables:
+            return
+
+        for name, ret_type, docstring in variables:
             self.write(f"{name}: {ret_type}")
-            self._write_docstring(var.docstring)
+            self._write_docstring(docstring)
+
+        self.write("")
+        self.write("class cvar_class:")
+        self.indent()
+        for name, ret_type, docstring in variables:
+            self.write(f"{name}: {ret_type}")
+            self._write_docstring(docstring)
+        self.dedent()
+        self.write("")
+        self.write("cvar: cvar_class")
+        self.write("")
 
     def visit_enum(self, enum: Enum) -> None:
         """Emit a Python IntEnum from a C++ enum."""
@@ -420,11 +438,7 @@ class StubEmitter:
             self._emit_container_methods(container_elem_type)
             has_members = True
 
-        prop_method_ids = self._emit_properties(cls)
-        if prop_method_ids:
-            has_members = True
-
-        if self._emit_methods(cls, prop_method_ids):
+        if self._emit_methods(cls):
             has_members = True
 
         if not has_members:
@@ -442,6 +456,8 @@ class StubEmitter:
         if cls.is_template:
             base_names.append("Generic[_T]")
             self.tm.needed_imports.add("Generic")
+            self.tm.needed_imports.add("TypeVar")
+            self.needs_typevar_t = True
         return f"({', '.join(base_names)})" if base_names else ""
 
     def _add_cpp_type_base(self, cpp_type: str, base_names: list[str]) -> None:
@@ -492,46 +508,6 @@ class StubEmitter:
                     names.append(wrapped_type)
         return names
 
-    def _emit_properties(self, cls: Class) -> set[int]:
-        properties = self._collect_properties(cls)
-        prop_method_ids: set[int] = set()
-        for prop_name, p_info in properties.items():
-            if not p_info["get"]:
-                continue
-            self._emit_property(prop_name, p_info)
-            prop_method_ids.add(id(p_info["get"]))
-            if p_info["set"]:
-                prop_method_ids.add(id(p_info["set"]))
-        return prop_method_ids
-
-    def _collect_properties(self, cls: Class) -> dict[str, dict[str, CDecl | None]]:
-        """Collect getter/setter properties from class methods."""
-        _ = cls  # Reserved for future use
-        return {}
-
-    def _emit_property(self, prop_name: str, p_info: dict[str, CDecl | None]) -> None:
-        getter = p_info["get"]
-        if not getter:
-            return
-        if getter.type:
-            ret_type = self.tm.to_python(getter.type)
-        else:
-            ret_type = "Any"
-            self.tm.needed_imports.add("Any")
-        if ret_type == "void":
-            ret_type = "None"
-        self.write("@property")
-        self.write(f"def {prop_name}(self) -> {ret_type}: ...")
-        setter = p_info["set"]
-        if setter:
-            self.write(f"@{prop_name}.setter")
-            if setter.parms and setter.parms[0].type:
-                p_type = self.tm.to_python(setter.parms[0].type)
-            else:
-                p_type = "Any"
-                self.tm.needed_imports.add("Any")
-            self.write(f"def {prop_name}(self, value: {p_type}) -> None: ...")
-
     def _emit_getitem_iter(self, getitem_funcs: list[CDecl]) -> None:
         ret_type = "Any"
         if getitem_funcs and getitem_funcs[0].type:
@@ -543,8 +519,8 @@ class StubEmitter:
         self.write(f"def __iter__(self) -> Iterator[{ret_type}]: ...")
         self.tm.needed_imports.add("Iterator")
 
-    def _emit_methods(self, cls: Class, skip_ids: set[int]) -> bool:
-        method_groups = self._group_methods(cls, skip_ids)
+    def _emit_methods(self, cls: Class) -> bool:
+        method_groups = self._group_methods(cls)
         is_container = self._get_container_elem_type(cls) is not None
         for name, group in method_groups.items():
             if is_container and name in (
@@ -560,13 +536,11 @@ class StubEmitter:
             self._emit_getitem_iter(method_groups["__getitem__"])
         return len(method_groups) > 0
 
-    def _group_methods(self, cls: Class, skip_ids: set[int]) -> dict[str, list[CDecl]]:
+    def _group_methods(self, cls: Class) -> dict[str, list[CDecl]]:
         method_groups: dict[str, list[CDecl]] = {}
         for method in cls.cdecls:
-            if (
-                id(method) in skip_ids
-                or method.kind not in ("function", "variable")
-                or self.should_skip_method(method)
+            if method.kind not in ("function", "variable") or self.should_skip_method(
+                method
             ):
                 continue
 
@@ -604,7 +578,7 @@ class StubEmitter:
                 parms=ctor.parms,
                 is_static=False,
             )
-            sig_tuple = self.sf.get_signature(
+            sig_tuple = self.get_signature(
                 dummy_func, is_method=True, indent_level=self.indent_level
             )
             unique_sigs[sig_tuple] = ctor
@@ -643,7 +617,7 @@ class StubEmitter:
     ) -> None:
         unique_sigs: dict[tuple[str, str], CDecl] = {}
         for func in group:
-            sig = self.sf.get_signature(
+            sig = self.get_signature(
                 func, is_method=is_method, indent_level=self.indent_level
             )
             unique_sigs[sig] = func
@@ -670,3 +644,80 @@ class StubEmitter:
         ):
             return True
         return bool(name.startswith("~"))
+
+    def format_params(self, parms: list[Parm]) -> list[str]:
+        """Format parameter list for Python function signature."""
+        parts: list[str] = []
+        for i, p in enumerate(parms):
+            p_name = self.nm.sanitize(p.name or f"arg{i}")
+            if p.type:
+                p_type = self.tm.to_python(p.type, is_parameter=True)
+            else:
+                self.tm.needed_imports.add("Any")
+                p_type = "Any"
+
+            if p_type in self.tm.enums:
+                self.tm.needed_imports.add("Union")
+                p_type = f"Union[{p_type}, int]"
+            if p.value is not None:
+                parts.append(f"{p_name}: {p_type} = ...")
+            else:
+                parts.append(f"{p_name}: {p_type}")
+        return parts
+
+    def _get_param_parts(
+        self, func: CDecl, *, is_method: bool, mapped_name: str | None
+    ) -> list[str]:
+        is_cmp = is_method and mapped_name in ("__eq__", "__ne__")
+        if is_cmp:
+            return ["other: object"]
+        return self.format_params(func.parms)
+
+    def _format_params_string(
+        self,
+        param_parts: list[str],
+        *,
+        is_method: bool,
+        is_static: bool,
+        num_parms: int,
+        indent_level: int,
+    ) -> str:
+        if is_method and not is_static:
+            param_parts.insert(0, "self")
+
+        if len(param_parts) > 1 or (is_method and not is_static and num_parms > 0):
+            params_str = ",\n".join(
+                (indent_level + 1) * "    " + p for p in param_parts
+            )
+            return f"\n{params_str},\n" + indent_level * "    "
+        if len(param_parts) == 1:
+            return param_parts[0]
+        return ""
+
+    def _get_return_type(self, func_type: str | None) -> str:
+        if not func_type:
+            self.tm.needed_imports.add("Any")
+            return "Any"
+        ret_type = self.tm.to_python(func_type)
+        if ret_type == "void":
+            return "None"
+        return ret_type
+
+    def get_signature(
+        self, func: CDecl, *, is_method: bool, indent_level: int = 0
+    ) -> tuple[str, str]:
+        """Get the parameters string and return type for a function/method."""
+        mapped_name = self.nm.get_python_name(func.name) if is_method else func.name
+        param_parts = self._get_param_parts(
+            func, is_method=is_method, mapped_name=mapped_name
+        )
+        is_static = getattr(func, "is_static", False)
+        full_params = self._format_params_string(
+            param_parts,
+            is_method=is_method,
+            is_static=is_static,
+            num_parms=len(func.parms),
+            indent_level=indent_level,
+        )
+        ret_type = self._get_return_type(func.type)
+        return (full_params, ret_type)

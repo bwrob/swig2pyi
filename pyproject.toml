@@ -5,6 +5,8 @@
     classifiers = [
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
@@ -19,7 +21,7 @@
     license-files = ['LICENSE']
     name = "swig2pyi"
     readme = "README.md"
-    requires-python = ">=3.12,<3.15"
+    requires-python = ">=3.10,<3.15"
     version = "0.1.0"
 
     [project.urls]
@@ -66,7 +68,7 @@
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py310"
 exclude = ["examples", "tests/expected_output", "tests/data", ".agents", ".temp", "tests/quantlib_tests"]
 
 [tool.ruff.lint]
@@ -74,7 +76,8 @@ ignore = ["COM", "D203", "D211", "D213"]
 select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004", "SLF001", "PLC0415", "ANN401"]
+"src/swig2pyi/cli.py" = ["T201"]
+"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004", "SLF001", "PLC0415", "ANN", "ARG", "PLR0915"]
 
 [tool.ruff.format]
 docstring-code-format = true

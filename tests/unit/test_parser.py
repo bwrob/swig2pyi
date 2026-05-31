@@ -59,3 +59,34 @@ def test_parse_simple_xml() -> None:
 
     assert len(top.module.cdecls) == 1
     assert top.module.cdecls[0].name == "testGlobal"
+
+
+def test_parse_typedef() -> None:
+    xml = """
+    <top>
+        <module>
+            <cdecl>
+                <attributelist>
+                    <attribute name="type" value="double"/>
+                    <attribute name="name" value="Real"/>
+                    <attribute name="sym_name" value="Real"/>
+                    <attribute name="kind" value="typedef"/>
+                </attributelist>
+            </cdecl>
+            <cdecl>
+                <attributelist>
+                    <attribute name="type" value="char"/>
+                    <attribute name="decl" value="p."/>
+                    <attribute name="name" value="retString"/>
+                    <attribute name="sym_name" value="retString"/>
+                    <attribute name="kind" value="typedef"/>
+                </attributelist>
+            </cdecl>
+        </module>
+    </top>
+    """
+    parser = SwigXmlParser()
+    top = parser.parse_string(xml)
+    assert top.module is not None
+    assert top.module.typedefs["Real"] == "double"
+    assert top.module.typedefs["retString"] == "char *"

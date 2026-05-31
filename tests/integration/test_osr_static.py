@@ -2,7 +2,6 @@ import ast
 from pathlib import Path
 from typing import Any
 
-from swig2pyi.api import collect_enums
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
@@ -89,7 +88,7 @@ def _extract_symbols(tree: ast.Module) -> dict[str, Any]:
 
 def test_osr_static_stub_matches_reference() -> None:
     """Compare the generated OSR stub against the reference osr.py statically using AST."""
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     xml_file = base_dir / "data" / "osr" / "osr.xml"
     config_file = base_dir.parent / "src" / "swig2pyi" / "rules" / "gdal_osr.json"
     reference_py_file = base_dir / "data" / "osr" / "osr.py"
@@ -102,8 +101,7 @@ def test_osr_static_stub_matches_reference() -> None:
     parser = SwigXmlParser()
     top = parser.parse_file(xml_file)
 
-    enums = collect_enums(top)
-    tm = TypeManager(config, enums=enums)
+    tm = TypeManager(config, top=top)
     emitter = StubEmitter(tm)
     emitter.emit(top)
     stub_text = emitter.get_output()

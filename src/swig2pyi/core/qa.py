@@ -7,6 +7,7 @@ import importlib
 import logging
 import shutil
 import subprocess
+import sys
 import types
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -88,17 +89,47 @@ class StubCoverageChecker:
     def _try_import(module_name: str) -> types.ModuleType | None:
         try:
             return importlib.import_module(module_name)
-        except ImportError:
+        except ImportError as e:
+            logger.warning(
+                "Could not import module %s due to ImportError: %s", module_name, e
+            )
+            sys.stderr.write(f"Warning: Could not import module {module_name}\n")
+            return None
+        except Exception as e:  # noqa: BLE001
+            logger.warning(
+                "Could not import module %s due to error: %s", module_name, e
+            )
+            sys.stderr.write(f"Warning: Could not import module {module_name}\n")
             return None
 
     @staticmethod
+    def _is_native_symbol(name: str, obj: object, module_name: str) -> bool:
+        if name.startswith("_") or isinstance(obj, types.ModuleType):
+            return False
+
+        obj_module = getattr(obj, "__module__", None)
+        if not isinstance(obj_module, str):
+            return True
+
+        is_same_pkg = (
+            obj_module == module_name
+            or obj_module.startswith(module_name + ".")
+            or module_name.startswith(obj_module + ".")
+        )
+        is_mock = module_name == "mock_mod" or module_name.startswith("mock")
+        return is_same_pkg or is_mock
+
+    @staticmethod
     def _public_runtime_symbols(module: types.ModuleType) -> set[str]:
-        return {
-            name
-            for name in dir(module)
-            if not name.startswith("_")
-            and not isinstance(getattr(module, name, None), types.ModuleType)
-        }
+        symbols: set[str] = set()
+        module_name = module.__name__
+        for name in dir(module):
+            obj = getattr(module, name, None)
+            if obj is not None and StubCoverageChecker._is_native_symbol(
+                name, obj, module_name
+            ):
+                symbols.add(name)
+        return symbols
 
     @staticmethod
     def _stub_top_level_names(stub_path: Path) -> set[str]:
@@ -152,7 +183,9 @@ class QAValidator:
                 capture_output=True,
             )
         except subprocess.CalledProcessError as e:
-            return False, f"Ruff failed:\n{e.stderr.decode()}"
+            stdout_str = e.stdout.decode() if e.stdout else ""
+            stderr_str = e.stderr.decode() if e.stderr else ""
+            return False, f"Ruff failed:\nStdout: {stdout_str}\nStderr: {stderr_str}"
         else:
             return True, "Formatting and linting successful."
 
@@ -180,14 +213,18 @@ class QAValidator:
     def validate(self, file_path: Path) -> bool:
         """Run the full QA suite on the file.
 
-        Returns True if all checks pass (or strictly if formatting succeeds,
-        type checking might be warnings).
+        Returns True if all checks (formatting, linting, and type checking) pass.
         """
         # Step 1: Format & Lint
-        fmt_ok, _fmt_msg = self.run_formatting(file_path)
+        fmt_ok, fmt_msg = self.run_formatting(file_path)
         if not fmt_ok:
+            logger.error(fmt_msg)
             return False
 
-        # Step 2: Type check (informational)
-        _py_ok, _py_msg = self.run_type_check(file_path)
+        # Step 2: Type check
+        py_ok, py_msg = self.run_type_check(file_path)
+        if not py_ok:
+            logger.error(py_msg)
+            return False
+
         return True

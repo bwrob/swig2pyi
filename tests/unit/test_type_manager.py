@@ -149,3 +149,17 @@ def test_template_argument_limiting(type_manager: TypeManager) -> None:
         type_manager.to_python("std::map<std::string, int, std::less<std::string>>")
         == "dict[str, int]"
     )
+
+
+def test_dynamic_typedef_resolution(config: Config) -> None:
+    from swig2pyi.core.ast_models import Module, Top
+
+    module = Module(name="QuantLib")
+    module.typedefs["OGRErr"] = "int"
+    module.typedefs["retString"] = "char *"
+    module.typedefs["DateVector"] = "std::vector<QuantLib::Date>"
+    top = Top(module=module)
+    tm = TypeManager(config, top=top)
+    assert tm.to_python("OGRErr") == "int"
+    assert tm.to_python("retString") == "str"
+    assert tm.to_python("DateVector") == "list[Date]"

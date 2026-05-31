@@ -40,10 +40,19 @@ All tasks added to `.project/plan.md` must strictly follow this format:
 
 ```markdown
 - [ ] **[Component / Category]: [Task Title] [Priority: High|Medium|Low]:** [Task Details explaining the goal, scope, and expected outcome].
+  * **Acceptance Criteria:**
+    - [ ] [Criterion 1]
+    - [ ] [Criterion 2]
 ```
 
 ### Examples:
-* **Correct:** `- [ ] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.`
+* **Correct:**
+  ```markdown
+  - [ ] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.
+    * **Acceptance Criteria:**
+      - [ ] Importer checks are executed dynamically during AST traversal.
+      - [ ] All post-emission regex scans are deleted.
+  ```
 * **Incorrect:** `- [ ] Fix imports in emitter`
 
 ---

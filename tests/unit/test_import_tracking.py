@@ -51,10 +51,9 @@ def test_import_tracking_basic_and_overload(type_manager: TypeManager) -> None:
     emitter.emit(top)
     output = emitter.get_output()
 
-    # We expect overload and TypeVar
+    # We expect overload
     assert "overload" in type_manager.needed_imports
-    assert "TypeVar" in type_manager.needed_imports
-    assert "from typing import overload, TypeVar" in output
+    assert "from typing import overload" in output
     assert "@overload" in output
 
 
@@ -108,6 +107,6 @@ def test_import_tracking_container_iterators(type_manager: TypeManager) -> None:
     assert "Iterable" in type_manager.needed_imports
     assert "Iterator" in type_manager.needed_imports
     assert "overload" in type_manager.needed_imports
-    assert "from typing import overload, TypeVar, Iterable, Iterator" in output
+    assert "from typing import overload, Iterable, Iterator" in output
     assert "def __iter__(self) -> Iterator[int]: ..." in output
     assert "iterable: Iterable[int]" in output

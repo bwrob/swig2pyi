@@ -1,9 +1,13 @@
 """Type normalization and mapping system."""
 
-import re
-from typing import ClassVar
+from __future__ import annotations
 
-from .config import Config
+import re
+from typing import TYPE_CHECKING, ClassVar
+
+if TYPE_CHECKING:
+    from .ast_models import Class, Top
+    from .config import Config
 
 
 class TypeManager:
@@ -40,10 +44,18 @@ class TypeManager:
         "RelinkableHandle": 1,
     }
 
-    def __init__(self, config: Config, enums: set[str] | None = None) -> None:
+    def __init__(
+        self,
+        config: Config,
+        enums: set[str] | None = None,
+        top: Top | None = None,
+    ) -> None:
         """Initialize with configuration."""
         self.config = config
-        self.enums = enums or set()
+        if top is not None:
+            self.enums = _collect_enums(top)
+        else:
+            self.enums = enums or set()
         self.needed_imports: set[str] = set()
         self.cpp_to_py_class_names: dict[str, str] = {}
         self.py_class_to_cpp_types: dict[str, str] = {}
@@ -55,6 +67,12 @@ class TypeManager:
         self._containers: dict[str, str] = {
             self.clean_cpp_type(k): v for k, v in self.config.containers.items()
         }
+        self.typedefs: dict[str, str] = {}
+        if top is not None and top.module is not None:
+            self.typedefs = {
+                self.clean_cpp_type(k): self.clean_cpp_type(v)
+                for k, v in top.module.typedefs.items()
+            }
 
     def _build_smart_ptr_regex(self) -> re.Pattern[str]:
         patterns = [re.escape(ptr) for ptr in self.config.smart_pointers]
@@ -192,16 +210,45 @@ class TypeManager:
         if cpp_type.endswith(("::size_type", ".size_type")):
             return "int"
 
+        # 1. Resolve from static type map
+        mapped = self._lookup_type_map(cpp_type)
+        if mapped is not None:
+            return mapped
+
+        # 2. Resolve from XML parsed typedefs
+        resolved = self._lookup_typedefs(cpp_type)
+        if resolved is not None:
+            return resolved
+
+        return self.BASIC_TYPES.get(cpp_type)
+
+    def _lookup_type_map(self, cpp_type: str) -> str | None:
+        """Look up the C++ type in the static type map config."""
         if cpp_type in self._type_map:
             return self._type_map[cpp_type]
 
         if self.config.module_name:
             namespaced = f"{self.config.module_name}::{cpp_type}"
-            cleaned_namespaced = self.clean_cpp_type(namespaced)
-            if cleaned_namespaced in self._type_map:
-                return self._type_map[cleaned_namespaced]
+            cleaned = self.clean_cpp_type(namespaced)
+            if cleaned in self._type_map:
+                return self._type_map[cleaned]
+        return None
 
-        return self.BASIC_TYPES.get(cpp_type)
+    def _lookup_typedefs(self, cpp_type: str) -> str | None:
+        """Look up the C++ type in parsed typedefs and recursively normalize."""
+        if cpp_type in self.typedefs:
+            underlying = self.typedefs[cpp_type]
+            if underlying != cpp_type:
+                return self.normalize_type(underlying)
+
+        if self.config.module_name:
+            namespaced = f"{self.config.module_name}::{cpp_type}"
+            cleaned = self.clean_cpp_type(namespaced)
+            if cleaned in self.typedefs:
+                underlying = self.typedefs[cleaned]
+                if underlying != cleaned:
+                    return self.normalize_type(underlying)
+        return None
 
     def _get_template_arg_limit(self, template_name: str) -> int | None:
         base_name = template_name.rsplit(".", maxsplit=1)[-1]
@@ -355,3 +402,31 @@ class TypeManager:
         if current:
             parts.append("".join(current).strip())
         return parts
+
+
+def _collect_enums(top: Top) -> set[str]:
+    """Collect all enum names from the AST recursively."""
+    enums: set[str] = set()
+    if not top.module:
+        return enums
+
+    # Module-level enums
+    for enum in top.module.enums:
+        name = enum.name.split("::")[-1]
+        enums.add(name)
+
+    # Class-level enums
+    def visit_class(cls: Class, prefix: str = "") -> None:
+        cls_name = cls.name.split("::")[-1]
+        current_prefix = f"{prefix}{cls_name}." if prefix else f"{cls_name}."
+        for enum in cls.enums:
+            enum_name = enum.name.split("::")[-1]
+            enums.add(current_prefix + enum_name)
+            enums.add(enum_name)
+        for sub_cls in cls.classes:
+            visit_class(sub_cls, current_prefix)
+
+    for cls in top.module.classes:
+        visit_class(cls)
+
+    return enums

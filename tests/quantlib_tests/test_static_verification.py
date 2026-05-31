@@ -221,9 +221,7 @@ def test_static_stub_matches_reference_py(version_folder: str) -> None:
         parser = SwigXmlParser()
         top = parser.parse_file(xml_path_obj)
 
-        from swig2pyi.api import collect_enums
-        enums = collect_enums(top)
-        tm = TypeManager(config, enums=enums)
+        tm = TypeManager(config, top=top)
         emitter = StubEmitter(tm)
         emitter.emit(top)
         stub_text = emitter.get_output()

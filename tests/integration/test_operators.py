@@ -11,7 +11,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 def test_operator_remapping() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     interface_file = base_dir / "data" / "synthetic" / "operators.i"
     config_file = base_dir / "data" / "synthetic" / "operators.json"
 

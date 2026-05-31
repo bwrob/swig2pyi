@@ -11,7 +11,7 @@ from swig2pyi.core.type_system import TypeManager
 
 
 def test_vector_and_typedef_relaxation() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     interface_file = base_dir / "data" / "synthetic" / "vector_typedefs.i"
     config_file = base_dir / "data" / "synthetic" / "vector_typedefs.json"
 
