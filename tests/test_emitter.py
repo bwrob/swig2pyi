@@ -89,3 +89,57 @@ def test_emit_class_with_variables(type_manager: TypeManager) -> None:
     assert "class Point:" in output
     assert "x: int" in output
     assert "y: int" in output
+
+
+def test_emit_const_variables(type_manager: TypeManager) -> None:
+    # Set up vectors in the type manager's configuration for realistic resolution
+    custom_config = type_manager.config.model_copy(deep=True)
+    custom_config.containers["std::vector"] = "list"
+    custom_tm = TypeManager(custom_config)
+
+    # 1. Module-level const variable
+    module_var = CDecl(name="MY_CONST", kind="variable", type="const int")
+
+    # 2. Class-level const variable
+    class_var = CDecl(name="MAX_VAL", kind="variable", type="int const")
+
+    # 3. Class-level non-const variable with const inside template parameter
+    class_var_tmpl = CDecl(
+        name="vec_const_ptr", kind="variable", type="std::vector<const int>"
+    )
+
+    # 4. Class-level const variable with template parameter
+    class_var_const_tmpl = CDecl(
+        name="const_vec", kind="variable", type="const std::vector<int>"
+    )
+
+    cls = Class(
+        name="MyClass",
+        kind="class",
+        cdecls=[class_var, class_var_tmpl, class_var_const_tmpl],
+        constructors=[],
+    )
+    module = Module(name="Test", classes=[cls], cdecls=[module_var])
+    top = Top(module=module)
+
+    emitter = StubEmitter(custom_tm)
+    emitter.emit(top)
+    output = emitter.get_output()
+
+    # Check that Final is imported
+    typing_import = next(
+        line for line in output.splitlines() if line.startswith("from typing import")
+    )
+    assert "Final" in typing_import
+
+    # Check module-level const
+    assert "MY_CONST: Final[int]" in output
+
+    # Check class-level const
+    assert "MAX_VAL: Final[int]" in output
+
+    # Check class-level non-const with const inside template parameter (should NOT be Final)
+    assert "vec_const_ptr: list[int]" in output
+
+    # Check class-level const variable with template parameter (should be Final)
+    assert "const_vec: Final[list[int]]" in output

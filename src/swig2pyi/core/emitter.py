@@ -69,6 +69,7 @@ class StubEmitter:
             "Sequence",
             "Iterable",
             "Iterator",
+            "Final",
         )
         typing_symbols = [
             sym for sym in typing_symbols_list if sym in self.tm.needed_imports
@@ -116,6 +117,7 @@ class StubEmitter:
             "Sequence",
             "Iterable",
             "Iterator",
+            "Final",
         ):
             if re.search(rf"\b{sym}\b", line):
                 self.tm.needed_imports.add(sym)
@@ -313,6 +315,25 @@ class StubEmitter:
         for name, group in func_groups.items():
             self.visit_function_group(name, group, is_method=False)
 
+    def _is_const_type(self, type_str: str | None) -> bool:
+        if not type_str:
+            return False
+        before_template = type_str.split("<", 1)[0]
+        return bool(re.search(r"\bconst\b", before_template))
+
+    def _resolve_var_type(self, var_type: str | None) -> str:
+        if var_type:
+            ret_type = self.tm.to_python(var_type)
+        else:
+            ret_type = "Any"
+            self.tm.needed_imports.add("Any")
+        if ret_type == "void":
+            ret_type = "None"
+        if self._is_const_type(var_type):
+            ret_type = f"Final[{ret_type}]"
+            self.tm.needed_imports.add("Final")
+        return ret_type
+
     def _emit_module_variables(self, module: Module) -> None:
         """Emit module-level variables (e.g. __version__)."""
         for var in module.cdecls:
@@ -321,13 +342,7 @@ class StubEmitter:
             name = self.nm.get_python_name(var.name)
             if not name:
                 continue
-            if var.type:
-                ret_type = self.tm.to_python(var.type)
-            else:
-                ret_type = "Any"
-                self.tm.needed_imports.add("Any")
-            if ret_type == "void":
-                ret_type = "None"
+            ret_type = self._resolve_var_type(var.type)
             self.write(f"{name}: {ret_type}")
             self._write_docstring(var.docstring)
 
@@ -619,13 +634,7 @@ class StubEmitter:
 
     def _emit_variable_group(self, group_name: str, group: list[CDecl]) -> None:
         for var in group:
-            if var.type:
-                ret_type = self.tm.to_python(var.type)
-            else:
-                ret_type = "Any"
-                self.tm.needed_imports.add("Any")
-            if ret_type == "void":
-                ret_type = "None"
+            ret_type = self._resolve_var_type(var.type)
             self.write(f"{group_name}: {ret_type}")
             self._write_docstring(var.docstring)
 

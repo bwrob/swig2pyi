@@ -15,14 +15,12 @@ This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 - [x] **Type System: Nested Template Resolution [Priority: Medium]:** Enhance the `TypeManager` to handle complex nested templates (e.g. `std::vector<std::vector<std::shared_ptr<T>>>`) and custom template argument resolvers.
 - [x] **CLI: Stub Coverage Command [Priority: Low]:** Expose the coverage-checking logic as a first-class CLI command (e.g., `swig2pyi coverage --stub QuantLib.pyi --module QuantLib`).
 - [ ] **CI: Dynamic CI Integrations [Priority: Low]:** Extend GitHub Actions to build and verify GDAL OSR stubs dynamically in addition to QuantLib.
-- [ ] **Research: Analyze SWIG Specifications [Priority: Medium]:** Download SWIG documentation to `.temp/`, review C++ mapping specifications, identify gaps or divergence in current parser/emitter features, and plan/implement coverage for them.
-- [ ] **Type System: Const to Final Mapping [Priority: Low]:** Map C++ `const` variables and public member variables to Python `Final[T]` type annotations to preserve C++ immutability semantics.
-
-
-
+- [x] **Research: Analyze SWIG Specifications [Priority: Medium]:** Download SWIG documentation to `.temp/`, review C++ mapping specifications, identify gaps or divergence in current parser/emitter features, and plan/implement coverage for them.
+- [x] **Type System: Const to Final Mapping [Priority: Low]:** Map C++ `const` variables and public member variables to Python `Final[T]` type annotations to preserve C++ immutability semantics.
+- [ ] **Type System: Emulate SWIG cvar Object [Priority: Medium]:** Generate a `cvar` class and module-level `cvar` instance in stubs to support access to C++ global and static variables.
 
 ## 3. Package Release & Quality Tasks
-- [ ] **QA: Literal Code Coverage Target [Priority: Medium]:** Run `uv run poe coverage` and ensure the code coverage for the `swig2pyi` codebase meets or exceeds 90%.
+- [x] **QA: Literal Code Coverage Target [Priority: Medium]:** Run `uv run poe coverage` and ensure the code coverage for the `swig2pyi` codebase meets or exceeds 90%.
 - [ ] **Packaging: Repository Cleanup & Presentability [Priority: Medium]:** Verify the documentation structure, ensure README matches the tool's final API, and check dependency configurations.
 - [ ] **Packaging: PyPI Publishing [Priority: Medium]:** Perform a TestPyPI deployment verification, followed by publishing the first official release to PyPI.
 

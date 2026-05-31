@@ -134,6 +134,7 @@ class TypeManager:
             "Sequence",
             "Iterable",
             "Iterator",
+            "Final",
         ):
             if re.search(rf"\b{sym}\b", resolved):
                 self.needed_imports.add(sym)
@@ -166,7 +167,7 @@ class TypeManager:
                 break
             cpp_type = new_type
 
-        cpp_type = cpp_type.replace("const ", "").replace("volatile ", "").strip()
+        cpp_type = re.sub(r"\b(const|volatile)\b\s*", "", cpp_type).strip()
         while cpp_type and (cpp_type.endswith(("&", "*"))):
             cpp_type = cpp_type[:-1].strip()
         cpp_type = cpp_type.replace("(", "").replace(")", "")

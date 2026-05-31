@@ -19,6 +19,7 @@
 * **Explicit Import Tracking:** Tracked required imports (`overload`, `TypeVar`, `Generic`, `Iterable`, `Iterator`, `IntEnum`, etc.) dynamically in `StubEmitter` and `TypeManager` during stub generation, removing heuristic post-emission regex scans.
 * **Type Cleaning Unification:** Unified C++ type cleaning and sanitization logic across `StubEmitter` and `TypeManager` by centralizing it inside `TypeManager`'s public `clean_cpp_type` method.
 * **Strict Type Validation Coverage:** Achieved 100% type-checking coverage across 8 core QuantLib option/bond/swaption test files by adding configuration overrides (`pythoncode_signatures`) for custom Python helper engines defined in %pythoncode blocks.
+* **Const to Final Mapping:** Mapped C++ `const` global variables and public class member variables to Python `Final[T]` annotations, preserving immutability semantics in generated stubs and dynamic typing imports.
 
 
 ## 3. Package & Tooling Readiness
@@ -33,3 +34,5 @@
 * **Template Mapping Refinement:** Refined translation mappings for unmapped std::vector parameters to map directly to PEP 484 `Sequence[T]` annotations instead of redundant `Union[list[T], Sequence[T]]`. Updated the test suite and expected stub files accordingly.
 * **Nested Template Resolution & Argument Limiting:** Enhanced the `TypeManager` to resolve deeply nested templates (e.g. nested vectors of smart pointers) and limit template arguments dynamically. Introduced the `template_arg_counts` configuration option to limit template arguments to their expected counts (e.g. keeping only the first argument for `std::vector` or first two for `std::map`), preventing C++ default allocator/comparator args from polluting Python type hints.
 * **Stub Coverage CLI Command:** Implemented a new command line action `swig2pyi coverage` to check stub files against importable runtime modules. Exposes checks for missing symbols, supports allowlists, prints coverage statistics, and exits with code 1 if missing symbols exist (for CI integration).
+* **Test Coverage Target:** Achieved 91% code coverage for the entire `swig2pyi` codebase, exceeding the target of 90%+, and verified that all code quality checks (pre-commit, formatting, linting, strict basedpyright, complexity) pass cleanly.
+

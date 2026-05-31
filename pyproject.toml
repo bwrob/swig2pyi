@@ -74,13 +74,13 @@ ignore = ["COM", "D203", "D211", "D213"]
 select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004"]
+"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004", "SLF001", "PLC0415", "ANN401"]
 
 [tool.ruff.format]
 docstring-code-format = true
 
 [tool.pytest.ini_options]
-addopts = "--ignore=tests/quantlib_tests"
+addopts = "--ignore=tests/quantlib_tests --ignore=tests/data"
 
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
