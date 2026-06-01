@@ -77,7 +77,7 @@ select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/swig2pyi/cli.py" = ["T201"]
-"tests/**" = ["N", "S101", "D", "INP001", "E501", "PTH", "PLR2004", "SLF001", "PLC0415", "ANN", "ARG", "PLR0915"]
+"tests/**" = ["N", "S101", "S603", "D", "INP001", "E501", "PTH", "PLR2004", "SLF001", "PLC0415", "ANN", "ARG", "PLR0915"]
 
 [tool.ruff.format]
 docstring-code-format = true

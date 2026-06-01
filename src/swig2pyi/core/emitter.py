@@ -24,6 +24,12 @@ class StubEmitter:
         self.lines: list[str] = []
         self.indent_level = 0
         self.needs_typevar_t = False
+        self.emitted_classes: set[str] = set()
+        self._extra_classes: set[str] = set()
+        for line in type_manager.config.extra_code:
+            match = re.match(r"^\s*class\s+([a-zA-Z0-9_]+)", line)
+            if match:
+                self._extra_classes.add(match.group(1))
 
     def indent(self) -> None:
         """Increment indentation level."""
@@ -130,8 +136,12 @@ class StubEmitter:
 
     def visit_module(self, module: Module) -> None:
         """Visit a module and emit its contents."""
+        self.emitted_classes.clear()
         self._cpp_to_py_class_names: dict[str, str] = {}
         for cls in module.classes:
+            if cls.name:
+                key_name = self.tm.clean_cpp_type(cls.name)
+                self._cpp_to_py_class_names[key_name] = cls.name
             if cls.cpp_type:
                 key = self.tm.clean_cpp_type(cls.cpp_type)
                 self._cpp_to_py_class_names[key] = cls.name
@@ -210,7 +220,10 @@ class StubEmitter:
             if self.nm.get_python_name(m.name)
         }
         existing_signatures = {
-            (self.nm.get_python_name(m.name), tuple(p.type for p in m.parms))
+            (
+                self.nm.get_python_name(m.name),
+                tuple(self.tm.to_python(p.type or "") for p in m.parms),
+            )
             for m in cls.cdecls
             if self.nm.get_python_name(m.name)
         }
@@ -218,7 +231,10 @@ class StubEmitter:
             py_name = self.nm.get_python_name(method.name)
             if not py_name or py_name in originally_defined_names:
                 continue
-            sig_key = (py_name, tuple(p.type for p in method.parms))
+            sig_key = (
+                py_name,
+                tuple(self.tm.to_python(p.type or "") for p in method.parms),
+            )
             if sig_key not in existing_signatures:
                 cls.cdecls.append(method.model_copy(deep=True))
                 existing_signatures.add(sig_key)
@@ -239,10 +255,31 @@ class StubEmitter:
                 continue
 
             for node in tree.body:
-                if isinstance(node, pyast.FunctionDef):
-                    self._emit_pythoncode_func(node)
-                elif isinstance(node, pyast.ClassDef):
-                    self._emit_pythoncode_class(node)
+                self._emit_pythoncode_node(node)
+
+    def _emit_pythoncode_node(self, node: pyast.AST) -> None:
+        if isinstance(node, pyast.FunctionDef):
+            self._emit_pythoncode_func(node)
+        elif isinstance(node, pyast.ClassDef):
+            self._emit_pythoncode_class(node)
+        elif isinstance(node, pyast.Assign):
+            self._emit_pythoncode_assign(node)
+        elif isinstance(node, pyast.AnnAssign):
+            self._emit_pythoncode_annassign(node)
+        elif isinstance(node, (pyast.Import, pyast.ImportFrom)):
+            self.write(pyast.unparse(node))
+
+    def _emit_pythoncode_assign(self, node: pyast.Assign) -> None:
+        for target in node.targets:
+            if isinstance(target, pyast.Name) and not target.id.startswith("_"):
+                self.write(f"{target.id}: Any")
+                self.tm.needed_imports.add("Any")
+
+    def _emit_pythoncode_annassign(self, node: pyast.AnnAssign) -> None:
+        if isinstance(node.target, pyast.Name) and not node.target.id.startswith("_"):
+            ann = pyast.unparse(node.annotation)
+            self.tm.record_imports(ann)
+            self.write(f"{node.target.id}: {ann}")
 
     def _emit_pythoncode_func(self, node: pyast.FunctionDef) -> None:
         """Emit a stub for a function defined in %pythoncode."""
@@ -254,22 +291,85 @@ class StubEmitter:
             self.tm.record_imports(sig_override)
             return
 
-        args = [a.arg for a in node.args.args]
-        defaults_count = len(node.args.defaults)
-        parts: list[str] = []
-        for i, arg in enumerate(args):
-            default_idx = i - (len(args) - defaults_count)
-            if default_idx >= 0:
-                parts.append(f"{arg}=...")
-            else:
-                parts.append(arg)
-        if node.args.vararg:
-            parts.append(f"*{node.args.vararg.arg}")
-        if node.args.kwarg:
-            parts.append(f"**{node.args.kwarg.arg}")
+        parts = self._format_pythoncode_args(node.args)
         sig = ", ".join(parts)
-        self.write(f"def {node.name}({sig}) -> Any: ...")
+        ret_ann = self._get_pythoncode_returns(node.returns)
+        self.write(f"def {node.name}({sig}) -> {ret_ann}: ...")
+
+    def _format_pythoncode_arg(self, arg_node: pyast.arg, *, has_default: bool) -> str:
+        name = arg_node.arg
+        if arg_node.annotation:
+            ann = pyast.unparse(arg_node.annotation)
+            self.tm.record_imports(ann)
+            res = f"{name}: {ann}"
+        else:
+            res = name
+        if has_default:
+            return f"{res} = ..."
+        return res
+
+    def _format_pythoncode_args(self, args_node: pyast.arguments) -> list[str]:
+        parts: list[str] = []
+        posonlyargs = getattr(args_node, "posonlyargs", [])
+        args = args_node.args
+        all_pos_args = posonlyargs + args
+        num_defaults = len(args_node.defaults)
+        start_default_idx = len(all_pos_args) - num_defaults
+
+        for i, arg in enumerate(posonlyargs):
+            parts.append(
+                self._format_pythoncode_arg(arg, has_default=i >= start_default_idx)
+            )
+
+        if posonlyargs:
+            parts.append("/")
+
+        for i, arg in enumerate(args):
+            actual_idx = len(posonlyargs) + i
+            parts.append(
+                self._format_pythoncode_arg(
+                    arg, has_default=actual_idx >= start_default_idx
+                )
+            )
+
+        self._format_pythoncode_varargs(args_node, parts)
+        return parts
+
+    def _format_pythoncode_varargs(
+        self, args_node: pyast.arguments, parts: list[str]
+    ) -> None:
+        if args_node.vararg:
+            vararg_ann = ""
+            if args_node.vararg.annotation:
+                ann = pyast.unparse(args_node.vararg.annotation)
+                self.tm.record_imports(ann)
+                vararg_ann = f": {ann}"
+            parts.append(f"*{args_node.vararg.arg}{vararg_ann}")
+        elif args_node.kwonlyargs:
+            parts.append("*")
+
+        for arg, kw_default in zip(
+            args_node.kwonlyargs, args_node.kw_defaults, strict=False
+        ):
+            parts.append(
+                self._format_pythoncode_arg(arg, has_default=kw_default is not None)
+            )
+
+        if args_node.kwarg:
+            kwarg_ann = ""
+            if args_node.kwarg.annotation:
+                ann = pyast.unparse(args_node.kwarg.annotation)
+                self.tm.record_imports(ann)
+                kwarg_ann = f": {ann}"
+            parts.append(f"**{args_node.kwarg.arg}{kwarg_ann}")
+
+    def _get_pythoncode_returns(self, returns_node: pyast.expr | None) -> str:
+        if returns_node:
+            ret_ann = pyast.unparse(returns_node)
+            self.tm.record_imports(ret_ann)
+            return ret_ann
         self.tm.needed_imports.add("Any")
+        return "Any"
 
     def _emit_pythoncode_class(self, node: pyast.ClassDef) -> None:
         """Emit a stub for a class defined in %pythoncode."""
@@ -279,15 +379,31 @@ class StubEmitter:
         bases_str = f"({', '.join(bases)})" if bases else ""
         self.write(f"class {node.name}{bases_str}:")
         self.indent()
-        has_methods = False
+        has_body = False
         for item in node.body:
-            if isinstance(item, pyast.FunctionDef) and not item.name.startswith("_"):
-                self._emit_pythoncode_func(item)
-                has_methods = True
-        if not has_methods:
+            if self._emit_pythoncode_class_item(item):
+                has_body = True
+        if not has_body:
             self.write("pass")
         self.dedent()
         self.write("")
+
+    def _emit_pythoncode_class_item(self, item: pyast.AST) -> bool:
+        if isinstance(item, pyast.FunctionDef) and not item.name.startswith("_"):
+            self._emit_pythoncode_func(item)
+            return True
+        if isinstance(item, pyast.Assign):
+            self._emit_pythoncode_assign(item)
+            return any(
+                isinstance(t, pyast.Name) and not t.id.startswith("_")
+                for t in item.targets
+            )
+        if isinstance(item, pyast.AnnAssign):
+            self._emit_pythoncode_annassign(item)
+            return isinstance(
+                item.target, pyast.Name
+            ) and not item.target.id.startswith("_")
+        return False
 
     def _emit_module_enums(self, module: Module) -> None:
         for enum in module.enums:
@@ -418,6 +534,10 @@ class StubEmitter:
             return
         name = name.split("::")[-1]
 
+        if name in self.emitted_classes:
+            return
+        self.emitted_classes.add(name)
+
         bases_str = self._get_bases_str(cls)
         self.write(f"class {name}{bases_str}:")
         self.indent()
@@ -495,6 +615,32 @@ class StubEmitter:
             normalized_base = self._cpp_to_py_class_names[cleaned]
         else:
             normalized_base = self.tm.to_python(base_type)
+
+        # Filter base class: it must be a class defined in this module,
+        # a standard generic container base, or an imported/extra base.
+        base_name_only = normalized_base.split("[", 1)[0]
+        is_valid_base = (
+            base_name_only in self._cpp_to_py_class_names.values()
+            or base_name_only in self._extra_classes
+            or base_name_only in self.tm.config.delegate_templates
+            or base_name_only
+            in (
+                "list",
+                "dict",
+                "set",
+                "tuple",
+                "Sequence",
+                "Iterable",
+                "Iterator",
+                "Generic",
+                "IntEnum",
+                "object",
+                "Exception",
+            )
+        )
+        if not is_valid_base:
+            return []
+
         names.append(normalized_base)
         if self.tm.config.delegate_templates:
             escaped_templates = "|".join(
@@ -627,11 +773,11 @@ class StubEmitter:
         for sig_tuple in sorted_sigs:
             func = unique_sigs[sig_tuple]
             params_str, ret_type = sig_tuple
-            if is_method and getattr(func, "is_static", False):
-                self.write("@staticmethod")
             if use_overload:
                 self.write("@overload")
                 self.tm.needed_imports.add("overload")
+            if is_method and getattr(func, "is_static", False):
+                self.write("@staticmethod")
             self.write(f"def {group_name}({params_str}) -> {ret_type}: ...")
             if not use_overload:
                 self._write_docstring(func.docstring)

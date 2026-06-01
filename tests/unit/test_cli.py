@@ -243,9 +243,7 @@ def test_cli_generation_interface(
 
     called = []
 
-    def mock_generate_from_interface(
-        interface, config, output, swig_path, validate
-    ) -> None:
+    def mock_generate_from_interface(interface, config, output, swig_path) -> None:
         called.append(True)
 
     monkeypatch.setattr(

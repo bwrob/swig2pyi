@@ -28,9 +28,6 @@ def main() -> None:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except Exception:  # noqa: BLE001
-        import traceback  # noqa: PLC0415
-
-        traceback.print_exc()
         sys.exit(1)
 
 
@@ -51,9 +48,6 @@ def _setup_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--swig-path", type=str, default="swig", help="Path to swig executable"
-    )
-    parser.add_argument(
-        "--validate", "-v", action="store_true", help="Run QA validation"
     )
     return parser
 
@@ -79,13 +73,12 @@ def _run_generation(args: argparse.Namespace, config: Config) -> None:
             config,
             args.output,
             args.swig_path,
-            validate=args.validate,
         )
     elif args.xml:
         if not args.xml.exists():
             print(f"Error: XML file not found: {args.xml}", file=sys.stderr)
             sys.exit(1)
-        generate_from_xml(args.xml, config, args.output, validate=args.validate)
+        generate_from_xml(args.xml, config, args.output)
 
 
 def _load_allowlist(path: Path | None) -> set[str]:

@@ -76,6 +76,6 @@ The architecture of `swig2pyi` is divided into five logical tiers:
 * **Modules:** `core.parser`, `core.runner`, `core.config`, `core.ast_models`
 * **Role:**
     * **Parser:** Stream-parses massive SWIG XML inputs using `iterparse` into strongly typed AST elements.
-    * **Runner:** Invokes the local SWIG wrapper compile commands with caching.
+    * **Runner:** Invokes the local SWIG compiler via subprocess, producing XML output. Stateless with no caching layer.
     * **Config / AST:** Defines base rules schema and target types.
 * **Constraints:** Completely decoupled from generator and type resolution systems (leaf layer).

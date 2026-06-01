@@ -21,6 +21,10 @@ class TypeManager:
         "unsigned long": "int",
         "long long": "int",
         "unsigned long long": "int",
+        "unsigned short": "int",
+        "unsigned char": "int",
+        "signed char": "int",
+        "long double": "float",
         "double": "float",
         "float": "float",
         "char": "str",
@@ -28,6 +32,27 @@ class TypeManager:
         "bool": "bool",
         "size_t": "int",
         "std::size_t": "int",
+        "ptrdiff_t": "int",
+        "std::ptrdiff_t": "int",
+        "wchar_t": "str",
+        "char16_t": "str",
+        "char32_t": "str",
+        "int8_t": "int",
+        "uint8_t": "int",
+        "int16_t": "int",
+        "uint16_t": "int",
+        "int32_t": "int",
+        "uint32_t": "int",
+        "int64_t": "int",
+        "uint64_t": "int",
+        "std::int8_t": "int",
+        "std::uint8_t": "int",
+        "std::int16_t": "int",
+        "std::uint16_t": "int",
+        "std::int32_t": "int",
+        "std::uint32_t": "int",
+        "std::int64_t": "int",
+        "std::uint64_t": "int",
     }
 
     DEFAULT_TEMPLATE_ARG_COUNTS: ClassVar[dict[str, int]] = {
@@ -80,17 +105,35 @@ class TypeManager:
             return re.compile(r"$.^")  # Match nothing
         return re.compile(rf"^(?:{'|'.join(patterns)})\s*<(.+)>$")
 
-    def normalize_type(self, cpp_type: str, *, bypass_mapping: bool = False) -> str:
+    def normalize_type(
+        self,
+        cpp_type: str,
+        *,
+        bypass_mapping: bool = False,
+        visited: set[str] | None = None,
+    ) -> str:
         """Normalize a C++ type string to a valid Python type hint."""
         cpp_type = cpp_type.strip()
 
+        if visited is None:
+            visited = set()
+
+        if cpp_type in visited:
+            return cpp_type.replace("::", ".")
+
+        # Create a new set branch to allow independent resolving paths
+        # but prevent loop cycles.
+        visited = visited | {cpp_type}
+
         basic_cleaned = self._clean_basic(cpp_type)
         if match := self._smart_ptr_regex.match(basic_cleaned):
-            return self.normalize_type(match.group(1), bypass_mapping=bypass_mapping)
+            return self.normalize_type(
+                match.group(1), bypass_mapping=bypass_mapping, visited=visited
+            )
 
         cpp_type = self.clean_cpp_type(cpp_type)
 
-        typedef_res = self._resolve_typedefs(cpp_type)
+        typedef_res = self._resolve_typedefs(cpp_type, visited=visited)
         if typedef_res is not None:
             return typedef_res
 
@@ -98,17 +141,26 @@ class TypeManager:
             return self.cpp_to_py_class_names[cpp_type]
 
         result = (
-            self._resolve_containers(cpp_type, bypass_mapping=bypass_mapping)
-            or self._resolve_general_template(cpp_type, bypass_mapping=bypass_mapping)
-            or self._resolve_scopes(cpp_type, bypass_mapping=bypass_mapping)
+            self._resolve_containers(
+                cpp_type, bypass_mapping=bypass_mapping, visited=visited
+            )
+            or self._resolve_general_template(
+                cpp_type, bypass_mapping=bypass_mapping, visited=visited
+            )
+            or self._resolve_scopes(
+                cpp_type, bypass_mapping=bypass_mapping, visited=visited
+            )
         )
         if result is not None:
             return result
 
+        return self._clean_prefix(cpp_type)
+
+    def _clean_prefix(self, cpp_type: str) -> str:
         py_type = cpp_type.replace("::", ".")
         prefix = self.config.module_name + "." if self.config.module_name else ""
         if prefix and py_type.startswith(prefix):
-            py_type = py_type[len(prefix) :]
+            return py_type[len(prefix) :]
         return py_type
 
     def to_python(
@@ -206,7 +258,11 @@ class TypeManager:
             cpp_type = cpp_type.replace(ns, "")
         return cpp_type
 
-    def _resolve_typedefs(self, cpp_type: str) -> str | None:
+    def _resolve_typedefs(
+        self, cpp_type: str, visited: set[str] | None = None
+    ) -> str | None:
+        if visited is None:
+            visited = set()
         if cpp_type.endswith(("::size_type", ".size_type")):
             return "int"
 
@@ -216,7 +272,7 @@ class TypeManager:
             return mapped
 
         # 2. Resolve from XML parsed typedefs
-        resolved = self._lookup_typedefs(cpp_type)
+        resolved = self._lookup_typedefs(cpp_type, visited=visited)
         if resolved is not None:
             return resolved
 
@@ -234,12 +290,16 @@ class TypeManager:
                 return self._type_map[cleaned]
         return None
 
-    def _lookup_typedefs(self, cpp_type: str) -> str | None:
+    def _lookup_typedefs(
+        self, cpp_type: str, visited: set[str] | None = None
+    ) -> str | None:
         """Look up the C++ type in parsed typedefs and recursively normalize."""
+        if visited is None:
+            visited = set()
         if cpp_type in self.typedefs:
             underlying = self.typedefs[cpp_type]
             if underlying != cpp_type:
-                return self.normalize_type(underlying)
+                return self.normalize_type(underlying, visited=visited)
 
         if self.config.module_name:
             namespaced = f"{self.config.module_name}::{cpp_type}"
@@ -247,7 +307,7 @@ class TypeManager:
             if cleaned in self.typedefs:
                 underlying = self.typedefs[cleaned]
                 if underlying != cleaned:
-                    return self.normalize_type(underlying)
+                    return self.normalize_type(underlying, visited=visited)
         return None
 
     def _get_template_arg_limit(self, template_name: str) -> int | None:
@@ -257,8 +317,14 @@ class TypeManager:
         return self.DEFAULT_TEMPLATE_ARG_COUNTS.get(base_name)
 
     def _resolve_containers(
-        self, cpp_type: str, *, bypass_mapping: bool = False
+        self,
+        cpp_type: str,
+        *,
+        bypass_mapping: bool = False,
+        visited: set[str] | None = None,
     ) -> str | None:
+        if visited is None:
+            visited = set()
         for cpp_container, py_abc in self._containers.items():
             prefix = cpp_container + "<"
             if (
@@ -272,7 +338,9 @@ class TypeManager:
                 inner = cpp_type[len(prefix) : -1].strip()
                 inner = self._clean_template_inner(inner)
                 args = [
-                    self.normalize_type(a, bypass_mapping=bypass_mapping)
+                    self.normalize_type(
+                        a, bypass_mapping=bypass_mapping, visited=visited
+                    )
                     for a in self._split_template_args(inner)
                 ]
                 limit = self._get_template_arg_limit(py_abc)
@@ -292,20 +360,46 @@ class TypeManager:
         return inner
 
     def _resolve_scopes(
-        self, cpp_type: str, *, bypass_mapping: bool = False
+        self,
+        cpp_type: str,
+        *,
+        bypass_mapping: bool = False,
+        visited: set[str] | None = None,
     ) -> str | None:
+        if visited is None:
+            visited = set()
         scopes = self._split_scopes(cpp_type)
-        if len(scopes) > 1:
-            if self.config.module_name and scopes[0] == self.config.module_name:
-                scopes = scopes[1:]
-            if len(scopes) > 1:
-                return ".".join(
-                    self.normalize_type(s, bypass_mapping=bypass_mapping)
-                    for s in scopes
-                )
-            if len(scopes) == 1:
-                return self.normalize_type(scopes[0], bypass_mapping=bypass_mapping)
-        return None
+        if len(scopes) <= 1:
+            return None
+
+        if self.config.module_name and scopes[0] == self.config.module_name:
+            scopes = scopes[1:]
+
+        if len(scopes) == 1:
+            return self.normalize_type(
+                scopes[0], bypass_mapping=bypass_mapping, visited=visited
+            )
+
+        resolved_components: list[str] = [
+            self._resolve_single_scope_component(
+                i, s, len(scopes), bypass_mapping=bypass_mapping, visited=visited
+            )
+            for i, s in enumerate(scopes)
+        ]
+        return ".".join(resolved_components)
+
+    def _resolve_single_scope_component(
+        self,
+        i: int,
+        s: str,
+        scopes_len: int,
+        *,
+        bypass_mapping: bool,
+        visited: set[str],
+    ) -> str:
+        if i < scopes_len - 1 and "<" in s:
+            s = s.split("<", 1)[0].strip()
+        return self.normalize_type(s, bypass_mapping=bypass_mapping, visited=visited)
 
     def _find_matching_paren_index(self, text: str) -> int:
         depth = 0
@@ -330,17 +424,23 @@ class TypeManager:
         return -1
 
     def _resolve_general_template(
-        self, cpp_type: str, *, bypass_mapping: bool = False
+        self,
+        cpp_type: str,
+        *,
+        bypass_mapping: bool = False,
+        visited: set[str] | None = None,
     ) -> str | None:
+        if visited is None:
+            visited = set()
         if "<" in cpp_type and cpp_type.endswith(">"):
             idx = cpp_type.find("<")
             base = self.normalize_type(
-                cpp_type[:idx].strip(), bypass_mapping=bypass_mapping
+                cpp_type[:idx].strip(), bypass_mapping=bypass_mapping, visited=visited
             )
             inner = cpp_type[idx + 1 : -1].strip()
             inner = self._clean_template_inner(inner)
             args = [
-                self.normalize_type(a, bypass_mapping=bypass_mapping)
+                self.normalize_type(a, bypass_mapping=bypass_mapping, visited=visited)
                 for a in self._split_template_args(inner)
             ]
             limit = self._get_template_arg_limit(base)

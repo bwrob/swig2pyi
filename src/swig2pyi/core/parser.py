@@ -182,6 +182,7 @@ class SwigXmlParser:
             not name and tag == "class"
         )
         if ignore_cond:
+            self.children_by_parent.pop(elem, None)
             return
 
         model = self._create_model(elem, tag, attrs, name)

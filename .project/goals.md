@@ -7,7 +7,7 @@ The primary goals for the `swig2pyi` project:
 * **Accuracy:** Resolve C++ templates to Python generics, map operators to dunder methods, relax sequence parameters, and delegate overloads for handle proxy classes.
 
 ## 2. High-Performance direct-to-memory XML Pipeline
-* **Efficiency:** Parse SWIG XML schemas cleanly and lazily using standard `xml.etree.ElementTree` directly to the Pydantic AST, minimizing memory footprint and CPU overhead.
+* **Efficiency:** Parse SWIG XML schemas cleanly and lazily using standard `xml.etree.ElementTree` directly to dataclass AST models, minimizing memory footprint and CPU overhead.
 
 
 ## 3. Strict Verification & Code Quality

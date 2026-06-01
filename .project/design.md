@@ -25,8 +25,8 @@ graph TD
 ## 2. Key Components
 
 ### `SwigRunner` (in `runner.py`)
-* **Purpose:** Runs the local `swig` compiler with `-xml` flag.
-* **Caching:** Computes a SHA256 cache key based on the SWIG version, the main interface file content, and the metadata (path, size, and modification time) of all dependencies tracked via `swig -MM`. Caches XML output in `.temp/swig_xml_cache/` to bypass compilation.
+* **Purpose:** Runs the local `swig` compiler with `-xml` flag and returns the XML output path.
+* **Design:** Thin subprocess wrapper with no caching or state. Callers manage temporary file lifecycle.
 
 ### `SwigXmlParser` (in `parser.py`)
 * **Purpose:** Performs a single-pass parse of SWIG XML trees using standard `xml.etree.ElementTree`.

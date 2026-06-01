@@ -2,10 +2,11 @@ import os
 import tempfile
 from pathlib import Path
 
+from helpers import validate_stub
+
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
-from swig2pyi.core.qa import QAValidator
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
@@ -67,15 +68,14 @@ def test_operator_remapping() -> None:
         if os.path.exists(xml_path):
             os.unlink(xml_path)
 
-    # Run type checks on generated stubs using QAValidator
-    qa = QAValidator()
+    # Run type checks on generated stubs using validate_stub
     fd, path = tempfile.mkstemp(suffix=".pyi")
     os.close(fd)
     path_obj = Path(path)
     try:
         path_obj.write_text(generated_output, encoding="utf-8")
-        success, message = qa.run_type_check(path_obj)
-        assert success, f"Operators stub type checking failed: {message}"
+        success = validate_stub(path_obj)
+        assert success, "Operators stub type checking failed"
     finally:
         if path_obj.exists():
             path_obj.unlink()

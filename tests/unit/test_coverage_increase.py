@@ -9,10 +9,9 @@
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Never
+from typing import Any
 
 import pytest
 
@@ -21,7 +20,7 @@ from swig2pyi.cli import _load_config, _run_generation, main
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import Class, Module, Top
-from swig2pyi.core.qa import CoverageReport, QAValidator, StubCoverageChecker
+from swig2pyi.core.qa import CoverageReport, StubCoverageChecker
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager, _collect_enums
 
@@ -82,7 +81,7 @@ def test_api_generate_from_xml(tmp_path: Path) -> None:
         containers={},
         rename_operators=True,
     )
-    generate_from_xml(xml_file, config, output_file, validate=True)
+    generate_from_xml(xml_file, config, output_file)
     assert output_file.exists()
     content = output_file.read_text(encoding="utf-8")
     assert "def sin(" in content
@@ -133,7 +132,7 @@ def test_api_generate_from_interface(
         return output_xml
 
     monkeypatch.setattr(SwigRunner, "run", mock_run)
-    generate_from_interface(interface_file, config, output_file, validate=True)
+    generate_from_interface(interface_file, config, output_file)
     assert output_file.exists()
     content = output_file.read_text(encoding="utf-8")
     assert "def add(" in content
@@ -239,25 +238,6 @@ def test_runner_unresolved_exe() -> None:
         )
 
 
-def test_parse_dependencies() -> None:
-    from swig2pyi.core.runner import parse_dependencies
-
-    # Simple Linux paths
-    out1 = "target_wrap.cxx: \\\n  path/to/a.h \\\n  path/to/b.h"
-    assert parse_dependencies(out1) == ["path/to/a.h", "path/to/b.h"]
-
-    # Windows drive paths
-    out2 = "C:\\path\\to\\target_wrap.cxx: \\\n  C:\\path\\to\\dep.i \\\n  D:\\other\\dep.h"
-    assert parse_dependencies(out2) == ["C:\\path\\to\\dep.i", "D:\\other\\dep.h"]
-
-    # Single-line format
-    out3 = "target: a.h b.h"
-    assert parse_dependencies(out3) == ["a.h", "b.h"]
-
-    # Empty target/no colon
-    assert parse_dependencies("invalid string") == []
-
-
 def test_runner_execute_failures(tmp_path: Path) -> None:
     runner = SwigRunner()
     # 1. SWIG execution failed (OSError)
@@ -276,45 +256,7 @@ def test_runner_execute_failures(tmp_path: Path) -> None:
     assert "SWIG did not produce output file" in str(exc_info.value)
 
 
-def test_qa_validator_missing_executables(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    validator = QAValidator()
-    monkeypatch.setattr(validator, "ruff_path", None)
-    monkeypatch.setattr(validator, "pyright_path", None)
-
-    # run_formatting
-    success, msg = validator.run_formatting(tmp_path / "dummy.pyi")
-    assert not success
-    assert "Ruff executable not found" in msg
-
-    # run_type_check
-    success, msg = validator.run_type_check(tmp_path / "dummy.pyi")
-    assert not success
-    assert "Pyright executable not found" in msg
-
-    # validate
-    assert not validator.validate(tmp_path / "dummy.pyi")
-
-
-def test_qa_validator_failed_executions(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    validator = QAValidator()
-    dummy_file = tmp_path / "dummy.pyi"
-    dummy_file.write_text("invalid syntax ...", encoding="utf-8")
-
-    # Mock subprocess.run to raise CalledProcessError
-    def mock_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
-        _ = args, kwargs
-        raise subprocess.CalledProcessError(
-            1, cmd=["ruff"], stderr=b"Mocked Ruff error"
-        )
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-    success, msg = validator.run_formatting(dummy_file)
-    assert not success
-    assert "Ruff failed" in msg
+# Deleted test_qa_validator_missing_executables and test_qa_validator_failed_executions
 
 
 def test_coverage_report_edge_cases() -> None:
@@ -383,30 +325,7 @@ def test_runner_caching(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
     assert out_xml_2.exists()
 
 
-def test_qa_validator_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    validator = QAValidator()
-    monkeypatch.setattr(validator, "ruff_path", "ruff")
-    monkeypatch.setattr(validator, "pyright_path", "pyright")
-
-    class MockResult:
-        returncode: int = 0
-        stdout: str = "Type checking passed."
-        stderr: bytes = b""
-
-    # Mock subprocess.run to return code 0
-    def mock_run(
-        *args: Any,
-        **kwargs: Any,
-    ) -> MockResult:
-        _ = args, kwargs
-        return MockResult()
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-
-    dummy_file = tmp_path / "dummy.pyi"
-    dummy_file.write_text("def f(): ...", encoding="utf-8")
-
-    assert validator.validate(dummy_file)
+# Deleted test_qa_validator_success
 
 
 def test_cli_coverage_with_allowlist(
@@ -659,37 +578,7 @@ y = z = 2
     assert report.coverage_pct == 100.0
 
 
-def test_qa_validator_oserror(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    # Validator raising OSError on run_type_check
-    validator = QAValidator()
-    monkeypatch.setattr(validator, "pyright_path", "pyright")
-
-    def mock_run(*args, **kwargs) -> Never:
-        msg_0 = "Mock OSError"
-        raise OSError(msg_0)
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-    success, msg = validator.run_type_check(tmp_path / "dummy.pyi")
-    assert not success
-    assert "Pyright execution failed" in msg
-
-
-def test_qa_validator_failed_typecheck(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    # Validator returning error code on run_type_check
-    validator = QAValidator()
-    monkeypatch.setattr(validator, "pyright_path", "pyright")
-
-    class MockResult:
-        returncode = 1
-        stdout = "Type errors found"
-        stderr = b""
-
-    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: MockResult())
-    success, msg = validator.run_type_check(tmp_path / "dummy.pyi")
-    assert not success
-    assert "Type checking failed" in msg
+# Deleted test_qa_validator_oserror and test_qa_validator_failed_typecheck
 
 
 def test_runner_execute_success(tmp_path: Path) -> None:
@@ -749,104 +638,7 @@ def test_runner_windows_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cmd[0].endswith(".exe")
 
 
-def test_runner_get_dependencies_success(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    runner = SwigRunner()
-
-    class MockCompletedProcess:
-        def __init__(self, stdout: str):
-            self.stdout = stdout
-            self.returncode = 0
-
-    dep_file = tmp_path / "dep.i"
-    dep_file.write_text("// dummy")
-
-    def mock_run(cmd, capture_output, text, check, env):
-        return MockCompletedProcess(
-            f"dummy_wrap.cxx: \\\n  {dep_file.resolve().as_posix()}"
-        )
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-
-    interface_file = tmp_path / "interface.i"
-    interface_file.write_text("%module test")
-
-    deps = runner._get_dependencies([], interface_file, {})
-    assert len(deps) == 1
-    assert deps[0].resolve() == dep_file.resolve()
-
-
-def test_runner_get_dependencies_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    runner = SwigRunner()
-
-    def mock_run(*args, **kwargs):
-        raise subprocess.CalledProcessError(1, ["swig"], stderr="Mock error")
-
-    monkeypatch.setattr(subprocess, "run", mock_run)
-
-    interface_file = tmp_path / "interface.i"
-    interface_file.write_text("%module test")
-
-    deps = runner._get_dependencies([], interface_file, {})
-    assert len(deps) == 1
-    assert deps[0].resolve() == interface_file.resolve()
-
-
-def test_runner_compute_cache_key_stat_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    runner = SwigRunner()
-
-    dep_file = tmp_path / "dep.i"
-    dep_file.write_text("// dummy")
-
-    monkeypatch.setattr(runner, "_get_dependencies", lambda *args: [dep_file])
-
-    orig_stat = Path.stat
-
-    def mock_stat(self, *args, **kwargs):
-        if "dep.i" in str(self):
-            msg = "Mock stat error"
-            raise OSError(msg)
-        return orig_stat(self, *args, **kwargs)
-
-    monkeypatch.setattr(Path, "stat", mock_stat)
-
-    interface_file = tmp_path / "interface.i"
-    interface_file.write_text("%module test")
-
-    key = runner._compute_cache_key([], interface_file, {})
-    assert isinstance(key, str)
-    assert len(key) == 64
-
-
-def test_runner_cache_oserror(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    runner = SwigRunner()
-
-    # Mock execute to write to output
-    def mock_execute(cmd, env, out):
-        out.write_text("<xml/>")
-        return out
-
-    monkeypatch.setattr(runner, "_execute", mock_execute)
-
-    # Mock shutil.copy2 to raise OSError during caching
-    def mock_copy(*args, **kwargs) -> Never:
-        msg = "Mock OSError"
-        raise OSError(msg)
-
-    monkeypatch.setattr(shutil, "copy2", mock_copy)
-
-    interface = tmp_path / "test.i"
-    interface.write_text("int f();")
-    out = tmp_path / "out.xml"
-
-    # Run should complete despite cache error
-    res = runner.run([], interface, out)
-    assert res == out
+# Deleted cache/dependency runner tests
 
 
 def test_runner_build_command_shutil_which_fail(
@@ -1103,8 +895,9 @@ def test_emitter_extra_coverage(monkeypatch: pytest.MonkeyPatch) -> None:
     module = Module(
         name="Test",
         python_code=[
-            "def my_py_func(a, b=1, *args, **kwargs): pass\n",
-            "class MyPyClass(BaseClass):\n  def method(self): pass\n",
+            "import os\nfrom datetime import date\ndef my_py_func(a: int, b: str='default', *args, **kwargs) -> bool: pass\n",
+            "MY_CONST = 42\nMY_ANN_CONST: float = 3.14\n",
+            "class MyPyClass(BaseClass):\n  def method(self: MyPyClass) -> None: pass\n  CLASS_VAR = 'hello'\n  CLASS_ANN_VAR: int = 123\n",
             "class EmptyPyClass: pass\n",
             "invalid python syntax...",
         ],
@@ -1112,9 +905,18 @@ def test_emitter_extra_coverage(monkeypatch: pytest.MonkeyPatch) -> None:
     top = Top(module=module)
     emitter.emit(top)
     output2 = emitter.get_output()
-    assert "def my_py_func" in output2
-    assert "class MyPyClass" in output2
-    assert "class EmptyPyClass" in output2
+    assert "import os" in output2
+    assert "from datetime import date" in output2
+    assert (
+        "def my_py_func(a: int, b: str = ..., *args, **kwargs) -> bool: ..." in output2
+    )
+    assert "MY_CONST: Any" in output2
+    assert "MY_ANN_CONST: float" in output2
+    assert "class MyPyClass(BaseClass):" in output2
+    assert "def method(self: MyPyClass) -> None: ..." in output2
+    assert "CLASS_VAR: Any" in output2
+    assert "CLASS_ANN_VAR: int" in output2
+    assert "class EmptyPyClass:" in output2
 
     # 4. skip function config
     func_skipped = CDecl(name="skipped_func", kind="function", type="void")

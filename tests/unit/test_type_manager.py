@@ -163,3 +163,33 @@ def test_dynamic_typedef_resolution(config: Config) -> None:
     assert tm.to_python("OGRErr") == "int"
     assert tm.to_python("retString") == "str"
     assert tm.to_python("DateVector") == "list[Date]"
+
+
+def test_circular_typedef_resolution(config: Config) -> None:
+    from swig2pyi.core.ast_models import Module, Top
+
+    module = Module(name="QuantLib")
+    # Circular typedef loop: A -> B -> A
+    module.typedefs["A"] = "B"
+    module.typedefs["B"] = "A"
+    top = Top(module=module)
+    tm = TypeManager(config, top=top)
+
+    # Should resolve to "A" without recursion loop crash
+    assert tm.to_python("A") == "A"
+    assert tm.to_python("B") == "B"
+
+
+def test_additional_basic_types(type_manager: TypeManager) -> None:
+    assert type_manager.to_python("unsigned short") == "int"
+    assert type_manager.to_python("unsigned char") == "int"
+    assert type_manager.to_python("signed char") == "int"
+    assert type_manager.to_python("long double") == "float"
+    assert type_manager.to_python("wchar_t") == "str"
+    assert type_manager.to_python("std::uint32_t") == "int"
+    assert type_manager.to_python("int64_t") == "int"
+
+
+def test_nested_template_scope_resolution(type_manager: TypeManager) -> None:
+    assert type_manager.to_python("A<B>::C") == "A.C"
+    assert type_manager.to_python("A::B<C>::D") == "A.B.D"

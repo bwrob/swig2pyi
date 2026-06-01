@@ -7,14 +7,13 @@ from pathlib import Path
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
 from swig2pyi.core.parser import SwigXmlParser
-from swig2pyi.core.qa import CoverageReport, QAValidator, StubCoverageChecker
+from swig2pyi.core.qa import CoverageReport, StubCoverageChecker
 from swig2pyi.core.runner import SwigRunner
 from swig2pyi.core.type_system import TypeManager
 
 __all__ = [
     "Config",
     "CoverageReport",
-    "QAValidator",
     "StubCoverageChecker",
     "generate_from_interface",
     "generate_from_xml",
@@ -26,8 +25,6 @@ def generate_from_interface(
     config: Config,
     output_file: Path,
     swig_path: str = "swig",
-    *,
-    validate: bool = False,
 ) -> None:
     """Generate a Python stub (.pyi) file from a SWIG interface (.i) file.
 
@@ -36,7 +33,6 @@ def generate_from_interface(
         config: Configuration object.
         output_file: Path to write the generated stub to.
         swig_path: Path to the swig executable.
-        validate: Whether to run QA validation (Ruff/Pyright) on the output.
 
     """
     runner = SwigRunner(swig_path=swig_path)
@@ -51,7 +47,7 @@ def generate_from_interface(
             xml_path_obj,
             module_name=config.module_name,
         )
-        generate_from_xml(xml_path_obj, config, output_file, validate=validate)
+        generate_from_xml(xml_path_obj, config, output_file)
     finally:
         if xml_path_obj.exists():
             xml_path_obj.unlink()
@@ -61,8 +57,6 @@ def generate_from_xml(
     xml_file: Path,
     config: Config,
     output_file: Path,
-    *,
-    validate: bool = False,
 ) -> None:
     """Generate a Python stub (.pyi) file from a pre-generated SWIG XML file.
 
@@ -70,7 +64,6 @@ def generate_from_xml(
         xml_file: Path to the SWIG XML file.
         config: Configuration object.
         output_file: Path to write the generated stub to.
-        validate: Whether to run QA validation (Ruff/Pyright) on the output.
 
     """
     parser = SwigXmlParser()
@@ -85,9 +78,3 @@ def generate_from_xml(
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     output_file.write_text(output_content)
-
-    if validate:
-        qa = QAValidator()
-        if not qa.validate(output_file):
-            msg = "QA validation failed for the generated stub."
-            raise RuntimeError(msg)

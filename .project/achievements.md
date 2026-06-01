@@ -46,3 +46,14 @@
 * **Unification & Deduplication of Runner and NameManager:** Eliminated duplicate code and resources across `runner.py` and `naming.py`. Unified temporary interface wrapper creation under a single `_create_wrapper` helper and consolidated SWIG executable resolution using `_get_swig_exe`. Converted reserved keyword lookups and operator mappings to class/module-level `ClassVar` constants to eliminate allocation overhead.
 * **Robust User Cache Directory Fallback:** Refactored compile cache directory lookup in `runner.py` to target OS-appropriate standard user cache folders (such as `~/.cache/swig2pyi` or Windows `LOCALAPPDATA`) with standard system temporary directories as safe fallbacks, avoiding relative walk-ups that fail when the tool is installed as a package.
 * **Automated Typedef Mapping:** Added support for parsing `<typedef>` XML nodes directly from SWIG AST outputs in `SwigXmlParser`. Extracted pointers and reference symbols from SWIG `decl` attributes and enabled recursive lookup/resolution in `TypeManager` to correctly normalise custom typedef types without manual config overrides.
+
+## 4. Robustness Hardening (Thermonuclear Review)
+* **Cache Layer Removal:** Deleted the custom XML caching layer from `runner.py` (~150 LOC), simplifying it to a stateless subprocess wrapper. Callers manage temporary file lifecycle directly.
+* **Circular Typedef Detection:** Added `visited` set cycle detection in `TypeManager.normalize_type` to prevent infinite recursion on mutually recursive or self-referencing typedefs.
+* **Expanded C++ Primitive Coverage:** Added 20+ missing primitive types to `BASIC_TYPES` including `unsigned char`, `unsigned short`, `wchar_t`, `long double`, `int8_t`–`int64_t`, `uint8_t`–`uint64_t`, `size_t`, `ptrdiff_t`, and `ssize_t`.
+* **Invalid Scope Syntax Prevention:** Fixed `_resolve_scopes` to strip template arguments from prefix scope components, preventing invalid Python syntax like `A[B].C`.
+* **`%pythoncode` Preservation:** Enhanced `%pythoncode` parsing to preserve type annotations on function parameters and class-level variable assignments (`Assign`/`AnnAssign`/`Import` nodes).
+* **Duplicate Overload Elimination:** Fixed duplicate `@overload` generation in Handle delegation by normalizing parameter types before signature comparison.
+* **Memory Leak Fix:** Corrected `children_by_parent` cleanup in `parser.py` to clear entries for ignored classes during iterparse.
+* **API Cleanup:** Removed unused `validate` parameter from public API functions `generate_from_xml` and `generate_from_interface`.
+* **Lint Compliance:** Resolved all remaining FBT001 (boolean positional args), SIM102 (collapsible ifs), and basedpyright `reportArgumentType` errors across `emitter.py` and `type_system.py`.
