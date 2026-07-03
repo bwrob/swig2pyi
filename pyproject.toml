@@ -38,7 +38,7 @@
 [dependency-groups]
 
     dev = [
-        "basedpyright>=1.31.2",
+        "basedpyright>=1.39.9",
         "complexipy>=5.4.1",
         "coverage>=7.10.4",
         "diff-cover>=9.6.0",
