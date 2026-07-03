@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -12,8 +13,10 @@ def validate_stub(file_path: Path) -> bool:
         msg = "Ruff not found"
         raise FileNotFoundError(msg)
 
+    use_shell = sys.platform == "win32"
+
     # Format
-    subprocess.run([ruff_path, "format", str(file_path)], check=True)
+    subprocess.run([ruff_path, "format", str(file_path)], check=True, shell=use_shell)
     # Check & fix
     subprocess.run(
         [
@@ -25,6 +28,7 @@ def validate_stub(file_path: Path) -> bool:
             str(file_path),
         ],
         check=True,
+        shell=use_shell,
     )
 
     if pyright_path:
@@ -34,6 +38,7 @@ def validate_stub(file_path: Path) -> bool:
             capture_output=True,
             text=True,
             check=False,
+            shell=use_shell,
         )
         if res.returncode != 0:
             return False
