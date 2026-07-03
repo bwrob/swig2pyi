@@ -3,6 +3,12 @@
 This document tracks remaining future tasks and long-term goals for `swig2pyi`.
 
 ## 1. Active Tasks (Working On)
+- [x] **Component: Transitive Stub Filtering [Priority: High]:** Add transitive filtering support to generate stubs only for specific symbols and their dependencies.
+  * **Acceptance Criteria:**
+    - [x] Implement transitive stub filtering traversal in `filter.py`.
+    - [x] Expose `--filter-file` option in CLI main callback.
+    - [x] Integrate filtering dynamically during stub generation.
+    - [x] Achieve 100% code coverage on filter logic and >95% on CLI validation.
 - [x] **Component G: Explicit Import Tracking [Priority: High]:** Track required imports dynamically in `StubEmitter` and `TypeManager` during stub generation, removing the heuristic post-emission regex scans.
 - [x] **Component H: Type Cleaning Unification [Priority: High]:** Unify C++ type sanitization and cleaning logic, centralizing it inside `TypeManager`.
 - [x] **QA: Strict Type Validation [Priority: High]:** Run `basedpyright` in strict mode against real QuantLib Python tests and iteratively resolve emitter gaps.

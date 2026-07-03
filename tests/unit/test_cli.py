@@ -4,6 +4,7 @@
 # pyright: reportMissingParameterType=false
 # pyright: reportUnknownMemberType=false
 # pyright: reportUnknownLambdaType=false
+# pyright: reportPrivateUsage=false
 import sys
 from pathlib import Path
 from typing import ClassVar, NoReturn
@@ -383,3 +384,198 @@ def test_main_py_entrypoint(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(SystemExit) as exc_info:
         runpy.run_module("swig2pyi.main", run_name="__main__")
     assert exc_info.value.code == 0
+
+
+def test_cli_validate_inputs_no_sources(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config_file = tmp_path / "config.json"
+    config_file.write_text("{}", encoding="utf-8")
+    output_file = tmp_path / "out.pyi"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "--config",
+            str(config_file),
+            "--output",
+            str(output_file),
+        ],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: Must specify either --interface or --xml" in captured.err
+
+
+def test_cli_validate_inputs_both_sources(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config_file = tmp_path / "config.json"
+    config_file.write_text("{}", encoding="utf-8")
+    output_file = tmp_path / "out.pyi"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "-i",
+            "file.i",
+            "-x",
+            "file.xml",
+            "--config",
+            str(config_file),
+            "--output",
+            str(output_file),
+        ],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: Cannot specify both --interface and --xml" in captured.err
+
+
+def test_cli_validate_inputs_missing_config(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "-i",
+            "file.i",
+            "--output",
+            "out.pyi",
+        ],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: Missing option '--config'" in captured.err
+
+
+def test_cli_validate_inputs_missing_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "-i",
+            "file.i",
+            "--config",
+            "config.json",
+        ],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: Missing option '--output'" in captured.err
+
+
+def test_cli_filter_file_not_found(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config_file = tmp_path / "config.json"
+    config_file.write_text(
+        '{"module_name": "Test", "includes": [], "type_map": {}, "smart_pointers": [], "containers": {}}',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "-i",
+            "file.i",
+            "--config",
+            str(config_file),
+            "--output",
+            "out.pyi",
+            "--filter-file",
+            "nonexistent_filter.txt",
+        ],
+    )
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: Filter file not found" in captured.err
+
+
+def test_cli_filter_file_valid(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    config_file = tmp_path / "config.json"
+    config_file.write_text(
+        '{"module_name": "Test", "includes": [], "type_map": {}, "smart_pointers": [], "containers": {}}',
+        encoding="utf-8",
+    )
+    filter_file = tmp_path / "filter.txt"
+    filter_file.write_text(
+        "# This is comment\nMyClass\nAnotherClass\n", encoding="utf-8"
+    )
+    output_file = tmp_path / "out.pyi"
+    interface_file = tmp_path / "file.i"
+    interface_file.write_text("// swig interface\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "swig2pyi",
+            "-i",
+            str(interface_file),
+            "--config",
+            str(config_file),
+            "--output",
+            str(output_file),
+            "--filter-file",
+            str(filter_file),
+        ],
+    )
+
+    generated_configs = []
+
+    def mock_generate_from_interface(interface, config, output, swig_path) -> None:
+        generated_configs.append(config)
+
+    monkeypatch.setattr(
+        "swig2pyi.cli.generate_from_interface", mock_generate_from_interface
+    )
+
+    main()
+    assert len(generated_configs) == 1
+    assert generated_configs[0].include_symbols == ["MyClass", "AnotherClass"]
+
+
+def test_cli_run_generation_missing_output_safeties() -> None:
+    from types import SimpleNamespace
+
+    from swig2pyi.cli import _run_generation
+    from swig2pyi.core.config import Config
+
+    config = Config(
+        module_name="Test",
+        includes=[],
+        type_map={},
+        smart_pointers=[],
+        containers={},
+    )
+
+    # 1. interface without output
+    args_i = SimpleNamespace(interface="file.i", xml=None, output=None)
+    with pytest.raises(SystemExit) as exc_info:
+        _run_generation(args_i, config)
+    assert exc_info.value.code == 1
+
+    # 2. xml without output
+    args_x = SimpleNamespace(interface=None, xml="file.xml", output=None)
+    with pytest.raises(SystemExit) as exc_info:
+        _run_generation(args_x, config)
+    assert exc_info.value.code == 1

@@ -12,11 +12,12 @@ This document defines the high-level architecture, module design, and translatio
 graph TD
     A[SWIG Interface File .i] -->|SwigRunner| B[SWIG XML Schema]
     B -->|SwigXmlParser| C[Dataclass AST Models]
-    C -->|StubEmitter| D[Type stub .pyi]
+    C -->|filter_ast| G[Filtered Dataclass AST Models]
+    G -->|StubEmitter| D[Type stub .pyi]
 
     subgraph Type System
-        C -->|TypeManager| E[Python Type Annotations]
-        C -->|NameManager| F[Python Sanity & Operator Remap]
+        G -->|TypeManager| E[Python Type Annotations]
+        G -->|NameManager| F[Python Sanity & Operator Remap]
     end
 ```
 
@@ -31,6 +32,10 @@ graph TD
 ### `SwigXmlParser` (in `parser.py`)
 * **Purpose:** Performs a single-pass parse of SWIG XML trees using standard `xml.etree.ElementTree`.
 * **AST Mapping:** Constructs structured standard Python `@dataclass(slots=True)` models representing modules, classes, functions, enums, parameters, and variable definitions.
+
+### `filter_ast` (in `filter.py`)
+* **Purpose:** Computes the transitive closure of required symbols starting from a set of seed symbols, stripping the AST to only include the necessary components.
+* **Design:** Utilizes a Breadth-First Search (BFS) queue to walk class bases, nested items, parameters, and return types.
 
 ### `TypeManager` (in `type_system.py`)
 * **Purpose:** Resolves C++ types to PEP 484 Python annotations.

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from swig2pyi.core.config import Config
 from swig2pyi.core.emitter import StubEmitter
+from swig2pyi.core.filter import filter_ast
 from swig2pyi.core.parser import SwigXmlParser
 from swig2pyi.core.qa import CoverageReport, StubCoverageChecker
 from swig2pyi.core.runner import SwigRunner
@@ -68,6 +69,9 @@ def generate_from_xml(
     """
     parser = SwigXmlParser()
     top = parser.parse_file(xml_file)
+
+    if config.include_symbols:
+        top = filter_ast(top, config.include_symbols, config)
 
     tm = TypeManager(config, top=top)
     emitter = StubEmitter(tm)

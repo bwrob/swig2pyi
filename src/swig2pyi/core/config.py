@@ -22,6 +22,7 @@ class Config(BaseModel):
     parameter_relaxation: dict[str, str] = {}
     skip_functions: list[str] = []
     template_arg_counts: dict[str, int] = {}
+    include_symbols: list[str] = []
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":

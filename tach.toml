@@ -30,7 +30,8 @@ respect_gitignore            = true
         "swig2pyi.core.type_system",
         "swig2pyi.core.emitter",
         "swig2pyi.core.qa",
-        "swig2pyi.core.config"
+        "swig2pyi.core.config",
+        "swig2pyi.core.filter"
     ]
     layer      = "api"
     path       = "swig2pyi.api"
@@ -61,6 +62,15 @@ respect_gitignore            = true
     depends_on = [  ]
     layer      = "core_types"
     path       = "swig2pyi.core.naming"
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.ast_models",
+        "swig2pyi.core.naming",
+        "swig2pyi.core.type_system"
+    ]
+    layer      = "core_types"
+    path       = "swig2pyi.core.filter"
 
 [[modules]]
     depends_on = [
