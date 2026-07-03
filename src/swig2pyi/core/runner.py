@@ -124,7 +124,7 @@ class SwigRunner:
         """Execute the SWIG command."""
         try:
             subprocess.run(  # noqa: S603
-                cmd, capture_output=True, text=True, check=True, env=env
+                cmd, capture_output=True, text=True, check=True, env=env or None
             )
         except subprocess.CalledProcessError as e:
             msg = f"SWIG failed:\n{e.stderr}"

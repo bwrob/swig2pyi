@@ -245,14 +245,22 @@ def test_runner_execute_failures(tmp_path: Path) -> None:
         runner._execute(["/nonexistent/path/to/swig"], {}, tmp_path / "out.xml")
     assert "SWIG execution failed" in str(exc_info.value)
 
-    # 2. SWIG failed (subprocess failure)
+    # 2. SWIG failed (subprocess failure) - use python -c 'sys.exit(1)' for cross-platform
     with pytest.raises(RuntimeError) as exc_info:
-        runner._execute(["false"], {}, tmp_path / "out.xml")
+        runner._execute(
+            [sys.executable, "-c", "import sys; sys.exit(1)"],
+            {},
+            tmp_path / "out.xml",
+        )
     assert "SWIG failed" in str(exc_info.value)
 
-    # 3. SWIG succeeded but did not produce output file
+    # 3. SWIG succeeded but did not produce output file - python -c 'pass'
     with pytest.raises(RuntimeError) as exc_info:
-        runner._execute(["true"], {}, tmp_path / "out.xml")
+        runner._execute(
+            [sys.executable, "-c", "pass"],
+            {},
+            tmp_path / "out.xml",
+        )
     assert "SWIG did not produce output file" in str(exc_info.value)
 
 
