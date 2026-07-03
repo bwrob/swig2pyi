@@ -39,7 +39,7 @@
 
     dev = [
         "basedpyright>=1.31.2",
-        "complexipy>=5.4.1",
+        "complexipy>=6.0.1",
         "coverage>=7.10.4",
         "diff-cover>=9.6.0",
         "pandas",
