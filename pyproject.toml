@@ -57,7 +57,7 @@
         "mkdocs-git-committers-plugin-2>=2.5.0",
         "mkdocs-git-revision-date-localized-plugin>=1.4.7",
         "mkdocs-material>=9.6.17",
-        "mkdocs-typer2>=0.1.5",
+        "mkdocs-typer2>=0.4.1",
         "mkdocstrings-python>=1.17.0",
         "pymdown-extensions>=10.16.1",
     ]
