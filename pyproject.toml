@@ -87,7 +87,7 @@ docstring-code-format = true
 addopts = "--ignore=tests/quantlib_tests --ignore=tests/data"
 
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=82.0.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-data]
