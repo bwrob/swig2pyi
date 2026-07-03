@@ -50,8 +50,8 @@ uv run swig2pyi --interface path/to/interface.i --config path/to/config.json --o
 # 2. Generate from a pre-compiled XML file
 uv run swig2pyi --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi
 
-# 3. Enable QA validation (runs formatters and type-checkers on the output)
-uv run swig2pyi --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi --validate
+# 3. Filter output to only include specific symbols and their dependencies
+uv run swig2pyi --xml path/to/swig_output.xml --config path/to/config.json --output path/to/output.pyi --filter-file path/to/filter.txt
 ```
 
 ### Configuration
