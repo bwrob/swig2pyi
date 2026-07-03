@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/api-reference/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/architecture/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/changelog/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/cli-reference/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://bwrob.github.io/swig2pyi/configuration/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+</urlset>
