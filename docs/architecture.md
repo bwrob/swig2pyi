@@ -22,11 +22,8 @@ graph TD
     end
 
     subgraph Core Type Mapping Layer [4. Core Type Mapping Layer]
-        swig2pyi.core.emitter --> swig2pyi.core.signature[signature.py]
         swig2pyi.core.emitter --> swig2pyi.core.type_system[type_system.py]
-        swig2pyi.core.signature --> swig2pyi.core.type_system
-        swig2pyi.core.signature --> swig2pyi.core.naming[naming.py]
-        swig2pyi.core.emitter --> swig2pyi.core.naming
+        swig2pyi.core.emitter --> swig2pyi.core.naming[naming.py]
     end
 
     subgraph Core Parser Layer [5. Core Parser Layer]
@@ -35,7 +32,6 @@ graph TD
         swig2pyi.api --> swig2pyi.core.config[config.py]
         swig2pyi.core.parser --> swig2pyi.core.ast_models[ast_models.py]
         swig2pyi.core.emitter --> swig2pyi.core.ast_models
-        swig2pyi.core.signature --> swig2pyi.core.ast_models
         swig2pyi.core.type_system --> swig2pyi.core.config
         swig2pyi.core.qa --> swig2pyi.core.config
     end
@@ -65,10 +61,9 @@ The architecture of `swig2pyi` is divided into five logical tiers:
 * **Constraints:** Depends on the semantic types layer to resolve individual types and parameters.
 
 ### 4. Core Type Mapping Layer
-* **Modules:** `core.type_system`, `core.signature`, `core.naming`
+* **Modules:** `core.type_system`, `core.naming`
 * **Role:**
     * **Type System:** Translates C++ symbols, typedefs, smart pointers, and templates into clean Python PEP 484 type hints.
-    * **Signature:** Formats function/method parameter lists, properties, and overloaded signatures.
     * **Naming:** Resolves operator remappings (like `operator==` to `__eq__`) and sanitizes Python keywords.
 * **Constraints:** Depends on lower-level parser modules for base AST and configs.
 

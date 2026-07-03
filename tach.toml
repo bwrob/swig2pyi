@@ -44,16 +44,11 @@ respect_gitignore            = true
     depends_on = [
         "swig2pyi.core.ast_models",
         "swig2pyi.core.naming",
-        "swig2pyi.core.signature",
         "swig2pyi.core.type_system"
     ]
     layer      = "core_generator"
     path       = "swig2pyi.core.emitter"
 
-[[modules]]
-    depends_on = [ "swig2pyi.core.ast_models", "swig2pyi.core.naming", "swig2pyi.core.type_system" ]
-    layer      = "core_types"
-    path       = "swig2pyi.core.signature"
 
 [[modules]]
     depends_on = [

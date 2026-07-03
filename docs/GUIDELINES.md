@@ -14,15 +14,15 @@ This document outlines the development guidelines, project practices, and archit
 1.  **Input Source:**
     *   *Standard Mode:* `.i` file -> `SwigRunner` executes `swig -xml`.
     *   *XML Mode:* Pre-existing `.xml` file -> Bypasses SWIG execution.
-2.  **Middle-End (Normalization):** Parse the XML stream (SAX) and persist nodes to a temporary SQLite database using `sqlmodel`. This solves memory exhaustion on massive XML trees. Normalize C++ types to Python types using `TypeManager`.
-3.  **Backend (Emission):** Query the database to construct an AST and emit valid, idiomatic Python type stubs (`.pyi`).
+2.  **Middle-End (Parsing & Normalization):** Parse the XML stream directly into a strongly typed, memory-efficient AST (`ast_models.py` dataclasses) in a single pass using `xml.etree.ElementTree.iterparse`. Normalize C++ types to Python types using `TypeManager`.
+3.  **Backend (Emission):** Walk the AST models and emit valid, idiomatic Python type stubs (`.pyi`).
 4.  **Verification:** Generated stubs must be valid Python syntax and strictly typed.
 
 ### 1.2. Tech Stack & Tooling
 
 *   **Language:** Python 3.12+
 *   **Package Management:** `uv`
-*   **Core Dependencies:** `swig` (Python wrapper), `sqlmodel`.
+*   **Core Dependencies:** `pydantic`, `swig` (Python wrapper).
 *   **Testing:** `pytest`.
 *   **Linting/Types:** `ruff` & `basedpyright`.
 
@@ -39,8 +39,8 @@ Driven by configuration to avoid hardcoded library rules. Includes module name, 
 ### 2.3. The Runner (`SwigRunner`)
 Executes `swig -xml -DSWIGPYTHON`. Injects mocks and preambles to silence errors caused by the lack of full Python runtime libraries during XML generation.
 
-### 2.4. The Parser (`SwigXmlParser` & `sqlmodel`)
-SAX streams the SWIG XML into a temporary SQLite database. The schema is defined declaratively using `sqlmodel` to ensure type safety. AST queries resolve relationships (inheritance, templates) from the DB.
+### 2.4. The Parser (`SwigXmlParser`)
+Streams the SWIG XML in a single pass using `xml.etree.ElementTree.iterparse` directly into memory-efficient, strongly typed Python `@dataclass(slots=True)` AST models. This avoids huge memory overhead on massive SWIG output XML files.
 
 ### 2.5. The Type System (`TypeManager`)
 Translates C++ types to Python types (unwrapping smart pointers, resolving typedefs, mapping templates).

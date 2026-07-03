@@ -12,8 +12,6 @@
 
 ::: swig2pyi.core.naming
 
-::: swig2pyi.core.signature
-
 ::: swig2pyi.core.qa
 
 ::: swig2pyi.core.runner
