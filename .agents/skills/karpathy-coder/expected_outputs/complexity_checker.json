@@ -1,0 +1,28 @@
+{
+    "average_score": 85.0,
+    "files_analyzed": 1,
+    "results": [
+        {
+            "avg_cyclomatic": 3.4,
+            "classes": 0,
+            "file": "scripts/complexity_checker.py",
+            "findings": [
+                {
+                    "message": "Max nesting depth 5 (max 4). Extract or flatten.",
+                    "rule": "nesting-depth",
+                    "severity": "warn"
+                }
+            ],
+            "functions": 7,
+            "imports": 6,
+            "language": "python",
+            "lines": 210,
+            "max_nesting": 5,
+            "score": 85
+        }
+    ],
+    "status": "ok",
+    "threshold": "medium",
+    "total_findings": 1,
+    "verdict": "WARN"
+}

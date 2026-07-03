@@ -1,0 +1,95 @@
+exclude      = [ "**/*__pycache__", "**/*egg-info", "**/docs", "**/tests", "**/venv" ]
+interfaces   = [  ]
+source_roots = [ "src" ]
+
+forbid_circular_dependencies = true
+ignore_type_checking_imports = false
+layers = [
+    "cli",
+    "api",
+    "core_generator",
+    "core_types",
+    "core_parser"
+]
+respect_gitignore            = true
+
+[[modules]]
+    depends_on = [ "swig2pyi.cli" ]
+    layer      = "cli"
+    path       = "swig2pyi.main"
+
+[[modules]]
+    depends_on = [ "swig2pyi.api" ]
+    layer      = "cli"
+    path       = "swig2pyi.cli"
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.runner",
+        "swig2pyi.core.parser",
+        "swig2pyi.core.type_system",
+        "swig2pyi.core.emitter",
+        "swig2pyi.core.qa",
+        "swig2pyi.core.config",
+        "swig2pyi.core.filter"
+    ]
+    layer      = "api"
+    path       = "swig2pyi.api"
+
+[[modules]]
+    depends_on = [  ]
+    layer      = "core_generator"
+    path       = "swig2pyi.core.qa"
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.ast_models",
+        "swig2pyi.core.naming",
+        "swig2pyi.core.type_system"
+    ]
+    layer      = "core_generator"
+    path       = "swig2pyi.core.emitter"
+
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.config"
+    ]
+    layer      = "core_types"
+    path       = "swig2pyi.core.type_system"
+
+[[modules]]
+    depends_on = [  ]
+    layer      = "core_types"
+    path       = "swig2pyi.core.naming"
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.ast_models",
+        "swig2pyi.core.naming",
+        "swig2pyi.core.type_system"
+    ]
+    layer      = "core_types"
+    path       = "swig2pyi.core.filter"
+
+[[modules]]
+    depends_on = [
+        "swig2pyi.core.ast_models"
+    ]
+    layer      = "core_parser"
+    path       = "swig2pyi.core.parser"
+
+[[modules]]
+    depends_on = [  ]
+    layer      = "core_parser"
+    path       = "swig2pyi.core.ast_models"
+
+[[modules]]
+    depends_on = [  ]
+    layer      = "core_parser"
+    path       = "swig2pyi.core.config"
+
+[[modules]]
+    depends_on = [  ]
+    layer      = "core_parser"
+    path       = "swig2pyi.core.runner"

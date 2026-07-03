@@ -1,0 +1,14 @@
+{
+    "containers": {},
+    "delegate_templates": [],
+    "includes": [],
+    "module_name": "osr",
+    "namespaces_to_remove": [
+        "OSGeo::OSR::"
+    ],
+    "smart_pointers": [],
+    "type_map": {
+        "OGRErr": "int",
+        "retStringAndCPLFree": "str"
+    }
+}

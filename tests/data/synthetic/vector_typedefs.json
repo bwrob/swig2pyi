@@ -1,0 +1,20 @@
+{
+    "containers": {
+        "std::vector": "list"
+    },
+    "delegate_templates": [],
+    "generic_templates": [],
+    "includes": [],
+    "module_name": "vector_typedefs",
+    "namespaces_to_remove": [
+        "Synthetic::"
+    ],
+    "rename_operators": true,
+    "smart_pointers": [],
+    "type_map": {
+        "Matrix": "DoubleVectorVector",
+        "RealVector": "DoubleVector",
+        "double": "float",
+        "int": "int"
+    }
+}

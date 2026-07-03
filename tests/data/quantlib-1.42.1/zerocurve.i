@@ -1,0 +1,89 @@
+
+/*
+ Copyright (C) 2005, 2006 StatPro Italia srl
+ Copyright (C) 2015 Matthias Groncki
+
+ This file is part of QuantLib, a free-software/open-source library
+ for financial quantitative analysts and developers - http://quantlib.org/
+
+ QuantLib is free software: you can redistribute it and/or modify it
+ under the terms of the QuantLib license.  You should have received a
+ copy of the license along with this program; if not, please email
+ <quantlib-dev@lists.sf.net>. The license is also available online at
+ <https://www.quantlib.org/license.shtml>.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the license for more details.
+*/
+
+#ifndef quantlib_zero_curve_i
+#define quantlib_zero_curve_i
+
+%include termstructures.i
+%include interpolation.i
+
+%{
+using QuantLib::InterpolatedZeroCurve;
+%}
+
+%shared_ptr(InterpolatedZeroCurve<Linear>);
+%shared_ptr(InterpolatedZeroCurve<LogLinear>);
+%shared_ptr(InterpolatedZeroCurve<Cubic>);
+%shared_ptr(InterpolatedZeroCurve<SplineCubic>);
+%shared_ptr(InterpolatedZeroCurve<DefaultLogCubic>);
+%shared_ptr(InterpolatedZeroCurve<MonotonicCubic>);
+#if !defined(SWIGPYTHON)
+%shared_ptr(InterpolatedZeroCurve<Kruger>);
+#endif
+%shared_ptr(InterpolatedZeroCurve<ParabolicCubic>);
+%shared_ptr(InterpolatedZeroCurve<MonotonicParabolicCubic>);
+
+template <class Interpolator>
+class InterpolatedZeroCurve : public YieldTermStructure {
+  public:
+    InterpolatedZeroCurve(const std::vector<Date>& dates,
+                          const std::vector<Rate>& yields,
+                          const DayCounter& dayCounter,
+                          const Calendar& calendar = Calendar(),
+                          const Interpolator& i = Interpolator(),
+                          Compounding compounding = Continuous,
+                          Frequency frequency = Annual);
+    const std::vector<Time>& times() const;
+    const std::vector<Real>& data() const;
+    const std::vector<Date>& dates() const;
+    const std::vector<Rate>& zeroRates() const;
+    #if !defined(SWIGR)
+    std::vector<std::pair<Date,Rate> > nodes() const;
+    #endif
+};
+
+%template(ZeroCurve) InterpolatedZeroCurve<Linear>;
+#if defined(SWIGPYTHON)
+%template(_LogLinearZeroCurve) InterpolatedZeroCurve<LogLinear>;
+%template(_LogCubicZeroCurve) InterpolatedZeroCurve<DefaultLogCubic>;
+deprecate_feature_with_message(
+    LogLinearZeroCurve,
+    _LogLinearZeroCurve,
+    "use ZeroCurve because zero curves should not use log interpolations");
+deprecate_feature_with_message(
+    LogCubicZeroCurve,
+    _LogCubicZeroCurve,
+    "use KrugerZeroCurve because zero curves should not use log interpolations");
+#else
+%template(LogLinearZeroCurve) InterpolatedZeroCurve<LogLinear>;
+%template(LogCubicZeroCurve) InterpolatedZeroCurve<DefaultLogCubic>;
+#endif
+%template(CubicZeroCurve) InterpolatedZeroCurve<Cubic>;
+%template(NaturalCubicZeroCurve) InterpolatedZeroCurve<SplineCubic>;
+%template(MonotonicCubicZeroCurve) InterpolatedZeroCurve<MonotonicCubic>;
+#if defined(SWIGPYTHON)
+deprecate_feature(KrugerZeroCurve, CubicZeroCurve);
+#else
+%template(KrugerZeroCurve) InterpolatedZeroCurve<Kruger>;
+#endif
+%template(ParabolicCubicZeroCurve) InterpolatedZeroCurve<ParabolicCubic>;
+%template(MonotonicParabolicCubicZeroCurve) InterpolatedZeroCurve<MonotonicParabolicCubic>;
+
+
+#endif

@@ -1,0 +1,25 @@
+{
+    "containers": {},
+    "delegate_templates": [
+        "SmartPtr"
+    ],
+    "extra_code": [
+        "class SmartPtr(Generic[_T]):",
+        "    def __init__(self, ptr: _T) -> None: ...",
+        "    def __deref__(self) -> _T: ..."
+    ],
+    "generic_templates": [
+        "SmartPtr"
+    ],
+    "includes": [],
+    "module_name": "synthetic",
+    "namespaces_to_remove": [
+        "Synthetic::"
+    ],
+    "rename_operators": true,
+    "smart_pointers": [],
+    "type_map": {
+        "double": "float",
+        "int": "int"
+    }
+}

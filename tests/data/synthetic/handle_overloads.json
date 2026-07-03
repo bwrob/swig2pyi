@@ -1,0 +1,24 @@
+{
+    "containers": {},
+    "delegate_templates": [
+        "Handle"
+    ],
+    "extra_code": [
+        "class Handle(Generic[_T]):",
+        "    def __init__(self, ptr: _T) -> None: ..."
+    ],
+    "generic_templates": [
+        "Handle"
+    ],
+    "includes": [],
+    "module_name": "handle_overloads",
+    "namespaces_to_remove": [
+        "Synthetic::"
+    ],
+    "rename_operators": true,
+    "smart_pointers": [],
+    "type_map": {
+        "int": "int",
+        "std::string": "str"
+    }
+}

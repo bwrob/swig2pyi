@@ -1,0 +1,89 @@
+{
+    "containers": {
+        "ext::optional": "Optional",
+        "std::map": "dict",
+        "std::pair": "tuple",
+        "std::set": "set",
+        "std::vector": "list"
+    },
+    "delegate_templates": [
+        "Handle",
+        "RelinkableHandle"
+    ],
+    "extra_code": [
+        "class Handle(Generic[_T]):",
+        "    @overload",
+        "    def __init__(self) -> None: ...",
+        "    @overload",
+        "    def __init__(self, p: _T) -> None: ...",
+        "    def currentLink(self) -> _T: ...",
+        "    def empty(self) -> bool: ...",
+        "    def __deref__(self) -> _T: ...",
+        "class RelinkableHandle(Handle[_T]):",
+        "    def linkTo(self, h: _T, registerAsObserver: bool = True) -> None: ...",
+        "class TimeSeries(Generic[_T]):",
+        "    def __init__(self) -> None: ..."
+    ],
+    "generic_templates": [
+        "Handle",
+        "RelinkableHandle",
+        "TimeSeries"
+    ],
+    "includes": [
+        "tests/data/quantlib-1.40"
+    ],
+    "module_name": "QuantLib",
+    "namespaces_to_remove": [
+        "QuantLib::",
+        "ext::"
+    ],
+    "parameter_relaxation": {
+        "Array": "Union[Array, Sequence[float]]",
+        "Matrix": "Union[Matrix, Sequence[Sequence[float]]]"
+    },
+    "pythoncode_signatures": {
+        "BinomialVanillaEngine": "(process: GeneralizedBlackScholesProcess, type: str, steps: int) -> PricingEngine",
+        "MCAmericanBasketEngine": "(process: StochasticProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ..., nCalibrationSamples: int = ..., polynomOrder: int = ..., polynomType: int = ...) -> PricingEngine",
+        "MCEuropeanBasketEngine": "(process: StochasticProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ...) -> PricingEngine",
+        "MCEuropeanEngine": "(process: GeneralizedBlackScholesProcess, traits: str, timeSteps: Optional[int] = ..., timeStepsPerYear: Optional[int] = ..., brownianBridge: bool = ..., antitheticVariate: bool = ..., requiredSamples: Optional[int] = ..., requiredTolerance: Optional[float] = ..., maxSamples: Optional[int] = ..., seed: int = ...) -> PricingEngine"
+    },
+    "rename_operators": true,
+    "skip_functions": [
+        "linkTo",
+        "currentLink",
+        "empty",
+        "values"
+    ],
+    "smart_pointers": [
+        "boost::shared_ptr",
+        "std::shared_ptr",
+        "ext::shared_ptr",
+        "shared_ptr"
+    ],
+    "type_map": {
+        "Day": "int",
+        "Hour": "int",
+        "Microsecond": "int",
+        "Millisecond": "int",
+        "Minute": "int",
+        "QuantLib::BigInteger": "int",
+        "QuantLib::BlackVolTermStructure": "Any",
+        "QuantLib::Decimal": "float",
+        "QuantLib::DiscountFactor": "float",
+        "QuantLib::Integer": "int",
+        "QuantLib::Natural": "int",
+        "QuantLib::Rate": "float",
+        "QuantLib::Real": "float",
+        "QuantLib::Size": "int",
+        "QuantLib::Spread": "float",
+        "QuantLib::Time": "float",
+        "QuantLib::Volatility": "float",
+        "Second": "int",
+        "Time": "float",
+        "Year": "int",
+        "bool": "bool",
+        "doubleOrNull": "Optional[float]",
+        "std::string": "str",
+        "string": "str"
+    }
+}

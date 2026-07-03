@@ -1,0 +1,65 @@
+{
+    "skills": {
+        "cavecrew": {
+            "computedHash": "505d836228d1c5e14834ff5d62aad72390c7d27f79c6aa7f9a7a55ed6606d6a2",
+            "skillPath": "skills/cavecrew/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman": {
+            "computedHash": "dfbf85749fd474feeb0bbe60c779795ecd5dbec0083299b56e68916bc3ddd8c9",
+            "skillPath": "skills/caveman/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman-commit": {
+            "computedHash": "f456ea0564875e46858890ac39ee701ecb9c601c72a2da1e6ce6bd5f9fc5d817",
+            "skillPath": "skills/caveman-commit/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman-compress": {
+            "computedHash": "b8cbfec00b620f0944960a9bb4072f262cf816c1d3c82e6dbded35c30b4c5d0b",
+            "skillPath": "skills/caveman-compress/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman-help": {
+            "computedHash": "2c21437427e98df1eacabaa0b055b5256a308b2191feea3ca2df6a9418e76cb1",
+            "skillPath": "skills/caveman-help/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman-review": {
+            "computedHash": "fb7214a1c5793bae6ba8b1be4329e2e6f40dbec6dd911dfb335ad29f09c316a1",
+            "skillPath": "skills/caveman-review/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "caveman-stats": {
+            "computedHash": "47ce2de3d6cb39a75047b5c962e4eb3da15594e7397c94103e9a104d42626553",
+            "skillPath": "skills/caveman-stats/SKILL.md",
+            "source": "JuliusBrussee/caveman",
+            "sourceType": "github"
+        },
+        "karpathy-coder": {
+            "computedHash": "79991fad2fcec49c45565e7fcf3fff69b778e0787b94f9db3e179000ae45042c",
+            "skillPath": "engineering/karpathy-coder/skills/karpathy-coder/SKILL.md",
+            "source": "alirezarezvani/claude-skills",
+            "sourceType": "github"
+        },
+        "python-type-safety": {
+            "computedHash": "16314aa8a4a465773be809c517f62f8ef704f5ab1bb237e8c9b8a759689fcb21",
+            "skillPath": "plugins/python-development/skills/python-type-safety/SKILL.md",
+            "source": "wshobson/agents",
+            "sourceType": "github"
+        },
+        "skill-creator": {
+            "computedHash": "5d87a277cc877ea3a81634ed1092e02ceb2db9c6b02799cf20b0403caeb1b3ee",
+            "skillPath": "skills/skill-creator/SKILL.md",
+            "source": "cognitedata/builder-skills",
+            "sourceType": "github"
+        }
+    },
+    "version": 1
+}
