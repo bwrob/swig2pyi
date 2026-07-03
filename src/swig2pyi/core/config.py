@@ -27,6 +27,6 @@ class Config(BaseModel):
     @classmethod
     def from_file(cls, path: Path) -> "Config":
         """Load configuration from a JSON file."""
-        with path.open("r") as f:
+        with path.open("r", encoding="utf-8") as f:
             json_content = f.read()
         return cls.model_validate_json(json_content)

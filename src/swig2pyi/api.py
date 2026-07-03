@@ -81,4 +81,4 @@ def generate_from_xml(
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    output_file.write_text(output_content)
+    output_file.write_text(output_content, encoding="utf-8")

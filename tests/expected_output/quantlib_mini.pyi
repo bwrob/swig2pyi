@@ -270,7 +270,7 @@ class Period:
         self,
         other: object,
     ) -> bool: ...
-    def __hash__(self) -> hash_t: ...
+    def __hash__(self) -> int: ...
 
 class PeriodVector(list[Period]):
     @overload
@@ -423,7 +423,7 @@ class Date:
         self,
         other: object,
     ) -> bool: ...
-    def __hash__(self) -> hash_t: ...
+    def __hash__(self) -> int: ...
     def __bool__(self) -> bool: ...
     def __lt__(
         self,
@@ -508,90 +508,90 @@ class IMM:
     X: Month
     Z: Month
     def __init__(self) -> None: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isIMMdate(
         d: Date,
         mainCycle: bool = ...,
     ) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isIMMdate(d: Date) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isIMMcode(
         code: str,
         mainCycle: bool = ...,
     ) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isIMMcode(code: str) -> bool: ...
     @staticmethod
     def code(immDate: Date) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def date(
         immCode: str,
         referenceDate: Date = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def date(immCode: str) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate() -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         d: Date = ...,
         mainCycle: bool = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         immCode: str,
         mainCycle: bool = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         immCode: str,
         mainCycle: bool = ...,
         referenceDate: Date = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(d: Date = ...) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(immCode: str) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode() -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         d: Date = ...,
         mainCycle: bool = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         immCode: str,
         mainCycle: bool = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         immCode: str,
         mainCycle: bool = ...,
         referenceDate: Date = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(d: Date = ...) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(immCode: str) -> str: ...
 
 class ASX:
@@ -622,90 +622,90 @@ class ASX:
     X: Month
     Z: Month
     def __init__(self) -> None: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isASXdate(
         d: Date,
         mainCycle: bool = ...,
     ) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isASXdate(d: Date) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isASXcode(
         code: str,
         mainCycle: bool = ...,
     ) -> bool: ...
-    @staticmethod
     @overload
+    @staticmethod
     def isASXcode(code: str) -> bool: ...
     @staticmethod
     def code(asxDate: Date) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def date(
         asxCode: str,
         referenceDate: Date = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def date(asxCode: str) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate() -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         asxCode: str,
         mainCycle: bool = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         asxCode: str,
         mainCycle: bool = ...,
         referenceDate: Date = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(
         d: Date = ...,
         mainCycle: bool = ...,
     ) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(asxCode: str) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextDate(d: Date = ...) -> Date: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode() -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         asxCode: str,
         mainCycle: bool = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         asxCode: str,
         mainCycle: bool = ...,
         referenceDate: Date = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(
         d: Date = ...,
         mainCycle: bool = ...,
     ) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(asxCode: str) -> str: ...
-    @staticmethod
     @overload
+    @staticmethod
     def nextCode(d: Date = ...) -> str: ...
 
 class Calendar:
@@ -853,7 +853,7 @@ class Calendar:
         self,
         other: object,
     ) -> bool: ...
-    def __hash__(self) -> hash_t: ...
+    def __hash__(self) -> int: ...
 
 class CalendarVector(list[Calendar]):
     @overload
@@ -1445,7 +1445,7 @@ class DayCounter:
         self,
         other: object,
     ) -> bool: ...
-    def __hash__(self) -> hash_t: ...
+    def __hash__(self) -> int: ...
 
 class Actual360(DayCounter):
     @overload
@@ -2565,8 +2565,8 @@ class InterestRate:
         self,
         t: float,
     ) -> float: ...
-    @staticmethod
     @overload
+    @staticmethod
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
@@ -2575,8 +2575,8 @@ class InterestRate:
         d1: Date,
         d2: Date,
     ) -> InterestRate: ...
-    @staticmethod
     @overload
+    @staticmethod
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
@@ -2586,8 +2586,8 @@ class InterestRate:
         d2: Date,
         refStart: Date = ...,
     ) -> InterestRate: ...
-    @staticmethod
     @overload
+    @staticmethod
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
@@ -2598,8 +2598,8 @@ class InterestRate:
         refStart: Date = ...,
         refEnd: Date = ...,
     ) -> InterestRate: ...
-    @staticmethod
     @overload
+    @staticmethod
     def impliedRate(
         compound: float,
         resultDC: DayCounter,
@@ -3029,4 +3029,4 @@ class IntervalPrice:
         t: Union[IntervalPrice.Type, int],
     ) -> RealTimeSeries: ...
 
-def MakeSchedule(effectiveDate=..., terminationDate=..., tenor=..., frequency=..., calendar=..., convention=..., terminalDateConvention=..., rule=..., forwards=..., backwards=..., endOfMonth=..., firstDate=..., nextToLastDate=...) -> Any: ...
+def MakeSchedule(effectiveDate = ..., terminationDate = ..., tenor = ..., frequency = ..., calendar = ..., convention = ..., terminalDateConvention = ..., rule = ..., forwards = ..., backwards = ..., endOfMonth = ..., firstDate = ..., nextToLastDate = ...) -> Any: ...
